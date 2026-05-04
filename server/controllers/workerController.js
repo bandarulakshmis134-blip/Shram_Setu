@@ -366,18 +366,16 @@ exports.getWorkerCountBySkill = async (req,res)=>{
 
   workers.forEach(worker=>{
 
-   const skills = worker.skills;
+   let skills = worker.skills;
 
-   // 🔥 FULL SAFE CHECK
+   // 🔥 SAFE FIX
    if(!skills) return;
 
-   // if string → convert to array
-   const safeSkills = Array.isArray(skills)
-    ? skills
-    : [skills];
+   if(!Array.isArray(skills)){
+    skills = [skills];
+   }
 
-
-   safeSkills.forEach(skill=>{
+   skills.forEach(skill=>{
 
     if(!skill) return;
 
@@ -398,12 +396,10 @@ exports.getWorkerCountBySkill = async (req,res)=>{
 
  catch(error){
 
-  console.log("🔥 COUNT ERROR:", error); // CHECK THIS IN TERMINAL
+  console.log("COUNT ERROR:", error); // IMPORTANT
 
   res.status(500).json({
-
    message:error.message
-
   });
 
  }
@@ -423,7 +419,7 @@ exports.searchWorkers = async (req,res)=>{
 
   const { category, location, search, userId } = req.query;
 
-  console.log("SEARCH VALUE:", search); // DEBUG
+  // DEBUG
 
   const query = {};
 
@@ -485,7 +481,7 @@ exports.searchWorkers = async (req,res)=>{
 
   }
 
-  console.log("FINAL QUERY:", query); // DEBUG
+   // DEBUG
 
 
   const workers = await Worker.find(query)
@@ -506,6 +502,44 @@ exports.searchWorkers = async (req,res)=>{
  catch(error){
 
   console.log("ERROR:",error);
+
+  res.status(500).json({
+   message:error.message
+  });
+
+ }
+
+};
+
+exports.syncWorkerSkills = async (req,res)=>{
+
+ try{
+
+  const { userId, skills } = req.body;
+
+  const updatedWorker = await Worker.findOneAndUpdate(
+
+   { userId:userId },
+
+   { skills:skills },
+
+   { returnDocument:"after" }
+
+  );
+
+  if(!updatedWorker){
+   return res.status(404).json({
+    message:"Worker not found"
+   });
+  }
+
+  res.json(updatedWorker);
+
+ }
+
+ catch(error){
+
+  console.log("SYNC ERROR:", error);
 
   res.status(500).json({
    message:error.message

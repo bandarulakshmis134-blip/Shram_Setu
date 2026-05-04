@@ -1,6 +1,5 @@
 const Job = require("../models/Job");
 
-
 /*
 ============================
 CREATE JOB
@@ -13,19 +12,15 @@ exports.createJob = async (req,res)=>{
  try{
 
   const {
-
    title,
    category,
    location,
    budget,
    urgency,
    description
-
   } = req.body;
 
-
   let expiryDate = new Date();
-
 
   /*
   set expiry time
@@ -33,38 +28,31 @@ exports.createJob = async (req,res)=>{
 
   if(urgency === "urgent"){
 
-   // expires in 5 hours
    expiryDate.setHours(
-
     expiryDate.getHours() + 5
-
    );
 
   }
 
   else if(urgency === "24hrs"){
 
-   // expires in 24 hours
    expiryDate.setHours(
-
     expiryDate.getHours() + 24
-
    );
 
   }
 
   else{
 
-   // flexible → expires in 3 days
    expiryDate.setDate(
-
     expiryDate.getDate() + 3
-
    );
 
   }
 
-
+  /*
+  🔥 IMPORTANT FIX → attach user
+  */
   const newJob = new Job({
 
    title,
@@ -74,21 +62,20 @@ exports.createJob = async (req,res)=>{
    budget:Number(budget),
 
    urgency,
-
    description,
 
-   expiryDate
+   expiryDate,
+
+   /* 🔥 NEW */
+   postedBy: req.user.id
 
   });
 
-
   await newJob.save();
-
 
   res.status(201).json({
 
    message:"Job created successfully",
-
    job:newJob
 
   });
@@ -99,17 +86,13 @@ exports.createJob = async (req,res)=>{
 
   console.log("CREATE JOB ERROR:",error);
 
-
   res.status(500).json({
-
    message:error.message
-
   });
 
  }
 
 };
-
 
 
 
@@ -130,45 +113,31 @@ exports.getJobs = async (req,res)=>{
 
   const skip = (page - 1) * limit;
 
-
   /*
   only fetch active jobs
   */
 
   const jobs = await Job.find({
-
    expiryDate:{ $gt:new Date() }
-
   })
-
   .sort({ createdAt:-1 })
-
   .skip(skip)
-
   .limit(limit);
-
-
 
   /*
   count active jobs
   */
 
   const totalJobs = await Job.countDocuments({
-
    expiryDate:{ $gt:new Date() }
-
   });
-
-
 
   res.json({
 
    jobs,
 
    totalPages: Math.ceil(
-
     totalJobs / limit
-
    ),
 
    currentPage: page
@@ -181,11 +150,47 @@ exports.getJobs = async (req,res)=>{
 
   console.log("GET JOB ERROR:",error);
 
+  res.status(500).json({
+   message:error.message
+  });
+
+ }
+
+};
+
+
+
+/*
+============================
+GET MY JOBS (🔥 NEW)
+============================
+Used for Dashboard
+*/
+
+exports.getMyJobs = async (req,res)=>{
+
+ try{
+
+  const jobs = await Job.find({
+
+   postedBy: req.params.userId,
+
+   /* only active */
+   expiryDate:{ $gt:new Date() }
+
+  })
+  .sort({ createdAt:-1 });
+
+  res.json(jobs);
+
+ }
+
+ catch(error){
+
+  console.log("GET MY JOBS ERROR:",error);
 
   res.status(500).json({
-
    message:error.message
-
   });
 
  }

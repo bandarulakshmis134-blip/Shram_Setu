@@ -2,9 +2,11 @@ import { useEffect, useState, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import socket from "../socket";
 import axios from "axios";
-import {Logo} from "../components/Logo"; // ✅ IMPORT YOUR LOGO COMPONENT
+import { Logo } from "../components/Logo";
+import RequestModal from "../components/findWorkers/RequestModal";
 
 const Messages = () => {
+
   const location = useLocation();
   const user = JSON.parse(sessionStorage.getItem("user") || "null");
 
@@ -14,8 +16,9 @@ const Messages = () => {
   const [selectedUser, setSelectedUser] = useState(
     location.state?.user || null
   );
-  const [onlineUsers, setOnlineUsers] = useState({});
   const [search, setSearch] = useState("");
+  const [unreadCounts, setUnreadCounts] = useState({});
+  const [showModal, setShowModal] = useState(false);
 
   const inputRef = useRef(null);
   const messagesEndRef = useRef(null);
@@ -25,12 +28,8 @@ const Messages = () => {
   AUTO SCROLL
   =====================
   */
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
   useEffect(() => {
-    scrollToBottom();
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   /*
@@ -45,33 +44,38 @@ const Messages = () => {
 
   /*
   =====================
-  SOCKET LISTENERS
+  RECEIVE MESSAGE
   =====================
   */
   useEffect(() => {
+
     const handleReceive = (msg) => {
+
       if (msg.senderId === user._id) return;
-      setMessages((prev) => [...prev, msg]);
-    };
 
-    const handleOnline = (id) => {
-      setOnlineUsers((prev) => ({ ...prev, [id]: true }));
-    };
+      if (selectedUser && msg.senderId === selectedUser._id) {
 
-    const handleOffline = (id) => {
-      setOnlineUsers((prev) => ({ ...prev, [id]: false }));
+        setMessages((prev) => [...prev, msg]);
+
+        socket.emit("messageSeen", {
+          senderId: msg.senderId,
+          receiverId: user._id
+        });
+
+      } else {
+
+        setUnreadCounts((prev) => ({
+          ...prev,
+          [msg.senderId]: (prev[msg.senderId] || 0) + 1
+        }));
+
+      }
     };
 
     socket.on("receiveMessage", handleReceive);
-    socket.on("userOnline", handleOnline);
-    socket.on("userOffline", handleOffline);
+    return () => socket.off("receiveMessage", handleReceive);
 
-    return () => {
-      socket.off("receiveMessage", handleReceive);
-      socket.off("userOnline", handleOnline);
-      socket.off("userOffline", handleOffline);
-    };
-  }, [user?._id]);
+  }, [user?._id, selectedUser]);
 
   /*
   =====================
@@ -79,21 +83,16 @@ const Messages = () => {
   =====================
   */
   useEffect(() => {
+
     if (!user?._id) return;
 
-    const fetchUsers = async () => {
-      try {
-        const res = await axios.get(
-          "http://localhost:5000/api/messages/conversations",
-          { params: { userId: user._id } }
-        );
-        setUsers(res.data || []);
-      } catch (err) {
-        console.log(err);
-      }
-    };
+    axios
+      .get("http://localhost:5000/api/messages/conversations", {
+        params: { userId: user._id },
+      })
+      .then((res) => setUsers(res.data || []))
+      .catch((err) => console.log(err));
 
-    fetchUsers();
   }, [user]);
 
   /*
@@ -102,28 +101,38 @@ const Messages = () => {
   =====================
   */
   useEffect(() => {
+
     if (!selectedUser || !user?._id) return;
 
-    const fetchMessages = async () => {
-      try {
-        const res = await axios.get(
-          "http://localhost:5000/api/messages",
-          {
-            params: {
-              userId: user._id,
-              receiverId: selectedUser._id,
-            },
-          }
-        );
-        setMessages(res.data || []);
-      } catch (err) {
-        console.log(err);
-      }
-    };
+    axios
+      .get("http://localhost:5000/api/messages", {
+        params: {
+          userId: user._id,
+          receiverId: selectedUser._id,
+        },
+      })
+      .then((res) => setMessages(res.data || []))
+      .catch((err) => console.log(err));
 
-    fetchMessages();
     inputRef.current?.focus();
+
   }, [selectedUser, user?._id]);
+
+  /*
+  =====================
+  SELECT USER
+  =====================
+  */
+  const handleSelectUser = (u) => {
+
+    setSelectedUser(u);
+
+    setUnreadCounts((prev) => ({
+      ...prev,
+      [u._id]: 0
+    }));
+
+  };
 
   /*
   =====================
@@ -131,6 +140,7 @@ const Messages = () => {
   =====================
   */
   const sendMessage = () => {
+
     if (!text.trim() || !selectedUser) return;
 
     const msg = {
@@ -138,42 +148,67 @@ const Messages = () => {
       receiverId: selectedUser._id,
       text,
       createdAt: new Date().toISOString(),
+      seen: false
     };
 
     setMessages((prev) => [...prev, msg]);
     socket.emit("sendMessage", msg);
     setText("");
+
   };
 
+  /*
+  =====================
+  FILTER USERS
+  =====================
+  */
   const filteredUsers = users.filter((u) =>
-    u.name.toLowerCase().includes(search.toLowerCase())
+    (u.name || "")
+      .toLowerCase()
+      .includes((search || "").toLowerCase())
   );
 
-  const isOnline = selectedUser
-    ? onlineUsers[selectedUser._id]
-    : false;
+  /*
+  =====================
+  FORMAT TIME
+  =====================
+  */
+  const formatTime = (time) => {
+    if (!time) return "";
+    return new Date(time).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+  };
+
+  /*
+  =====================
+  SAFE WORKER FOR MODAL (🔥 FIX)
+  =====================
+  */
+  const modalWorker = selectedUser
+    ? {
+        _id: selectedUser.workerId || selectedUser._id, // ✅ fallback fix
+        firstName: selectedUser.name
+      }
+    : null;
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex h-[calc(100vh-64px)] bg-gray-100 overflow-hidden">
 
       {/* SIDEBAR */}
       <div className="w-[320px] bg-white border-r overflow-y-auto">
 
-        {/* 🔥 HEADER WITH LOGO COMPONENT */}
         <div className="p-4 border-b flex items-center gap-2">
-          <div className="w-7 h-7 flex items-center justify-center">
-            <Logo />
-          </div>
+          <Logo />
           <h2 className="text-lg font-bold">Messages</h2>
         </div>
 
-        {/* SEARCH */}
         <div className="p-3 border-b">
           <input
-            type="text"
-            placeholder="Search..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search..."
             className="w-full border px-3 py-2 rounded text-sm"
           />
         </div>
@@ -181,18 +216,32 @@ const Messages = () => {
         {filteredUsers.map((u) => (
           <div
             key={u._id}
-            onClick={() => setSelectedUser(u)}
+            onClick={() => handleSelectUser(u)}
             className={`p-3 border-b cursor-pointer hover:bg-gray-100 ${
               selectedUser?._id === u._id ? "bg-gray-100" : ""
             }`}
           >
-            <p className="font-medium">{u.name}</p>
+            <div className="flex justify-between items-center">
+
+              <div className="flex items-center gap-2">
+
+                <p className="font-medium">{u.name}</p>
+              </div>
+
+              {unreadCounts[u._id] > 0 && (
+                <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded-full">
+                  {unreadCounts[u._id]}
+                </span>
+              )}
+
+            </div>
           </div>
         ))}
+
       </div>
 
       {/* CHAT */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col overflow-hidden">
 
         {!selectedUser ? (
           <div className="flex items-center justify-center h-full text-gray-400">
@@ -200,40 +249,59 @@ const Messages = () => {
           </div>
         ) : (
           <>
-            <div className="p-4 border-b bg-white">
-              <h3 className="font-semibold">{selectedUser.name}</h3>
-              <p className="text-xs text-gray-500">
-                {isOnline ? "Online" : "Offline"}
-              </p>
+            {/* HEADER */}
+            <div className="p-4 border-b bg-white flex justify-between items-center">
+
+              <h3 className="font-semibold">
+                {selectedUser.name}
+              </h3>
+
+              <button
+                onClick={() => setShowModal(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-1 rounded"
+              >
+                Send Request
+              </button>
+
             </div>
 
+            {/* MESSAGES */}
             <div className="flex-1 p-4 overflow-y-auto space-y-2">
+
               {messages.map((m, i) => {
+
                 const isMine = m.senderId === user._id;
 
                 return (
-                  <div
-                    key={i}
-                    className={`flex ${
-                      isMine ? "justify-end" : "justify-start"
-                    }`}
-                  >
-                    <div
-                      className={`px-3 py-2 rounded-lg text-sm max-w-xs ${
-                        isMine
-                          ? "bg-blue-600 text-white"
-                          : "bg-white border"
-                      }`}
-                    >
-                      {m.text}
+                  <div key={i} className={`flex ${isMine ? "justify-end" : "justify-start"}`}>
+
+                    <div className="max-w-xs">
+
+                      <div className={`px-3 py-2 rounded-lg text-sm ${
+                        isMine ? "bg-blue-600 text-white" : "bg-white border"
+                      }`}>
+                        {m.text}
+                      </div>
+
+                      <div className="text-xs text-gray-400 mt-1 flex justify-end gap-1">
+                        {formatTime(m.createdAt)}
+                        {isMine && (
+                          <span>{m.seen ? "✔✔" : "✔"}</span>
+                        )}
+                      </div>
+
                     </div>
+
                   </div>
                 );
               })}
+
               <div ref={messagesEndRef} />
             </div>
 
+            {/* INPUT */}
             <div className="p-3 border-t bg-white flex gap-2">
+
               <input
                 ref={inputRef}
                 value={text}
@@ -242,16 +310,28 @@ const Messages = () => {
                 className="flex-1 border px-3 py-2 rounded"
                 placeholder="Type a message..."
               />
+
               <button
                 onClick={sendMessage}
                 className="bg-blue-600 text-white px-4 rounded"
               >
                 Send
               </button>
+
             </div>
           </>
         )}
+
       </div>
+
+      {/* 🔥 REQUEST MODAL */}
+      {showModal && modalWorker && (
+        <RequestModal
+          worker={modalWorker}
+          onClose={() => setShowModal(false)}
+        />
+      )}
+
     </div>
   );
 };

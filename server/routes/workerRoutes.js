@@ -9,72 +9,22 @@ const {
  deleteWorker,
  checkIfWorker,
  getWorkerCountBySkill,
- searchWorkers
+ searchWorkers,
+ syncWorkerSkills
 } = require("../controllers/workerController");
 
-
-/*
-=====================================
-REGISTER WORKER
-=====================================
-*/
 router.post("/register", registerWorker);
-
-
-/*
-=====================================
-CHECK IF USER IS WORKER
-=====================================
-*/
 router.get("/check/:userId", checkIfWorker);
-
-
-/*
-=====================================
-SEARCH WORKERS (VERY IMPORTANT FIX)
-=====================================
-*/
 router.get("/search", searchWorkers);
-
-
-/*
-=====================================
-TOP WORKERS
-=====================================
-*/
 router.get("/top-workers", getTopWorkers);
 
-
-/*
-=====================================
-GET WORKER BY ID
-=====================================
-*/
-router.get("/:id", getWorkerById);
-
-
-/*
-=====================================
-UPDATE SKILLS
-=====================================
-*/
+// 🔥 IMPORTANT: PUT routes BEFORE /:id
+router.put("/sync-skills", syncWorkerSkills);
 router.put("/update-skills", updateWorkerSkills);
 
-
-/*
-=====================================
-DELETE WORKER
-=====================================
-*/
-router.delete("/:id", deleteWorker);
-
-
-/*
-=====================================
-GET WORKER COUNT
-=====================================
-*/
 router.get("/count-by-skill", getWorkerCountBySkill);
 
+router.delete("/:id", deleteWorker);
+router.get("/:id", getWorkerById);
 
 module.exports = router;

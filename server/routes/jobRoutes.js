@@ -1,20 +1,31 @@
 const express = require("express");
-
 const router = express.Router();
 
 const {
-
  createJob,
- getJobs
-
+ getJobs,
+ getMyJobs
 } = require("../controllers/jobController");
+
 const { verifyToken } = require("../middleware/authMiddleware");
 
 
-router.post("/create",verifyToken, createJob);
+/*
+CREATE JOB
+*/
+router.post("/create", verifyToken, createJob);
 
-/* IMPORTANT */
+
+/*
+GET ALL JOBS (Marketplace)
+*/
 router.get("/", getJobs);
+
+
+/*
+🔥 GET MY JOBS (Dashboard)
+*/
+router.get("/my-jobs/:userId", getMyJobs);
 
 
 module.exports = router;
