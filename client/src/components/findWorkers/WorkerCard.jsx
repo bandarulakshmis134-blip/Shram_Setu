@@ -83,7 +83,7 @@ const WorkerCard = ({ worker }) => {
          },
         })
        }
-       className="p-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200"
+       className="p-2 bg-green-100 text-blue-600 rounded-lg hover:bg-green-200"
       >
        <MessageCircle size={18} />
       </button>

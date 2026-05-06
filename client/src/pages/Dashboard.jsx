@@ -8,6 +8,7 @@ import WorkerRequests from "../components/dashboard/WorkerRequests";
 import UpcomingWork from "../components/dashboard/UpcomingWork";
 import OrderHistory from "../components/dashboard/OrderHistory";
 import PostedJobs from "../components/dashboard/PostedJobs";
+import MyApplications from "../components/dashboard/MyApplications";
 
 const Dashboard = () => {
 
@@ -33,7 +34,7 @@ const Dashboard = () => {
 
           <div className="grid grid-cols-3 gap-6 mt-6">
 
-            <div className="col-span-2">
+            <div className="col-span-2 space-y-6">
               <Applications />
                <PostedJobs /> 
               <ActiveRequests />
@@ -52,8 +53,9 @@ const Dashboard = () => {
 
           <div className="grid grid-cols-3 gap-6 mt-6">
 
-            <div className="col-span-2">
+            <div className="col-span-2 space-y-6">
               <WorkerRequests />
+              <MyApplications />
               <UpcomingWork />
               <OrderHistory />
             </div>

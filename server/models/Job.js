@@ -32,6 +32,11 @@ const jobSchema = new mongoose.Schema({
   type:String,
   required:true
  },
+ status: {
+  type: String,
+  enum: ["active", "accepted"],
+  default: "active"
+},
 
  expiryDate:{
   type:Date,

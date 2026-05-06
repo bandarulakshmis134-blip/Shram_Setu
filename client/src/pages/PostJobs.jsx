@@ -6,226 +6,210 @@ import PostJobModal from "../components/PostJobModal";
 
 const PostJobs = () => {
 
- const [openModal, setOpenModal] = useState(false);
+  const [openModal, setOpenModal] = useState(false);
+  const [jobs, setJobs] = useState([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(true);
 
- const [jobs, setJobs] = useState([]);
+  /*
+  ==========================
+  GET LOGGED-IN USER
+  ==========================
+  */
+  const user = JSON.parse(
+    sessionStorage.getItem("user") || "null"
+  );
 
- const [page, setPage] = useState(1);
+  /*
+  ==========================
+  FETCH JOBS FROM DATABASE
+  ==========================
+  */
+  const fetchJobs = useCallback(async () => {
 
- const [totalPages, setTotalPages] = useState(1);
+    try {
 
- const [loading, setLoading] = useState(true);
+      setLoading(true);
 
+      const res = await axios.get(
+        `http://localhost:5000/api/jobs?page=${page}`
+      );
 
+      console.log("Jobs from DB:", res.data);
 
- /*
- ==========================
- FETCH JOBS FROM DATABASE
- ==========================
- */
+      /*
+      🔥 FILTER OUT OWN JOBS (ONLY CHANGE)
+      */
+      const filteredJobs = res.data.jobs.filter((job) => {
 
- const fetchJobs = useCallback(async () => {
+        const ownerId =
+          typeof job.postedBy === "object"
+            ? job.postedBy?._id
+            : job.postedBy;
 
-  try {
+        return ownerId?.toString() !== user?._id?.toString();
+      });
 
-   setLoading(true);
+      /*
+      KEEP EVERYTHING ELSE SAME
+      */
+      const formattedJobs = filteredJobs.map(job => ({
 
-   const res = await axios.get(
-    `http://localhost:5000/api/jobs?page=${page}`
-   );
+        ...job,
 
-   console.log("Jobs from DB:", res.data);
+        title: job.title || "No title",
+        category: job.category || "General",
+        location: job.location || "Location not specified",
 
+        budget: job.budget
+          ? `₹${job.budget}`
+          : "Budget not specified",
 
-   // format DB jobs for JobCard UI
-   const formattedJobs = res.data.jobs.map(job => ({
+        posted: "Recently posted",
 
-    title: job.title || "No title",
+        type: job.urgency || "flexible",
 
-    category: job.category || "General",
+        label:
+          job.urgency === "urgent"
+            ? "Urgent"
+            : job.urgency === "24hrs"
+            ? "24 Hours"
+            : "Flexible"
 
-    location: job.location || "Location not specified",
+      }));
 
-    budget: job.budget
-     ? `₹${job.budget}`
-     : "Budget not specified",
+      setJobs(formattedJobs);
+      setTotalPages(res.data.totalPages || 1);
 
-    posted: "Recently posted",
+    }
 
-    type: job.urgency || "flexible",
+    catch (error) {
 
-    label:
-     job.urgency === "urgent"
-      ? "Urgent"
-      : job.urgency === "24hrs"
-      ? "24 Hours"
-      : "Flexible"
+      console.log("Fetch jobs error:", error);
 
-   }));
+    }
 
+    finally {
 
-   setJobs(formattedJobs);
+      setLoading(false);
 
-   setTotalPages(res.data.totalPages || 1);
+    }
 
-  }
+  }, [page, user?._id]);
 
-  catch (error) {
+  /*
+  ==========================
+  RUN WHEN PAGE CHANGES
+  ==========================
+  */
+  useEffect(() => {
 
-   console.log("Fetch jobs error:", error);
+    fetchJobs();
 
-  }
+  }, [fetchJobs]);
 
-  finally {
+  /*
+  ==========================
+  AFTER POSTING NEW JOB
+  ==========================
+  */
+  const handleAddJob = () => {
 
-   setLoading(false);
+    fetchJobs();
 
-  }
+  };
 
- }, [page]);
+  /*
+  ==========================
+  UI (UNCHANGED)
+  ==========================
+  */
+  return (
 
+    <div className="min-h-screen bg-gray-100">
 
+      <div className="flex justify-between items-center px-6 py-6">
 
- /*
- ==========================
- RUN WHEN PAGE CHANGES
- ==========================
- */
+        <div>
 
- useEffect(() => {
+          <h1 className="text-2xl font-bold">
+            Job Marketplace
+          </h1>
 
-  fetchJobs();
+          <p className="text-gray-500">
+            Find open opportunities posted by clients
+          </p>
 
- }, [fetchJobs]);
+        </div>
 
+        <button
+          onClick={() => setOpenModal(true)}
+          className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700"
+        >
+          + Post a Job
+        </button>
 
+      </div>
 
- /*
- ==========================
- AFTER POSTING NEW JOB
- ==========================
- */
+      <div className="grid md:grid-cols-2 gap-8 px-6 pb-6">
 
- const handleAddJob = () => {
+        {loading ? (
 
-  fetchJobs(); // reload jobs
+          <p>Loading jobs...</p>
 
- };
+        ) : jobs.length === 0 ? (
 
+          <p>No jobs found</p>
 
+        ) : (
 
- /*
- ==========================
- UI
- ==========================
- */
+          jobs.map((job) => (
 
- return (
+            <JobCard
+              key={job._id}
+              job={job}
+            />
 
-  <div className="min-h-screen bg-gray-100">
+          ))
 
+        )}
 
-   {/* Header */}
+      </div>
 
-   <div className="flex justify-between items-center px-6 py-6">
+      <div className="flex justify-center gap-4 pb-10">
 
-    <div>
+        <button
+          disabled={page === 1}
+          onClick={() => setPage(page - 1)}
+          className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+        >
+          Previous
+        </button>
 
-     <h1 className="text-2xl font-bold">
-      Job Marketplace
-     </h1>
+        <span className="px-4 py-2">
+          Page {page} of {totalPages}
+        </span>
 
-     <p className="text-gray-500">
-      Find open opportunities posted by clients
-     </p>
+        <button
+          disabled={page === totalPages}
+          onClick={() => setPage(page + 1)}
+          className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+        >
+          Next
+        </button>
+
+      </div>
+
+      <PostJobModal
+        isOpen={openModal}
+        onClose={() => setOpenModal(false)}
+        onPost={handleAddJob}
+      />
 
     </div>
 
-
-    <button
-     onClick={() => setOpenModal(true)}
-     className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700"
-    >
-
-     + Post a Job
-
-    </button>
-
-   </div>
-
-
-
-   {/* Job Cards */}
-
-   <div className="grid md:grid-cols-2 gap-8 px-6 pb-6">
-
-    {loading ? (
-
-     <p>Loading jobs...</p>
-
-    ) : jobs.length === 0 ? (
-
-     <p>No jobs found</p>
-
-    ) : (
-
-     jobs.map((job, index) => (
-
-      <JobCard
-       key={index}
-       job={job}
-      />
-
-     ))
-
-    )}
-
-   </div>
-
-
-
-   {/* Pagination */}
-
-   <div className="flex justify-center gap-4 pb-10">
-
-    <button
-     disabled={page === 1}
-     onClick={() => setPage(page - 1)}
-     className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
-    >
-     Previous
-    </button>
-
-
-    <span className="px-4 py-2">
-     Page {page} of {totalPages}
-    </span>
-
-
-    <button
-     disabled={page === totalPages}
-     onClick={() => setPage(page + 1)}
-     className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
-    >
-     Next
-    </button>
-
-   </div>
-
-
-
-   {/* Post Job Modal */}
-
-   <PostJobModal
-    isOpen={openModal}
-    onClose={() => setOpenModal(false)}
-    onPost={handleAddJob}
-   />
-
-
-  </div>
-
- );
+  );
 
 };
 

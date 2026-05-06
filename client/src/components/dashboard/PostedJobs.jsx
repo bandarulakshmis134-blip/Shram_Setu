@@ -14,6 +14,7 @@ const PostedJobs = () => {
     if (!user?._id) return;
 
     const fetchJobs = async () => {
+
       try {
 
         const res = await axios.get(
@@ -22,9 +23,17 @@ const PostedJobs = () => {
 
         setJobs(res.data || []);
 
-      } catch (error) {
-        console.log("FETCH JOBS ERROR:", error);
       }
+
+      catch (error) {
+
+        console.log(
+          "FETCH JOBS ERROR:",
+          error
+        );
+
+      }
+
     };
 
     fetchJobs();
@@ -32,19 +41,24 @@ const PostedJobs = () => {
   }, [user]);
 
   /*
-  🔥 ONLY TAKE LATEST 2
+  ONLY TAKE LATEST 2
   */
   const latestJobs = jobs.slice(0, 2);
 
   return (
+
     <div className="bg-white p-5 rounded-xl shadow mb-6">
 
       <div className="flex justify-between items-center mb-4">
-        <h2 className="font-semibold">My Posted Jobs</h2>
+
+        <h2 className="font-semibold">
+          My Posted Jobs
+        </h2>
 
         <button className="text-blue-600 text-sm">
           View All
         </button>
+
       </div>
 
       {latestJobs.length === 0 ? (
@@ -63,6 +77,7 @@ const PostedJobs = () => {
           >
 
             <div>
+
               <p className="font-medium">
                 {job.title}
               </p>
@@ -74,17 +89,32 @@ const PostedJobs = () => {
               <p className="text-sm text-gray-400">
                 Budget: ₹{job.budget}
               </p>
+
             </div>
 
             <div className="flex items-center gap-3">
 
-              <span className="text-xs px-2 py-1 rounded bg-green-100 text-green-600">
-                Active
-              </span>
+              {/* STATUS */}
+              <span
+                className={`text-xs px-2 py-1 rounded 
 
-              <button className="text-blue-600 text-sm">
-                View
-              </button>
+                ${
+                  job.status === "accepted"
+
+                    ? "bg-green-100 text-green-600"
+
+                    : "bg-blue-100 text-blue-600"
+
+                }`}
+              >
+
+                {job.status === "accepted"
+
+                  ? "Accepted"
+
+                  : "Active"}
+
+              </span>
 
             </div>
 
@@ -95,7 +125,9 @@ const PostedJobs = () => {
       )}
 
     </div>
+
   );
+
 };
 
 export default PostedJobs;

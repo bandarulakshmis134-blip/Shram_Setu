@@ -58,14 +58,26 @@ const PostJobModal = ({ isOpen, onClose, onPost }) => {
 
       /*
       ==========================
-      GET USER TOKEN
+      GET USER + TOKEN (FIXED)
       ==========================
       */
-      const user = JSON.parse(
-        sessionStorage.getItem("user") || "null"
-      );
+      const stored = sessionStorage.getItem("user");
 
-      const token = user?.token;
+      if (!stored) {
+        alert("Please login again");
+        return;
+      }
+
+      let user;
+      try {
+        user = JSON.parse(stored);
+      } catch {
+        alert("Session error. Please login again");
+        return;
+      }
+
+      // 🔥 support both formats (important)
+      const token = user?.token || user?.accessToken;
 
       if (!token) {
         alert("Please login again");
@@ -83,7 +95,8 @@ const PostJobModal = ({ isOpen, onClose, onPost }) => {
         {
           headers: {
             Authorization: `Bearer ${token}`
-          }
+          },
+          withCredentials: true // safe for refresh flow
         }
       );
 
@@ -103,28 +116,24 @@ const PostJobModal = ({ isOpen, onClose, onPost }) => {
         description: ""
       });
 
-      /*
-      ==========================
-      🔥 IMPORTANT (REFRESH DASHBOARD)
-      ==========================
-      */
-      if (onPost) {
-        onPost();
-      }
+      if (onPost) onPost();
 
-      /*
-      CLOSE MODAL
-      */
       onClose();
 
     } catch (error) {
 
       console.log(
-        error.response?.data ||
-        error.message
+        "POST JOB ERROR:",
+        error.response?.data || error.message
       );
 
-      alert("Error submitting the form");
+      // better error feedback
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        alert("Session expired. Please login again");
+      } else {
+        alert("Error submitting the form");
+      }
+
     }
   };
 

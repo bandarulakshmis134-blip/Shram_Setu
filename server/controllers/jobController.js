@@ -1,4 +1,5 @@
 const Job = require("../models/Job");
+const Application = require("../models/Application");
 
 /*
 ============================
@@ -51,7 +52,7 @@ exports.createJob = async (req,res)=>{
   }
 
   /*
-  🔥 IMPORTANT FIX → attach user
+  attach user
   */
   const newJob = new Job({
 
@@ -66,7 +67,6 @@ exports.createJob = async (req,res)=>{
 
    expiryDate,
 
-   /* 🔥 NEW */
    postedBy: req.user.id
 
   });
@@ -84,7 +84,10 @@ exports.createJob = async (req,res)=>{
 
  catch(error){
 
-  console.log("CREATE JOB ERROR:",error);
+  console.log(
+   "CREATE JOB ERROR:",
+   error
+  );
 
   res.status(500).json({
    message:error.message
@@ -101,6 +104,7 @@ exports.createJob = async (req,res)=>{
 GET JOBS WITH PAGINATION
 ============================
 Only returns jobs that are NOT expired
+and NOT accepted already
 */
 
 exports.getJobs = async (req,res)=>{
@@ -114,23 +118,59 @@ exports.getJobs = async (req,res)=>{
   const skip = (page - 1) * limit;
 
   /*
-  only fetch active jobs
+  GET ACCEPTED JOB IDS
   */
+  const acceptedApplications =
+   await Application.find({
 
+    status:"accepted"
+
+   });
+
+  const acceptedJobIds =
+   acceptedApplications.map(
+    (app)=>app.job
+   );
+
+  /*
+  FETCH AVAILABLE JOBS
+  */
   const jobs = await Job.find({
-   expiryDate:{ $gt:new Date() }
+
+   expiryDate:{ $gt:new Date() },
+
+   _id:{
+    $nin: acceptedJobIds
+   }
+
   })
+
+  .populate(
+   "postedBy",
+   "firstName"
+  )
+
   .sort({ createdAt:-1 })
+
   .skip(skip)
+
   .limit(limit);
 
   /*
-  count active jobs
+  TOTAL AVAILABLE JOBS
   */
+  const totalJobs =
+   await Job.countDocuments({
 
-  const totalJobs = await Job.countDocuments({
-   expiryDate:{ $gt:new Date() }
-  });
+    expiryDate:{
+     $gt:new Date()
+    },
+
+    _id:{
+     $nin: acceptedJobIds
+    }
+
+   });
 
   res.json({
 
@@ -148,7 +188,10 @@ exports.getJobs = async (req,res)=>{
 
  catch(error){
 
-  console.log("GET JOB ERROR:",error);
+  console.log(
+   "GET JOB ERROR:",
+   error
+  );
 
   res.status(500).json({
    message:error.message
@@ -162,7 +205,7 @@ exports.getJobs = async (req,res)=>{
 
 /*
 ============================
-GET MY JOBS (🔥 NEW)
+GET MY JOBS
 ============================
 Used for Dashboard
 */
@@ -175,10 +218,12 @@ exports.getMyJobs = async (req,res)=>{
 
    postedBy: req.params.userId,
 
-   /* only active */
-   expiryDate:{ $gt:new Date() }
+   expiryDate:{
+    $gt:new Date()
+   }
 
   })
+
   .sort({ createdAt:-1 });
 
   res.json(jobs);
@@ -187,7 +232,10 @@ exports.getMyJobs = async (req,res)=>{
 
  catch(error){
 
-  console.log("GET MY JOBS ERROR:",error);
+  console.log(
+   "GET MY JOBS ERROR:",
+   error
+  );
 
   res.status(500).json({
    message:error.message

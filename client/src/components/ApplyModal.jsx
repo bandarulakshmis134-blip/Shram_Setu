@@ -6,10 +6,10 @@ const ApplyModal = ({ isOpen, onClose, onConfirm }) => {
   return (
     <div className="fixed inset-0 backdrop-blur-sm bg-white/30 flex items-center justify-center z-50">
 
-      <div className="bg-white rounded-2xl p-15 w-500px text-center shadow-xl">
+      <div className="bg-white rounded-2xl p-10 w-480px text-center shadow-xl">
 
         {/* Icon */}
-        <div className="flex justify-center mb-4 text-blue-500">
+        <div className="flex justify-center mb-5 text-blue-500">
           <FaBriefcase size={32} />
         </div>
 
@@ -18,23 +18,23 @@ const ApplyModal = ({ isOpen, onClose, onConfirm }) => {
           Apply for Job
         </h2>
 
-        <p className="text-gray-500 text-sm mt-2">
+        <p className="text-gray-500 text-sm mt-3">
           Send your profile to the client?
         </p>
 
         {/* Buttons */}
-        <div className="flex gap-4 mt-6">
+        <div className="flex gap-4 mt-8">
 
           <button
             onClick={onClose}
-            className="w-full border border-gray-300  px-8 rounded-lg hover:bg-gray-100"
+            className="w-full border border-gray-300 py-2.5 rounded-lg hover:bg-gray-100"
           >
             Cancel
           </button>
 
           <button
             onClick={onConfirm}
-            className="w-full bg-blue-600 text-white  px-8 rounded-lg hover:bg-blue-700"
+            className="w-full bg-blue-600 text-white py-2.5 rounded-lg hover:bg-blue-700"
           >
             Send Profile
           </button>

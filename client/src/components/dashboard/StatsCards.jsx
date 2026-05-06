@@ -5,18 +5,16 @@ const StatsCards = ({ type }) => {
       ? [
           { title: "Total Workers Hired", value: 15 },
           { title: "Active Jobs", value: 3 },
-          { title: "Completed", value: 12 },
-          { title: "Worker Progress", value: "92%" },
+          { title: "Completed", value: 12 }
         ]
       : [
           { title: "New Requests", value: 5 },
           { title: "Completed", value: 28 },
-          { title: "Earnings", value: "₹24k" },
-          { title: "Avg Rating", value: 4.9 },
+          { title: "Avg Rating", value: 4.9 }
         ];
 
   return (
-    <div className="grid grid-cols-4 gap-6">
+    <div className="grid grid-cols-3 gap-6">
 
       {data.map((item, i) => (
         <div

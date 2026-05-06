@@ -13,7 +13,8 @@ const workerRoutes = require("./routes/workerRoutes");
 const jobRoutes = require("./routes/jobRoutes");
 const jobRequestRoutes = require("./routes/jobRequestRoutes");
 const messageRoutes = require("./routes/messageRoutes");
-
+const applicationRoutes = require("./routes/applicationRoutes");
+const scheduleRoutes = require("./routes/scheduleRoutes");
 const cookieParser = require("cookie-parser");
 const Message = require("./models/Message");
 const Worker = require("./models/Worker"); // 🔥 important
@@ -85,7 +86,8 @@ app.use("/api/workers", workerRoutes);
 app.use("/api/jobs", jobRoutes);
 app.use("/api/requests", jobRequestRoutes);
 app.use("/api/messages", messageRoutes);
-
+app.use("/api/applications", applicationRoutes);
+app.use("/api/schedules",scheduleRoutes);
 /*
 ========================
 TEST ROUTE

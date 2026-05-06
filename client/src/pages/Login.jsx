@@ -1,6 +1,8 @@
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { Logo } from "../components/Logo";
+import { Eye, EyeOff } from "lucide-react";
 
 const Login = () => {
 
@@ -11,15 +13,38 @@ const Login = () => {
     password: ""
   });
 
+  const [showPassword, setShowPassword] = useState(false);
+
+  /*
+  =====================
+  HANDLE INPUT
+  =====================
+  */
   const handleChange = (e) => {
+
+    const { name, value } = e.target;
+
+    // mobile → only numbers, max 10 digits
+    if (name === "mobile") {
+      const onlyNumbers = value.replace(/\D/g, "");
+      if (onlyNumbers.length <= 10) {
+        setFormData({ ...formData, mobile: onlyNumbers });
+      }
+      return;
+    }
 
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [name]: value
     });
 
   };
 
+  /*
+  =====================
+  HANDLE LOGIN
+  =====================
+  */
   const handleSubmit = async (e) => {
 
     e.preventDefault();
@@ -28,16 +53,23 @@ const Login = () => {
 
       const res = await axios.post(
         "http://localhost:5000/api/auth/login",
-        formData
+        {
+          mobile: Number(formData.mobile), // ✅ IMPORTANT
+          password: formData.password
+        },
+        {
+          withCredentials: true // ✅ needed for refresh token cookie
+        }
       );
 
       /*
-      🔥 IMPORTANT FIX (TOKEN STORAGE)
+      =====================
+      STORE USER + TOKEN
+      =====================
       */
-
       const userData = {
         ...res.data.user,
-        token: res.data.accessToken // ✅ FIX
+        token: res.data.accessToken
       };
 
       sessionStorage.setItem(
@@ -45,65 +77,117 @@ const Login = () => {
         JSON.stringify(userData)
       );
 
+      /*
+      =====================
+      SUCCESS FLOW
+      =====================
+      */
       alert("Login successful");
 
-      navigate("/");
+      navigate("/home"); // ✅ your requirement
 
     }
 
     catch (error) {
 
-      console.log(
-        error.response?.data || error.message
-      );
+      console.log("LOGIN ERROR:", error.response?.data || error.message);
 
-      alert("Login failed");
+      alert(
+        error.response?.data?.message || "Login failed"
+      );
 
     }
 
   };
 
+  /*
+  =====================
+  UI
+  =====================
+  */
   return (
 
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
 
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white p-8 rounded-xl shadow-md w-full max-w-sm"
-      >
+      <div className="bg-white w-full max-w-md rounded-2xl shadow-lg p-8">
 
-        <h2 className="text-xl font-bold mb-6 text-center">
-          Login
+        {/* LOGO */}
+        <div className="flex justify-center mb-4">
+          <Logo />
+        </div>
+
+        {/* TITLE */}
+        <h2 className="text-2xl font-bold text-center text-gray-800">
+          Welcome Back
         </h2>
 
-        {/* MOBILE */}
-        <input
-          type="number"
-          name="mobile"
-          placeholder="Mobile Number"
-          value={formData.mobile}
-          onChange={handleChange}
-          className="w-full border p-3 rounded mb-4"
-        />
+        <p className="text-center text-gray-500 mt-1 mb-6">
+          Login to continue to Shram Setu
+        </p>
 
-        {/* PASSWORD */}
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          value={formData.password}
-          onChange={handleChange}
-          className="w-full border p-3 rounded mb-4"
-        />
+        <form onSubmit={handleSubmit}>
 
-        <button
-          type="submit"
-          className="w-full bg-blue-600 text-white py-3 rounded hover:bg-blue-700"
-        >
-          Login
-        </button>
+          {/* MOBILE */}
+          <div className="mb-4">
+            <label className="text-sm text-gray-600">
+              Mobile Number
+            </label>
 
-      </form>
+            <input
+              type="text"
+              name="mobile"
+              value={formData.mobile}
+              onChange={handleChange}
+              placeholder="Enter 10-digit number"
+              className="w-full mt-1 px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          {/* PASSWORD */}
+          <div className="mb-6 relative">
+            <label className="text-sm text-gray-600">
+              Password
+            </label>
+
+            <input
+              type={showPassword ? "text" : "password"}
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              placeholder="********"
+              className="w-full mt-1 px-4 py-3 border rounded-lg pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+
+            <span
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-10 cursor-pointer text-gray-500"
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </span>
+          </div>
+
+          {/* BUTTON */}
+          <button
+            type="submit"
+            className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition"
+          >
+            Login
+          </button>
+
+        </form>
+
+        {/* FOOTER */}
+        <p className="text-center text-sm text-gray-500 mt-6">
+          Don’t have an account?{" "}
+          <span
+            onClick={() => navigate("/signup")}
+            className="text-blue-600 cursor-pointer font-medium"
+          >
+            Sign Up
+          </span>
+        </p>
+
+      </div>
 
     </div>
 
