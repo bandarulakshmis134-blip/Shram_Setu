@@ -3,20 +3,46 @@ const express = require("express");
 const router = express.Router();
 
 const {
-  getMySchedule
+
+  getWorkerSchedule,
+  getAdminSchedule
+
 } = require("../controllers/scheduleController");
 
 const {
+
   verifyToken
+
 } = require("../middleware/authMiddleware");
 
 /*
-GET MY SCHEDULE
+========================
+WORKER SCHEDULE
+========================
 */
 router.get(
-  "/my",
+
+  "/worker",
+
   verifyToken,
-  getMySchedule
+
+  getWorkerSchedule
+
+);
+
+/*
+========================
+ADMIN SCHEDULE
+========================
+*/
+router.get(
+
+  "/admin",
+
+  verifyToken,
+
+  getAdminSchedule
+
 );
 
 module.exports = router;

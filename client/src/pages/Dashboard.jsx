@@ -12,13 +12,26 @@ import MyApplications from "../components/dashboard/MyApplications";
 
 const Dashboard = () => {
 
-  const user = JSON.parse(sessionStorage.getItem("user") || "null");
+  const user = JSON.parse(
+    sessionStorage.getItem("user") || "null"
+  );
 
-  const isWorker = user?.skills?.length > 0;
+  /*
+  CHECK REAL WORKER
+  */
+  const isWorker =
+    Array.isArray(user?.skills) &&
+    user.skills.some(
+      (skill) =>
+        skill &&
+        skill.trim() !== ""
+    );
 
-  const [activePanel, setActivePanel] = useState("admin");
+  const [activePanel, setActivePanel] =
+    useState("admin");
 
   return (
+
     <div className="p-6 bg-gray-100 min-h-screen">
 
       <DashboardHeader
@@ -29,45 +42,65 @@ const Dashboard = () => {
 
       {/* ADMIN PANEL */}
       {activePanel === "admin" && (
+
         <>
+
           <StatsCards type="admin" />
 
           <div className="grid grid-cols-3 gap-6 mt-6">
 
             <div className="col-span-2 space-y-6">
+
               <Applications />
-               <PostedJobs /> 
+
+              <PostedJobs />
+
               <ActiveRequests />
+
             </div>
 
-            <CalendarCard />
+            <CalendarCard isWorker={false} />
 
           </div>
+
         </>
+
       )}
 
       {/* WORKER PANEL */}
-      {isWorker && activePanel === "worker" && (
+      {isWorker &&
+        activePanel === "worker" && (
+
         <>
+
           <StatsCards type="worker" />
 
           <div className="grid grid-cols-3 gap-6 mt-6">
 
             <div className="col-span-2 space-y-6">
+
               <WorkerRequests />
+
               <MyApplications />
+
               <UpcomingWork />
+
               <OrderHistory />
+
             </div>
 
-            <CalendarCard />
+            <CalendarCard isWorker={true} />
 
           </div>
+
         </>
+
       )}
 
     </div>
+
   );
+
 };
 
 export default Dashboard;

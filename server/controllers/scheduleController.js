@@ -1,61 +1,26 @@
 const Schedule = require("../models/Schedule");
-const User = require("../models/User");
 
 /*
 ========================
-GET MY SCHEDULE
+WORKER SCHEDULE
 ========================
 */
-exports.getMySchedule = async (req, res) => {
+exports.getWorkerSchedule = async (
+  req,
+  res
+) => {
 
   try {
 
-    /*
-    GET USER
-    */
-    const user = await User.findById(
-      req.user.id
-    );
+    const schedules = await Schedule.find({
 
-    let schedules = [];
+      worker: req.user.id
 
-    /*
-    ========================
-    WORKER PANEL
-    ========================
-    */
-    if (user.role === "worker") {
+    })
 
-      schedules = await Schedule.find({
+    .populate("job")
 
-        worker: req.user.id
-
-      })
-
-      .populate("job")
-
-      .sort({ createdAt: -1 });
-
-    }
-
-    /*
-    ========================
-    ADMIN / CLIENT PANEL
-    ========================
-    */
-    else {
-
-      schedules = await Schedule.find({
-
-        client: req.user.id
-
-      })
-
-      .populate("job")
-
-      .sort({ createdAt: -1 });
-
-    }
+    .sort({ createdAt: -1 });
 
     res.json(schedules);
 
@@ -64,7 +29,50 @@ exports.getMySchedule = async (req, res) => {
   catch (error) {
 
     console.log(
-      "SCHEDULE ERROR:",
+      "WORKER SCHEDULE ERROR:",
+      error
+    );
+
+    res.status(500).json({
+      message: error.message
+    });
+
+  }
+
+};
+
+
+
+/*
+========================
+ADMIN SCHEDULE
+========================
+*/
+exports.getAdminSchedule = async (
+  req,
+  res
+) => {
+
+  try {
+
+    const schedules = await Schedule.find({
+
+      client: req.user.id
+
+    })
+
+    .populate("job")
+
+    .sort({ createdAt: -1 });
+
+    res.json(schedules);
+
+  }
+
+  catch (error) {
+
+    console.log(
+      "ADMIN SCHEDULE ERROR:",
       error
     );
 

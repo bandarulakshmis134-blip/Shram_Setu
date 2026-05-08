@@ -4,11 +4,36 @@ const router = express.Router();
 
 const {
 
- createRequest
+  createRequest,
+  getWorkerRequests
 
-} = require("../controllers/jobRequestController");
+} = require(
+  "../controllers/jobRequestController"
+);
 
+const {
 
-router.post("/create",createRequest);
+  verifyToken
+
+} = require(
+  "../middleware/authMiddleware"
+);
+
+/*
+CREATE REQUEST
+*/
+router.post(
+  "/create",
+  createRequest
+);
+
+/*
+GET WORKER REQUESTS
+*/
+router.get(
+  "/worker",
+  verifyToken,
+  getWorkerRequests
+);
 
 module.exports = router;

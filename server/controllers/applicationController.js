@@ -8,26 +8,38 @@ APPLY FOR JOB
 ========================
 */
 exports.applyJob = async (req, res) => {
+
   try {
 
     const { jobId } = req.body;
+
     const userId = req.user.id;
 
-    // prevent duplicate
+    /*
+    PREVENT DUPLICATE
+    */
     const existing = await Application.findOne({
+
       job: jobId,
+
       worker: userId
+
     });
 
     if (existing) {
+
       return res.status(400).json({
         message: "Already applied"
       });
+
     }
 
     const application = new Application({
+
       job: jobId,
+
       worker: userId
+
     });
 
     await application.save();
@@ -36,10 +48,18 @@ exports.applyJob = async (req, res) => {
       message: "Applied successfully"
     });
 
-  } catch (error) {
-    res.status(500).json({ message: error.message });
   }
+
+  catch (error) {
+
+    res.status(500).json({
+      message: error.message
+    });
+
+  }
+
 };
+
 
 
 /*
@@ -48,26 +68,54 @@ GET APPLICATIONS FOR JOB OWNER
 (Admin panel)
 ========================
 */
-exports.getJobApplications = async (req, res) => {
+exports.getJobApplications = async (
+  req,
+  res
+) => {
+
   try {
 
     const userId = req.user.id;
 
-    const jobs = await Job.find({ postedBy: userId });
+    const jobs = await Job.find({
 
-    const jobIds = jobs.map(j => j._id);
+      postedBy: userId
 
-    const applications = await Application.find({
-      job: { $in: jobIds }
-    })
-    .populate("worker", "firstName profilePic")
-    .populate("job", "title");
+    });
+
+    const jobIds = jobs.map(
+      (j) => j._id
+    );
+
+    const applications =
+      await Application.find({
+
+        job: { $in: jobIds }
+
+      })
+
+      .populate(
+        "worker",
+        "firstName profilePic"
+      )
+
+      .populate(
+        "job",
+        "title"
+      );
 
     res.json(applications);
 
-  } catch (error) {
-    res.status(500).json({ message: error.message });
   }
+
+  catch (error) {
+
+    res.status(500).json({
+      message: error.message
+    });
+
+  }
+
 };
 
 
@@ -78,7 +126,10 @@ GET WORKER APPLICATIONS
 ========================
 AUTO DELETE INVALID JOBS
 */
-exports.getMyApplications = async (req, res) => {
+exports.getMyApplications = async (
+  req,
+  res
+) => {
 
   try {
 
@@ -87,10 +138,14 @@ exports.getMyApplications = async (req, res) => {
     /*
     GET APPLICATIONS
     */
-    let applications = await Application.find({
-      worker: userId
-    })
-    .populate("job");
+    let applications =
+      await Application.find({
+
+        worker: userId
+
+      })
+
+      .populate("job");
 
     /*
     REMOVE INVALID APPLICATIONS
@@ -101,10 +156,16 @@ exports.getMyApplications = async (req, res) => {
 
       if (!app.job) {
 
-        // 🔥 auto delete broken application
-        await Application.findByIdAndDelete(app._id);
+        /*
+        AUTO DELETE BROKEN APPLICATION
+        */
+        await Application.findByIdAndDelete(
+          app._id
+        );
 
-      } else {
+      }
+
+      else {
 
         validApplications.push(app);
 
@@ -121,7 +182,10 @@ exports.getMyApplications = async (req, res) => {
 
   catch (error) {
 
-    console.log("GET APPLICATIONS ERROR:", error);
+    console.log(
+      "GET APPLICATIONS ERROR:",
+      error
+    );
 
     res.status(500).json({
       message: error.message
@@ -132,12 +196,16 @@ exports.getMyApplications = async (req, res) => {
 };
 
 
+
 /*
 ========================
 UPDATE APPLICATION STATUS
 ========================
 */
-exports.updateApplicationStatus = async (req, res) => {
+exports.updateApplicationStatus = async (
+  req,
+  res
+) => {
 
   try {
 
@@ -159,17 +227,20 @@ exports.updateApplicationStatus = async (req, res) => {
     /*
     UPDATE APPLICATION
     */
-    const application = await Application.findByIdAndUpdate(
+    const application =
+      await Application.findByIdAndUpdate(
 
-      req.params.id,
+        req.params.id,
 
-      { status },
+        { status },
 
-      { new: true }
+        { new: true }
 
-    )
-    .populate("job")
-    .populate("worker");
+      )
+
+      .populate("job")
+
+      .populate("worker");
 
     if (!application) {
 
@@ -201,13 +272,14 @@ exports.updateApplicationStatus = async (req, res) => {
       /*
       AVOID DUPLICATE SCHEDULES
       */
-      const existingSchedule = await Schedule.findOne({
+      const existingSchedule =
+        await Schedule.findOne({
 
-        job: application.job?._id,
+          job: application.job?._id,
 
-        worker: application.worker?._id
+          worker: application.worker?._id
 
-      });
+        });
 
       if (!existingSchedule) {
 
@@ -217,13 +289,17 @@ exports.updateApplicationStatus = async (req, res) => {
 
           worker: application.worker?._id,
 
-          client: application.job?.postedBy,
+          /*
+          FIXED CLIENT ID
+          */
+          client:
+            application.job?.postedBy?._id ||
+            application.job?.postedBy,
 
           title: application.job?.title,
 
           /*
           CURRENT DATE
-          later you can add custom date picker
           */
           date: new Date()
 
@@ -259,20 +335,23 @@ exports.updateApplicationStatus = async (req, res) => {
 };
 
 
+
 /*
 ========================
 DELETE APPLICATION
 ========================
 */
-exports.deleteApplication = async (req, res) => {
+exports.deleteApplication = async (
+  req,
+  res
+) => {
 
   try {
 
-    const application = await Application.findById(
-      req.params.id
-    );
-
-    
+    const application =
+      await Application.findById(
+        req.params.id
+      );
 
     if (!application) {
 
@@ -283,7 +362,7 @@ exports.deleteApplication = async (req, res) => {
     }
 
     /*
-    TEMP REMOVE SECURITY CHECK
+    DELETE APPLICATION
     */
     await Application.findByIdAndDelete(
       req.params.id

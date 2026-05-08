@@ -1,6 +1,11 @@
-const DashboardHeader = ({ activePanel, setActivePanel, isWorker }) => {
+const DashboardHeader = ({
+  activePanel,
+  setActivePanel,
+  isWorker
+}) => {
 
   return (
+
     <div className="flex justify-between items-center mb-6">
 
       <h1 className="text-2xl font-bold">
@@ -8,6 +13,7 @@ const DashboardHeader = ({ activePanel, setActivePanel, isWorker }) => {
       </h1>
 
       {isWorker && (
+
         <div className="bg-white rounded-lg shadow p-1 flex">
 
           <button
@@ -33,10 +39,13 @@ const DashboardHeader = ({ activePanel, setActivePanel, isWorker }) => {
           </button>
 
         </div>
+
       )}
 
     </div>
+
   );
+
 };
 
 export default DashboardHeader;

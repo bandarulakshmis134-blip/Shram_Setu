@@ -79,3 +79,49 @@ exports.createRequest = async(req,res)=>{
  }
 
 };
+
+/*
+========================
+GET WORKER REQUESTS
+========================
+*/
+exports.getWorkerRequests = async (
+  req,
+  res
+) => {
+
+  try {
+
+    const requests =
+      await JobRequest.find({
+
+        workerId: req.user.id,
+
+        expiresAt: {
+          $gt: new Date()
+        }
+
+      })
+
+      .populate(
+        "userId",
+        "firstName"
+      )
+
+      .sort({ createdAt: -1 });
+
+    res.json(requests);
+
+  }
+
+  catch (error) {
+
+    console.log(error);
+
+    res.status(500).json({
+      message: error.message
+    });
+
+  }
+
+};

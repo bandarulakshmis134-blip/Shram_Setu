@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
-const CalendarCard = () => {
+const CalendarCard = ({ isWorker }) => {
 
   const [events, setEvents] = useState([]);
 
@@ -21,7 +21,9 @@ const CalendarCard = () => {
         );
 
         const res = await axios.get(
-          "http://localhost:5000/api/schedules/my",
+          isWorker
+  ? "http://localhost:5000/api/schedules/worker"
+  : "http://localhost:5000/api/schedules/admin",
           {
             headers: {
               Authorization: `Bearer ${user.token}`
@@ -89,7 +91,7 @@ const CalendarCard = () => {
 
     fetchSchedules();
 
-  }, []);
+  }, [isWorker]);
 
   /*
   =========================
