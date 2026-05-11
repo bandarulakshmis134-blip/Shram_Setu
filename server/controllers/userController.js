@@ -7,6 +7,7 @@ exports.updateUser = async (req,res)=>{
   const {
    firstName,
    email,
+   gender,
    age,
    mobile,
    location,
@@ -14,26 +15,33 @@ exports.updateUser = async (req,res)=>{
    skills
   } = req.body;
 
-  const updatedUser = await User.findByIdAndUpdate(
+ const updatedUser = await User.findByIdAndUpdate(
 
-   req.params.id,
+ req.params.id,
 
-   {
-    firstName,
-    email,
-    age,
-    mobile,
-    location,
-    profilePic,
-    skills
-   },
+ {
+  firstName,
+  email,
+  gender,
+  age,
+  mobile,
+  location,
+  profilePic,
 
-   {
-    returnDocument:"after",
-    runValidators:true
-   }
+  skills: (skills || []).filter(
+   (skill) =>
+    typeof skill === "string" &&
+    skill.trim() !== ""
+  )
 
-  );
+ },
+
+ {
+  returnDocument:"after",
+  runValidators:true
+ }
+
+);
 
   if(!updatedUser){
    return res.status(404).json({ message:"User not found" });

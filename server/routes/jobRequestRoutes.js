@@ -5,7 +5,11 @@ const router = express.Router();
 const {
 
   createRequest,
-  getWorkerRequests
+  getWorkerRequests,
+  getUserRequests,
+  getWorkerHistory,
+  updateRequestStatus,
+  deleteRequest
 
 } = require(
   "../controllers/jobRequestController"
@@ -34,6 +38,36 @@ router.get(
   "/worker",
   verifyToken,
   getWorkerRequests
+);
+
+/*
+GET WORKER HISTORY
+*/
+router.get(
+ "/worker-history",
+ verifyToken,
+ getWorkerHistory
+);
+
+/*
+GET USER REQUESTS
+*/
+router.get(
+ "/user",
+ verifyToken,
+ getUserRequests
+);
+
+router.put(
+ "/:id/status",
+ verifyToken,
+ updateRequestStatus
+);
+
+router.delete(
+  "/:id",
+  verifyToken,
+  deleteRequest
 );
 
 module.exports = router;

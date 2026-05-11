@@ -56,6 +56,7 @@ exports.signup = async (req,res)=>{
    firstName,
    lastName,
    email,
+   gender,
    age,
    aadhaar,
    location,
@@ -100,6 +101,8 @@ exports.signup = async (req,res)=>{
    lastName,
 
    email,
+
+   gender,
 
    age:Number(age),
 

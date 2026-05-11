@@ -2,40 +2,57 @@ const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema({
 
-profilePic:{
+ profilePic:{
+  type:String,
+  default:""
+ },
+
+ firstName: String,
+
+ lastName:String,
+
+ email: String,
+
+ age: Number,
+
+ /*
+ NEW
+ */
+ gender:{
+  type:String,
+  enum:["Male","Female","Other"],
+  default:"Other"
+ },
+
+ mobile: {
+  type: Number,
+  required: true
+ },
+
+ location: String,
+
+ aadhaar: String,
+
+ password: {
+  type: String,
+  required: true
+ },
+
+ skills: [String],
+
+ description:{
  type:String,
  default:""
 },
 
-  firstName: String,
-
-  lastName:String,
-
-  email: String,
-
-  age: Number,
-
-  mobile: {
-    type: Number,
-    required: true
-  },
-
-  location: String,
-
-  aadhaar: String,
-
-  password: {
-    type: String,
-    required: true
-  },
-
-  skills: [String],
-
-  role: {
-    type: String,
-    default: "worker"
-  }
+ role: {
+  type: String,
+  default: "worker"
+ }
 
 });
 
-module.exports = mongoose.model("User", userSchema);
+module.exports = mongoose.model(
+ "User",
+ userSchema
+);

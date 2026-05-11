@@ -1,4 +1,5 @@
 import { useState } from "react";
+
 import DashboardHeader from "../components/dashboard/DashboardHeader";
 import StatsCards from "../components/dashboard/StatsCards";
 import Applications from "../components/dashboard/Applications";
@@ -20,12 +21,17 @@ const Dashboard = () => {
   CHECK REAL WORKER
   */
   const isWorker =
+
     Array.isArray(user?.skills) &&
-    user.skills.some(
-      (skill) =>
-        skill &&
+
+    user.skills.filter(
+
+      (skill)=>
+
+        typeof skill === "string" &&
         skill.trim() !== ""
-    );
+
+    ).length > 0;
 
   const [activePanel, setActivePanel] =
     useState("admin");

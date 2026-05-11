@@ -69,27 +69,83 @@ const WorkerRequests = () => {
   UPDATE STATUS
   =========================
   */
-  const updateStatus = async (
-    id
-  ) => {
+const updateStatus = async (
+  id,
+  type
+) => {
 
-    try {
+  /*
+  REMOVE FROM UI
+  */
+  setRequests((prev) =>
+    prev.filter(
+      (req) => req._id !== id
+    )
+  );
 
-      setRequests((prev) =>
-        prev.filter(
-          (req) => req._id !== id
-        )
+  try{
+
+    const user = JSON.parse(
+      sessionStorage.getItem("user")
+    );
+
+    /*
+    ACCEPT REQUEST
+    */
+    if(type === "accept"){
+
+      await axios.put(
+
+        `http://localhost:5000/api/requests/${id}/status`,
+
+        {
+          status:"accepted"
+        },
+
+        {
+          headers:{
+            Authorization:
+             `Bearer ${user.token}`
+          }
+        }
+
       );
 
     }
 
-    catch (error) {
+    /*
+    REJECT REQUEST
+    */
+    else if(type === "reject"){
 
-      console.log(error);
+      await axios.put(
+
+        `http://localhost:5000/api/requests/${id}/status`,
+
+        {
+          status:"rejected"
+        },
+
+        {
+          headers:{
+            Authorization:
+             `Bearer ${user.token}`
+          }
+        }
+
+      );
 
     }
 
-  };
+  }
+
+  catch(error){
+
+    console.log(error);
+
+  }
+
+};
 
   /*
   =========================
@@ -132,7 +188,6 @@ const WorkerRequests = () => {
     }
 
     return "bg-green-100 text-green-600";
-
   };
 
   return (
@@ -247,22 +302,22 @@ const WorkerRequests = () => {
             <div className="flex gap-3 mt-4">
 
               <button
-                onClick={() =>
-                  updateStatus(
-                    request._id
-                  )
-                }
+               onClick={() =>
+                 updateStatus(
+                 request._id,
+                 "accept"
+                )}
                 className="bg-blue-600 text-white px-4 py-2 rounded"
               >
                 Accept
               </button>
 
               <button
-                onClick={() =>
-                  updateStatus(
-                    request._id
-                  )
-                }
+               onClick={() =>
+               updateStatus(
+               request._id,
+               "reject"
+              )}
                 className="border px-4 py-2 rounded"
               >
                 Reject

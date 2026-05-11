@@ -6,7 +6,7 @@ const ApplyModal = ({ isOpen, onClose, onConfirm }) => {
   return (
     <div className="fixed inset-0 backdrop-blur-sm bg-white/30 flex items-center justify-center z-50">
 
-      <div className="bg-white rounded-2xl p-10 w-480px text-center shadow-xl">
+      <div className="bg-white rounded-2xl p-15 w-480px text-center shadow-xl">
 
         {/* Icon */}
         <div className="flex justify-center mb-5 text-blue-500">
@@ -27,14 +27,14 @@ const ApplyModal = ({ isOpen, onClose, onConfirm }) => {
 
           <button
             onClick={onClose}
-            className="w-full border border-gray-300 py-2.5 rounded-lg hover:bg-gray-100"
+            className="w-full border border-gray-300 py-0.5 px-10 rounded-lg hover:bg-gray-100"
           >
             Cancel
           </button>
 
           <button
             onClick={onConfirm}
-            className="w-full bg-blue-600 text-white py-2.5 rounded-lg hover:bg-blue-700"
+            className="w-full bg-blue-600 text-white py-0.5 px-10 rounded-lg hover:bg-blue-700"
           >
             Send Profile
           </button>

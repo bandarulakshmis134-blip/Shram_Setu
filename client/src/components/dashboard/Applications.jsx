@@ -1,10 +1,14 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
+import WorkerProfileModal from "../WorkerProfileModal";
+
 const Applications = () => {
 
   const [apps, setApps] = useState([]);
-  const [selectedApp, setSelectedApp] = useState(null);
+
+  const [selectedApp, setSelectedApp] =
+    useState(null);
 
   /*
   ========================
@@ -53,7 +57,10 @@ const Applications = () => {
   UPDATE STATUS
   ========================
   */
-  const updateStatus = async (id, status) => {
+  const updateStatus = async (
+    id,
+    status
+  ) => {
 
     try {
 
@@ -97,13 +104,17 @@ const Applications = () => {
     <div className="bg-white p-5 rounded-xl shadow">
 
       <h2 className="font-semibold mb-4">
+
         New Job Applications
+
       </h2>
 
       {apps.length === 0 ? (
 
         <p className="text-gray-500 text-sm">
+
           No applications yet
+
         </p>
 
       ) : (
@@ -116,15 +127,25 @@ const Applications = () => {
           >
 
             <p className="font-medium">
+
               {app?.worker?.firstName}
+
             </p>
 
             <p className="text-sm text-gray-500">
-              Applied for: {app?.job?.title}
+
+              Applied for:
+              {" "}
+              {app?.job?.title}
+
             </p>
 
             <p className="text-xs mt-1 capitalize text-gray-400">
-              Status: {app?.status}
+
+              Status:
+              {" "}
+              {app?.status}
+
             </p>
 
             {/* ACTIONS */}
@@ -134,30 +155,44 @@ const Applications = () => {
 
                 {/* REVIEW */}
                 <button
-                  onClick={() => setSelectedApp(app)}
+                  onClick={() =>
+                    setSelectedApp(app)
+                  }
                   className="px-3 py-1 text-sm border rounded-lg hover:bg-gray-100"
                 >
+
                   Review
+
                 </button>
 
                 {/* ACCEPT */}
                 <button
                   onClick={() =>
-                    updateStatus(app._id, "accepted")
+                    updateStatus(
+                      app._id,
+                      "accepted"
+                    )
                   }
                   className="px-3 py-1 text-sm bg-green-100 text-green-600 rounded-lg hover:bg-green-200"
                 >
+
                   Accept
+
                 </button>
 
                 {/* REJECT */}
                 <button
                   onClick={() =>
-                    updateStatus(app._id, "rejected")
+                    updateStatus(
+                      app._id,
+                      "rejected"
+                    )
                   }
                   className="px-3 py-1 text-sm bg-red-100 text-red-600 rounded-lg hover:bg-red-200"
                 >
+
                   Reject
+
                 </button>
 
               </div>
@@ -170,42 +205,15 @@ const Applications = () => {
 
       )}
 
-      {/* REVIEW MODAL */}
+      {/* WORKER PROFILE MODAL */}
       {selectedApp && (
 
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-
-          <div className="bg-white p-6 rounded-xl w-100">
-
-            <h2 className="font-semibold text-lg mb-4">
-              Worker Review
-            </h2>
-
-            <p>
-              <strong>Name:</strong>{" "}
-              {selectedApp?.worker?.firstName}
-            </p>
-
-            <p className="mt-2">
-              <strong>Job:</strong>{" "}
-              {selectedApp?.job?.title}
-            </p>
-
-            <p className="mt-2">
-              <strong>Status:</strong>{" "}
-              {selectedApp?.status}
-            </p>
-
-            <button
-              onClick={() => setSelectedApp(null)}
-              className="mt-5 w-full bg-blue-600 text-white py-2 rounded-lg"
-            >
-              Close
-            </button>
-
-          </div>
-
-        </div>
+        <WorkerProfileModal
+          worker={selectedApp?.worker}
+          onClose={() =>
+            setSelectedApp(null)
+          }
+        />
 
       )}
 

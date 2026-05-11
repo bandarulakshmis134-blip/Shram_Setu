@@ -7,12 +7,12 @@ const CalendarCard = ({ isWorker }) => {
 
   /*
   =========================
-  FETCH SCHEDULES
+  FETCH SCHEDULES + REQUESTS
   =========================
   */
   useEffect(() => {
 
-    const fetchSchedules = async () => {
+    const fetchCalendarData = async () => {
 
       try {
 
@@ -20,62 +20,142 @@ const CalendarCard = ({ isWorker }) => {
           sessionStorage.getItem("user")
         );
 
-        const res = await axios.get(
+        /*
+        =========================
+        EXISTING SCHEDULES
+        =========================
+        */
+        const scheduleRes = await axios.get(
+
           isWorker
-  ? "http://localhost:5000/api/schedules/worker"
-  : "http://localhost:5000/api/schedules/admin",
+            ? "http://localhost:5000/api/schedules/worker"
+            : "http://localhost:5000/api/schedules/admin",
+
           {
             headers: {
-              Authorization: `Bearer ${user.token}`
+              Authorization:
+               `Bearer ${user.token}`
             }
           }
+
         );
 
         /*
         AUTO REMOVE EXPIRED WORK
         */
-        const validEvents = (res.data || []).filter(
-          (event) => {
+        const validSchedules =
+          (scheduleRes.data || []).filter(
+            (event) => {
 
-            const createdTime = new Date(
-              event.createdAt
-            ).getTime();
+              const createdTime =
+                new Date(
+                  event.createdAt
+                ).getTime();
 
-            const now = Date.now();
+              const now = Date.now();
 
-            let duration = 0;
+              let duration = 0;
 
-            /*
-            DURATION BASED ON URGENCY
-            */
-            if (
-              event?.job?.urgency === "urgent"
-            ) {
+              /*
+              DURATION BASED ON URGENCY
+              */
+              if (
+                event?.job?.urgency === "urgent"
+              ) {
 
-              duration = 5 * 60 * 60 * 1000;
+                duration =
+                 5 * 60 * 60 * 1000;
+
+              }
+
+              else if (
+                event?.job?.urgency === "24hrs"
+              ) {
+
+                duration =
+                 24 * 60 * 60 * 1000;
+
+              }
+
+              else {
+
+                duration =
+                 3 * 24 * 60 * 60 * 1000;
+
+              }
+
+              return (
+                now - createdTime <
+                duration
+              );
 
             }
+          );
 
-            else if (
-              event?.job?.urgency === "24hrs"
-            ) {
+        /*
+        =========================
+        FETCH REQUESTS
+        =========================
+        */
+        const requestRes = await axios.get(
 
-              duration = 24 * 60 * 60 * 1000;
+          isWorker
+            ? "http://localhost:5000/api/requests/worker-history"
+            : "http://localhost:5000/api/requests/user",
 
+          {
+            headers:{
+              Authorization:
+               `Bearer ${user.token}`
             }
-
-            else {
-
-              duration = 3 * 24 * 60 * 60 * 1000;
-
-            }
-
-            return now - createdTime < duration;
-
           }
+
         );
 
-        setEvents(validEvents);
+        /*
+        ONLY ACCEPTED / IN PROGRESS
+        */
+        const requestEvents =
+          (requestRes.data || [])
+
+          .filter(
+
+            (request)=>
+
+              request.status === "accepted" ||
+
+              request.status === "in-progress"
+
+          )
+
+          .map((request)=>({
+
+            _id:request._id,
+
+            title:isWorker
+
+             ? `Work for ${request.userId?.firstName}`
+
+             : `${request.workerId?.firstName}`,
+
+            date:request.createdAt,
+
+            urgency:request.urgency,
+
+            type:"request"
+
+          }));
+
+        /*
+        MERGE BOTH
+        */
+        setEvents([
+
+          ...validSchedules,
+
+          ...requestEvents
+
+        ]);
 
       }
 
@@ -89,7 +169,7 @@ const CalendarCard = ({ isWorker }) => {
 
     };
 
-    fetchSchedules();
+    fetchCalendarData();
 
   }, [isWorker]);
 
@@ -100,13 +180,19 @@ const CalendarCard = ({ isWorker }) => {
   */
   const getColor = (urgency) => {
 
-    if (urgency === "urgent") {
+    if (
+      urgency === "Urgent" ||
+      urgency === "urgent"
+    ) {
 
       return "border-red-500 bg-red-50";
 
     }
 
-    if (urgency === "24hrs") {
+    if (
+      urgency === "24 Hours" ||
+      urgency === "24hrs"
+    ) {
 
       return "border-orange-500 bg-orange-50";
 
@@ -123,13 +209,19 @@ const CalendarCard = ({ isWorker }) => {
   */
   const getTimeLabel = (urgency) => {
 
-    if (urgency === "urgent") {
+    if (
+      urgency === "Urgent" ||
+      urgency === "urgent"
+    ) {
 
       return "5 Hours";
 
     }
 
-    if (urgency === "24hrs") {
+    if (
+      urgency === "24 Hours" ||
+      urgency === "24hrs"
+    ) {
 
       return "1 Day";
 
@@ -162,20 +254,30 @@ const CalendarCard = ({ isWorker }) => {
             <div
               key={event._id}
               className={`border-l-4 rounded-lg p-3 ${getColor(
-                event?.job?.urgency
+
+                event?.job?.urgency ||
+
+                event?.urgency
+
               )}`}
             >
 
               <div className="flex items-center justify-between">
 
                 <p className="font-medium text-sm">
+
                   {event?.title}
+
                 </p>
 
                 <span className="text-xs font-medium">
 
                   {getTimeLabel(
-                    event?.job?.urgency
+
+                    event?.job?.urgency ||
+
+                    event?.urgency
+
                   )}
 
                 </span>

@@ -17,6 +17,9 @@ const Signup = () => {
  const [lastName,setLastName] = useState("");
 
  const [email,setEmail] = useState("");
+
+ const [gender,setGender] = useState("Other");
+
  const [age,setAge] = useState("");
 
  const [aadhaar,setAadhaar] = useState("");
@@ -105,6 +108,8 @@ const Signup = () => {
      lastName,
 
      email,
+
+     gender,
 
      age:Number(age),
 
@@ -243,6 +248,8 @@ const Signup = () => {
 
         className="w-full h-full object-cover"
 
+        alt="profile"
+
        />
 
       ) : (
@@ -347,6 +354,44 @@ const Signup = () => {
        className="w-full border px-3 py-2 rounded mt-1"
 
       />
+
+     </div>
+
+
+
+     {/* gender */}
+
+     <div>
+
+      <label className="text-sm font-medium">
+
+       Gender
+
+      </label>
+
+      <select
+
+       value={gender}
+
+       onChange={(e)=>setGender(e.target.value)}
+
+       className="w-full border px-3 py-2 rounded mt-1"
+
+      >
+
+       <option value="Male">
+        Male
+       </option>
+
+       <option value="Female">
+        Female
+       </option>
+
+       <option value="Other">
+        Other
+       </option>
+
+      </select>
 
      </div>
 

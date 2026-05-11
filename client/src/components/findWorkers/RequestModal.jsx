@@ -75,7 +75,7 @@ const RequestModal = ({ worker, onClose }) => {
 
      userId:user._id,
 
-     workerId:worker._id,
+     workerId:worker.userId || worker._id,
 
      description:form.description,
 

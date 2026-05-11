@@ -28,6 +28,8 @@ const WorkerRegister = () => {
 
   skills:[],
 
+  description:"",
+
   age:"",
   gender:"",
   aadhaar:"",
@@ -229,6 +231,8 @@ const WorkerRegister = () => {
 
    skills:formData.skills,
 
+   description:formData.description,
+
    price:Number(formData.price),
 
    priceType:formData.priceType,
@@ -291,7 +295,9 @@ const WorkerRegister = () => {
 
     mobile:workerData.mobile,
 
-    location:workerData.location
+    location:workerData.location,
+
+    description:formData.description
 
    };
 
@@ -474,6 +480,30 @@ const WorkerRegister = () => {
 
        </div>
 
+       <div className="col-span-2">
+
+        <p className="mb-1">
+         Description
+        </p>
+
+        <textarea
+
+         name="description"
+
+         value={formData.description}
+
+         onChange={handleChange}
+
+         rows={4}
+
+         placeholder="Tell clients about your work experience..."
+
+         className="border p-3 rounded w-full"
+
+        />
+
+       </div>
+
 
        <input name="price" placeholder="Price" onChange={handleChange} required className="border p-2 rounded"/>
 
@@ -510,6 +540,30 @@ const WorkerRegister = () => {
         <p>Skills</p>
 
         <SkillsSelector setSkills={setSkills}/>
+
+       </div>
+
+       <div className="col-span-2">
+
+        <p className="mb-1">
+         Description
+        </p>
+
+        <textarea
+
+         name="description"
+
+         value={formData.description}
+
+         onChange={handleChange}
+
+         rows={4}
+
+         placeholder="Tell clients about your team and work experience..."
+
+         className="border p-3 rounded w-full"
+
+        />
 
        </div>
 

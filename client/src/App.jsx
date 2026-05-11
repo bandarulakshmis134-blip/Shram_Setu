@@ -13,7 +13,7 @@ import WorkerRegister from "./pages/WorkerRegister";
 import Dashboard from "./pages/Dashboard";
 import FindWorkers from "./pages/FindWorkers";
 import Messages from "./pages/Messages";
-
+import AllRequests from "./pages/AllRequests";
 /*
 ========================
 LAYOUT WITH NAVBAR
@@ -74,6 +74,7 @@ function App() {
           <Route path="/find-workers" element={<FindWorkers />} />
           <Route path="/messages" element={<Messages />} />
           <Route path="/messages/:id" element={<Messages />} />
+          <Route path="/all-requests" element={<AllRequests />}/>
 
         </Route>
 

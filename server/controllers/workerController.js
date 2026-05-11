@@ -26,6 +26,8 @@ exports.registerWorker = async (req, res) => {
       experience,
       skills,
 
+      description,
+
       price,
       priceType,
 
@@ -52,6 +54,8 @@ exports.registerWorker = async (req, res) => {
       location,
       experience,
       skills,
+
+      description,
 
       price,
       priceType,
@@ -80,6 +84,8 @@ exports.registerWorker = async (req, res) => {
         mobile,
 
         location,
+
+        description,
 
         role: "worker"
 
@@ -204,7 +210,15 @@ exports.updateWorkerSkills = async (req,res)=>{
 
  try{
 
-  const { userId, skills } = req.body;
+  const {
+
+   userId,
+
+   skills,
+
+   description
+
+  } = req.body;
 
   if(!skills){
 
@@ -220,7 +234,13 @@ exports.updateWorkerSkills = async (req,res)=>{
 
    { userId:userId },
 
-   { skills:skills },
+   {
+
+    skills:skills,
+
+    description:description
+
+   },
 
    { new:true }
 
@@ -396,7 +416,7 @@ exports.getWorkerCountBySkill = async (req,res)=>{
 
  catch(error){
 
-  console.log("COUNT ERROR:", error); // IMPORTANT
+  console.log("COUNT ERROR:", error);
 
   res.status(500).json({
    message:error.message
@@ -418,8 +438,6 @@ exports.searchWorkers = async (req,res)=>{
  try{
 
   const { category, location, search, userId } = req.query;
-
-  // DEBUG
 
   const query = {};
 
@@ -455,7 +473,7 @@ exports.searchWorkers = async (req,res)=>{
 
   /*
  =============================
- SEARCH FILTER (FINAL FIX)
+ SEARCH FILTER
  =============================
  */
   if(search){
@@ -472,7 +490,6 @@ exports.searchWorkers = async (req,res)=>{
      { groupName: searchRegex },
      { location: searchRegex },
 
-     // ✅ FIXED ARRAY SEARCH
      { skills: { $in: [searchRegex] } }
 
     ];
@@ -480,9 +497,6 @@ exports.searchWorkers = async (req,res)=>{
    }
 
   }
-
-   // DEBUG
-
 
   const workers = await Worker.find(query)
    .populate("userId","profilePic")
@@ -515,13 +529,27 @@ exports.syncWorkerSkills = async (req,res)=>{
 
  try{
 
-  const { userId, skills } = req.body;
+  const {
+
+   userId,
+
+   skills,
+
+   description
+
+  } = req.body;
 
   const updatedWorker = await Worker.findOneAndUpdate(
 
    { userId:userId },
 
-   { skills:skills },
+   {
+
+    skills:skills,
+
+    description:description
+
+   },
 
    { returnDocument:"after" }
 

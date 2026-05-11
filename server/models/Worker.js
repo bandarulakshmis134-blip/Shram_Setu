@@ -44,6 +44,11 @@ const workerSchema = new mongoose.Schema({
     required: true
   },
 
+  description: {
+    type: String,
+    default:""
+  },
+
   price: {
     type: Number,
     required: true

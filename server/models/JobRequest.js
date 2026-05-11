@@ -37,7 +37,13 @@ const jobRequestSchema = new mongoose.Schema({
 
  status:{
   type:String,
-  enum:["pending","accepted","rejected","completed"],
+  enum:[
+   "pending",
+   "accepted",
+   "rejected",
+   "in-progress",
+   "completed"
+  ],
   default:"pending"
  },
 
@@ -56,8 +62,13 @@ const jobRequestSchema = new mongoose.Schema({
 
 /*
  TTL INDEX
- MongoDB automatically deletes document after expiresAt time
 */
-jobRequestSchema.index({ expiresAt:1 }, { expireAfterSeconds:0 });
+jobRequestSchema.index(
+ { expiresAt:1 },
+ { expireAfterSeconds:0 }
+);
 
-module.exports = mongoose.model("JobRequest",jobRequestSchema);
+module.exports = mongoose.model(
+ "JobRequest",
+ jobRequestSchema
+);

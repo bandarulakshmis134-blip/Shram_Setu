@@ -23,6 +23,8 @@ const WorkerForm = ({ onClose }) => {
 
     skills: [],
 
+    description:"",
+
     price: "",
 
     priceType: "hour"
@@ -220,6 +222,30 @@ const WorkerForm = ({ onClose }) => {
           />
 
         </div>
+
+        <div className="col-span-2">
+
+ <p className="text-sm mb-1">
+  Description
+ </p>
+
+ <textarea
+
+  name="description"
+
+  value={formData.description}
+
+  onChange={handleChange}
+
+  placeholder="Tell clients about your work experience..."
+
+  rows={4}
+
+  className="border p-3 rounded w-full"
+
+ />
+
+</div>
 
 
         <input

@@ -96,7 +96,17 @@ exports.getJobApplications = async (
 
       .populate(
         "worker",
-        "firstName profilePic"
+        `
+        firstName
+        profilePic
+        skills
+        location
+        age
+        gender
+        about
+        rating
+        reviews
+        `
       )
 
       .populate(
