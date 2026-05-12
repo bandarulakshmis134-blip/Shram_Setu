@@ -129,7 +129,9 @@ const Profile = () => {
 
       userId:user._id,
 
-      skills:cleanedSkills
+      skills:cleanedSkills,
+
+      description:user.description || ""
 
      }
 

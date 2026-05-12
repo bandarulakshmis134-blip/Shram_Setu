@@ -12,7 +12,8 @@ exports.updateUser = async (req,res)=>{
    mobile,
    location,
    profilePic,
-   skills
+   skills,
+   description
   } = req.body;
 
  const updatedUser = await User.findByIdAndUpdate(
@@ -27,6 +28,7 @@ exports.updateUser = async (req,res)=>{
   mobile,
   location,
   profilePic,
+  description,
 
   skills: (skills || []).filter(
    (skill) =>
@@ -44,7 +46,9 @@ exports.updateUser = async (req,res)=>{
 );
 
   if(!updatedUser){
-   return res.status(404).json({ message:"User not found" });
+   return res.status(404).json({
+    message:"User not found"
+   });
   }
 
   res.json(updatedUser);

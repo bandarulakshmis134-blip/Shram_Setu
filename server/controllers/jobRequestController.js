@@ -1,5 +1,5 @@
 const JobRequest = require("../models/JobRequest");
-
+const Invoice = require("../models/Invoice");
 
 
 /*
@@ -276,11 +276,7 @@ exports.getWorkerHistory = async (
 
 };
 
-/*
-========================
-UPDATE REQUEST STATUS
-========================
-*/
+
 /*
 ========================
 UPDATE REQUEST STATUS
@@ -307,6 +303,20 @@ exports.updateRequestStatus = async (
     }
 
    );
+
+   /*
+AUTO DELETE INVOICE
+WHEN WORK COMPLETES
+*/
+if(req.body.status === "completed"){
+
+ await Invoice.findOneAndDelete({
+
+  requestId:req.params.id
+
+ });
+
+}
 
   if(!updatedRequest){
 

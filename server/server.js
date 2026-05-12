@@ -18,7 +18,7 @@ const scheduleRoutes = require("./routes/scheduleRoutes");
 const cookieParser = require("cookie-parser");
 const Message = require("./models/Message");
 const Worker = require("./models/Worker"); // 🔥 important
-
+const invoiceRoutes = require("./routes/invoiceRoutes");
 /*
 ========================
 APP INIT
@@ -88,6 +88,7 @@ app.use("/api/requests", jobRequestRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/applications", applicationRoutes);
 app.use("/api/schedules",scheduleRoutes);
+app.use("/api/invoices",invoiceRoutes);
 /*
 ========================
 TEST ROUTE

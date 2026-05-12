@@ -1,240 +1,423 @@
-import { useEffect, useState } from "react";
+import {
+ useEffect,
+ useState,
+ useCallback
+} from "react";
+
 import axios from "axios";
+
 import { useNavigate } from "react-router-dom";
 
-const ActiveRequests = () => {
+import InvoiceModal from "./InvoiceModal";
 
-  const [requests,setRequests] = useState([]);
+const ActiveRequests = ({
+ showAll = false
+}) => {
 
-  const navigate = useNavigate();
+ const [requests,setRequests] =
+  useState([]);
 
-  /*
-  FETCH REQUESTS
-  */
-  const fetchRequests = async ()=>{
+ const [
+  selectedInvoice,
+  setSelectedInvoice
+ ] = useState(null);
 
-    try{
+ const navigate = useNavigate();
 
-      const user = JSON.parse(
-        sessionStorage.getItem("user")
-      );
+ /*
+ =========================
+ GET LOGGED USER
+ =========================
+ */
+ const getUser = ()=>{
 
-      const res = await axios.get(
+  return JSON.parse(
+   sessionStorage.getItem("user")
+  );
 
-        "http://localhost:5000/api/requests/user",
+ };
 
-        {
-          headers:{
-            Authorization:
-             `Bearer ${user.token}`
-          }
-        }
+ /*
+ =========================
+ FETCH REQUESTS
+ =========================
+ */
+ const fetchRequests =
+  useCallback(async ()=>{
 
-      );
+  try{
 
-      /*
-      ONLY LATEST 2
-      */
-      setRequests(
-        (res.data || []).slice(0,2)
-      );
+   const user = getUser();
 
+   const res = await axios.get(
+
+    "http://localhost:5000/api/requests/user",
+
+    {
+     headers:{
+      Authorization:
+       `Bearer ${user.token}`
+     }
     }
 
-    catch(error){
+   );
 
-      console.log(error);
+   setRequests(
+    res.data || []
+   );
 
-    }
+  }
+
+  catch(error){
+
+   console.log(
+    "REQUEST FETCH ERROR:",
+    error
+   );
+
+  }
+
+ },[]);
+
+ /*
+ =========================
+ INITIAL LOAD
+ =========================
+ */
+ useEffect(()=>{
+
+  const loadRequests = async ()=>{
+
+   await fetchRequests();
 
   };
 
+  loadRequests();
+
+ },[fetchRequests]);
+
+ /*
+ =========================
+ OPEN BILL / INVOICE
+ =========================
+ */
+ const handleBill = async (
+  request
+ )=>{
+
+  try{
+
+   const user = getUser();
+
+   const res = await axios.post(
+
+    "http://localhost:5000/api/invoices/create",
+
+    {
+     requestId:request._id,
+
+     amount:
+      request.budget || 1000
+    },
+
+    {
+     headers:{
+      Authorization:
+       `Bearer ${user.token}`
+     }
+    }
+
+   );
+
+   setSelectedInvoice(
+    res.data
+   );
+
+  }
+
+  catch(error){
+
+   console.log(
+    "INVOICE ERROR:",
+    error
+   );
+
+  }
+
+ };
+
+ /*
+ =========================
+ STATUS COLORS
+ =========================
+ */
+ const getStatusStyle = (
+  status
+ )=>{
+
+  switch(status){
+
+   case "completed":
+    return "bg-green-100 text-green-600";
+
+   case "rejected":
+    return "bg-red-100 text-red-600";
+
+   case "accepted":
+   case "in-progress":
+    return "bg-blue-100 text-blue-600";
+
+   default:
+    return "bg-yellow-100 text-yellow-600";
+
+  }
+
+ };
+
+ /*
+ =========================
+ ACTION BUTTON
+ =========================
+ */
+ const getAction = (
+  request
+ )=>{
+
+  switch(request.status){
+
+   case "completed":
+    return "Rebook";
+
+   case "accepted":
+   case "in-progress":
+    return "Bill";
+
+   default:
+    return "Message";
+
+  }
+
+ };
+
+ /*
+ =========================
+ BUTTON CLICK
+ =========================
+ */
+ const handleAction = (
+  request
+ )=>{
+
+  const action =
+   getAction(request);
+
   /*
-  LOAD REQUESTS
+  MESSAGE
   */
-  useEffect(()=>{
+  if(action === "Message"){
 
-    const loadRequests = async ()=>{
+   navigate("/messages",{
 
-      await fetchRequests();
+    state:{
 
-    };
+     user:{
 
-    loadRequests();
+      _id:
+       request.workerId?._id,
 
-  },[]);
+      name:
+       request.workerId?.firstName
 
-  /*
-  STATUS COLORS
-  */
-  const getStatusStyle = (status)=>{
-
-    switch(status){
-
-      case "completed":
-        return "bg-green-100 text-green-600";
-
-      case "rejected":
-        return "bg-red-100 text-red-600";
-
-      case "accepted":
-      case "in-progress":
-        return "bg-blue-100 text-blue-600";
-
-      default:
-        return "bg-yellow-100 text-yellow-600";
+     }
 
     }
 
-  };
+   });
+
+  }
 
   /*
-  ACTION BUTTON TEXT
+  BILL
   */
-  const getAction = (request)=>{
+  else if(action === "Bill"){
 
-    switch(request.status){
+   handleBill(request);
 
-      case "completed":
-        return "Rebook";
+  }
 
-      case "accepted":
-      case "in-progress":
-        return "Bill";
+ };
 
-      default:
-        return "Message";
+ /*
+ =========================
+ SHOW ONLY 2 IN DASHBOARD
+ =========================
+ */
+ const displayedRequests =
+  showAll
+   ? requests
+   : requests.slice(0,2);
 
-    }
+ return (
 
-  };
+  <>
 
-  return (
+   <div className="bg-white p-5 rounded-xl shadow mt-6">
 
-    <div className="bg-white p-5 rounded-xl shadow mt-6">
+    <div className="flex justify-between items-center mb-4">
 
-      <div className="flex justify-between items-center mb-4">
+     <h2 className="font-semibold">
+      Active Requests
+     </h2>
 
-        <h2 className="font-semibold">
-          Active Requests
-        </h2>
+     {!showAll && (
 
-        <button
-          onClick={()=>
-            navigate("/all-requests")
-          }
-          className="text-blue-600 text-sm"
-        >
-          View All
-        </button>
+      <button
+       onClick={()=>
+        navigate("/all-requests")
+       }
+       className="text-blue-600 text-sm"
+      >
 
-      </div>
+       View All
 
-      {requests.length === 0 ? (
+      </button>
 
-        <p className="text-sm text-gray-500">
-          No requests found
-        </p>
-
-      ) : (
-
-        <table className="w-full text-sm">
-
-          <thead className="text-gray-500">
-
-            <tr>
-
-              <th className="text-left">
-                Worker
-              </th>
-
-              <th className="text-left">
-                Service
-              </th>
-
-              <th className="text-left">
-                Date
-              </th>
-
-              <th className="text-left">
-                Status
-              </th>
-
-              <th className="text-left">
-                Action
-              </th>
-
-            </tr>
-
-          </thead>
-
-          <tbody>
-
-            {requests.map((r) => (
-
-              <tr
-                key={r._id}
-                className="border-t"
-              >
-
-                <td className="py-3">
-
-                  {r.workerId?.firstName}
-
-                </td>
-
-                <td>
-
-                  {r.workerId?.skills?.[0] ||
-                   "Service"}
-
-                </td>
-
-                <td>
-
-                  {new Date(
-                    r.createdAt
-                  ).toLocaleDateString()}
-
-                </td>
-
-                <td>
-
-                  <span
-                    className={`px-2 py-1 rounded text-xs capitalize ${getStatusStyle(r.status)}`}
-                  >
-
-                    {r.status === "accepted"
-                     ? "In Progress"
-                     : r.status
-                    }
-
-                  </span>
-
-                </td>
-
-                <td>
-
-                  <button className="text-blue-600">
-
-                    {getAction(r)}
-
-                  </button>
-
-                </td>
-
-              </tr>
-
-            ))}
-
-          </tbody>
-
-        </table>
-
-      )}
+     )}
 
     </div>
-  );
+
+    {displayedRequests.length === 0 ? (
+
+     <p className="text-sm text-gray-500">
+      No requests found
+     </p>
+
+    ) : (
+
+     <table className="w-full text-sm">
+
+      <thead className="text-gray-500">
+
+       <tr>
+
+        <th className="text-left">
+         Worker
+        </th>
+
+        <th className="text-left">
+         Service
+        </th>
+
+        <th className="text-left">
+         Date
+        </th>
+
+        <th className="text-left">
+         Status
+        </th>
+
+        <th className="text-left">
+         Action
+        </th>
+
+       </tr>
+
+      </thead>
+
+      <tbody>
+
+       {displayedRequests.map((r) => (
+
+        <tr
+         key={r._id}
+         className="border-t"
+        >
+
+         <td className="py-3">
+
+          {r.workerId?.firstName}
+
+         </td>
+
+         <td>
+
+          {r.workerId?.skills?.[0] ||
+           "Service"}
+
+         </td>
+
+         <td>
+
+          {new Date(
+           r.createdAt
+          ).toLocaleDateString()}
+
+         </td>
+
+         <td>
+
+          <span
+           className={`px-2 py-1 rounded text-xs capitalize ${getStatusStyle(r.status)}`}
+          >
+
+           {r.status === "accepted"
+            ? "In Progress"
+            : r.status
+           }
+
+          </span>
+
+         </td>
+
+         <td>
+
+          <button
+
+           onClick={()=>
+            handleAction(r)
+           }
+
+           className="text-blue-600"
+
+          >
+
+           {getAction(r)}
+
+          </button>
+
+         </td>
+
+        </tr>
+
+       ))}
+
+      </tbody>
+
+     </table>
+
+    )}
+
+   </div>
+
+   {/* INVOICE MODAL */}
+   {selectedInvoice && (
+
+    <InvoiceModal
+
+     invoice={selectedInvoice}
+
+     onClose={()=>
+      setSelectedInvoice(null)
+     }
+
+    />
+
+   )}
+
+  </>
+
+ );
+
 };
 
 export default ActiveRequests;

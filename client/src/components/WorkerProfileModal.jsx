@@ -1,272 +1,266 @@
-import { Trash2 } from "lucide-react";
+import {
+ X,
+ Star,
+ MapPin,
+ Briefcase
+} from "lucide-react";
+import { Logo } from "./Logo";
 
-import SkillsSelector from "../components/SkillsSelector";
-
-const PersonalInfo = ({
- user,
- isEditing,
- setUser
+const WorkerProfileModal = ({
+ worker,
+ onClose
 }) => {
 
- const handleChange = (e)=>{
+ if(!worker) return null;
 
-  setUser({
+ return (
 
-   ...user,
-   [e.target.name]: e.target.value
+  <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
 
-  });
+   <div className="bg-white w-full max-w-lg rounded-xl shadow-lg border border-gray-200 relative max-h-[88vh] overflow-y-auto">
 
- };
+    {/* CLOSE */}
+    <button
+     onClick={onClose}
+     className="absolute top-4 right-4 text-white hover:text-gray-200 z-10"
+    >
 
- /*
- REMOVE SKILL
- */
- const removeSkill = (index)=>{
+     <X size={20}/>
 
-  const updatedSkills =
-   (user.skills || []).filter(
-    (_,i)=> i !== index
-   );
+    </button>
 
-  setUser({
+    {/* TOP BLUE HEADER */}
+    <div className="bg-blue-600 px-5 py-3 flex items-center">
 
-   ...user,
+     <div className="flex items-center gap-2">
+         <div className="w-9 h-9 bg-white rounded-lg flex items-center justify-center shadow-sm">
 
-   skills: updatedSkills
+              <Logo className="w-6 h-6"/>
 
-  });
+         </div>
 
- };
+      <h2 className="text-white font-semibold text-lg">
 
- return(
+       Shram Setu
 
-  <div className="bg-white rounded-xl shadow-md p-6">
+      </h2>
 
-   <h2 className="text-lg font-semibold mb-4">
-    Personal Information
-   </h2>
-
-   <div className="grid grid-cols-2 gap-4">
-
-    {[
-      "firstName",
-      "lastName",
-      "email",
-      "gender",
-      "age",
-      "mobile",
-      "location"
-    ].map(field=>(
-
-      <div key={field}>
-
-        <p className="text-gray-500 text-sm capitalize">
-         {field}
-        </p>
-
-        {isEditing ? (
-
-          field === "gender" ? (
-
-            <select
-
-              name="gender"
-
-              value={user.gender || "Other"}
-
-              onChange={handleChange}
-
-              className="border p-2 w-full rounded"
-
-            >
-
-              <option value="Male">
-                Male
-              </option>
-
-              <option value="Female">
-                Female
-              </option>
-
-              <option value="Other">
-                Other
-              </option>
-
-            </select>
-
-          ) : (
-
-            <input
-
-              name={field}
-
-              value={user[field] || ""}
-
-              onChange={handleChange}
-
-              className="border p-2 w-full rounded"
-
-            />
-
-          )
-
-        ) : (
-
-          <p className="font-medium">
-           {user[field]}
-          </p>
-
-        )}
-
-      </div>
-
-    ))}
-
-    <div>
-
-      <p className="text-gray-500 text-sm">
-       Aadhaar
-      </p>
-
-      <p className="font-medium">
-       {user.aadhaar}
-      </p>
+     </div>
 
     </div>
 
-    {/* DESCRIPTION */}
-    <div className="col-span-2">
+    {/* PROFILE HEADER */}
+    <div className="p-6 border-b border-gray-200">
 
-      <p className="text-gray-500 text-sm mb-2">
-        Description
-      </p>
+     <div className="flex items-start gap-4">
 
-      {isEditing ? (
+      {/* IMAGE */}
+      {worker.profilePic ? (
 
-        <textarea
-
-          name="description"
-
-          value={user.description || ""}
-
-          onChange={handleChange}
-
-          rows={4}
-
-          placeholder="Tell clients about your work experience..."
-
-          className="border p-3 w-full rounded"
-
-        />
+       <img
+        src={worker.profilePic}
+        alt="worker"
+        className="w-20 h-20 rounded-xl object-cover border border-gray-200"
+       />
 
       ) : (
 
-        <p className="font-medium whitespace-pre-line">
+       <div className="w-20 h-20 rounded-xl bg-gray-200 flex items-center justify-center text-2xl font-bold text-gray-600">
 
-          {user.description ||
+        {worker.firstName?.charAt(0) || "W"}
 
-            "No description added"}
-
-        </p>
+       </div>
 
       )}
 
-    </div>
+      {/* INFO */}
+      <div className="flex-1">
 
-    {/* SKILLS */}
-   {Array.isArray(user.skills) &&
-   user.skills.length > 0 && (
+       <h2 className="text-xl font-semibold text-gray-800">
 
-      <div className="col-span-2">
+        {worker.firstName ||
+         worker.groupName ||
+         "Worker"}
 
-        <p className="text-gray-500 text-sm mb-2">
-         Skills
-        </p>
+       </h2>
 
-        {isEditing ? (
+       <p className="text-blue-600 text-sm font-medium mt-1">
 
-          <div className="space-y-3">
+        {worker.skills?.[0] ||
+         "General Worker"}
 
-            {/* EXISTING SKILLS */}
-            <div className="flex flex-wrap gap-2">
+       </p>
 
-              {(user.skills || []).map(
-                (skill,index)=>(
+       <div className="flex items-center text-gray-500 text-sm mt-2">
 
-                <div
-                  key={index}
-                  className="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-full"
-                >
+        <MapPin size={14}/>
 
-                  <span className="text-sm">
-                    {skill}
-                  </span>
+        <span className="ml-1">
 
-                  <button
-                    type="button"
-                    onClick={()=>
-                      removeSkill(index)
-                    }
-                    className="p-1 rounded-full hover:bg-red-50"
-                  >
+         {worker.location || "Location not available"}
 
-                    <Trash2
-                      size={14}
-                      className="text-red-500"
-                    />
+        </span>
 
-                  </button>
+       </div>
 
-                </div>
+       <div className="flex items-center mt-2 text-yellow-500">
 
-              ))}
+        <Star
+         size={16}
+         fill="currentColor"
+        />
 
-            </div>
+        <span className="ml-1 text-sm font-medium">
 
-            {/* ADD NEW SKILLS */}
-            <SkillsSelector
+         {worker.rating || 4.5}
 
-              defaultSkills={[]}
+        </span>
 
-              setSkills={(newSkills)=>{
-
-                setUser({
-
-                 ...user,
-
-                 skills:[
-                  ...(user.skills || []),
-                  ...newSkills
-                 ]
-
-                });
-
-              }}
-
-            />
-
-          </div>
-
-        ) : (
-
-          <p className="font-medium">
-
-           {user.skills?.length
-
-            ? user.skills.join(", ")
-
-            : "No skills added"
-
-           }
-
-          </p>
-
-        )}
+       </div>
 
       </div>
 
-    )}
+     </div>
+
+    </div>
+
+    {/* CONTENT */}
+    <div className="p-6 space-y-5">
+
+     {/* INFORMATION */}
+     <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+
+      <h3 className="font-semibold text-gray-800 mb-4">
+
+       Information
+
+      </h3>
+
+      <div className="grid grid-cols-2 gap-4">
+
+       <div>
+
+        <p className="text-sm text-gray-500">
+         Age
+        </p>
+
+        <p className="font-medium text-gray-800">
+
+         {worker.age || "-"}
+
+        </p>
+
+       </div>
+
+       <div>
+
+        <p className="text-sm text-gray-500">
+         Gender
+        </p>
+
+        <p className="font-medium text-gray-800">
+
+         {worker.gender || "-"}
+
+        </p>
+
+       </div>
+
+       <div>
+
+        <p className="text-sm text-gray-500">
+         Experience
+        </p>
+
+        <p className="font-medium text-gray-800">
+
+         {worker.experience
+          ? `${worker.experience} Years`
+          : "-"}
+
+        </p>
+
+       </div>
+
+       <div>
+
+        <p className="text-sm text-gray-500">
+         Work Type
+        </p>
+
+        <div className="flex items-center gap-1 text-gray-800 font-medium">
+
+         <Briefcase size={14}/>
+
+         {worker.registrationType || "-"}
+
+        </div>
+
+       </div>
+
+      </div>
+
+     </div>
+
+     {/* DESCRIPTION */}
+     <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+
+      <h3 className="font-semibold text-gray-800 mb-3">
+
+       Description
+
+      </h3>
+
+      <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">
+
+       {worker.description ||
+        "No description added yet."}
+
+      </p>
+
+     </div>
+
+     {/* SKILLS */}
+     <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+
+      <h3 className="font-semibold text-gray-800 mb-4">
+
+       Skills
+
+      </h3>
+
+      <div className="flex flex-wrap gap-2">
+
+       {worker.skills?.length > 0 ? (
+
+        worker.skills.map((skill,index)=>(
+
+         <span
+          key={index}
+          className="bg-blue-100 text-blue-700 text-sm px-3 py-1 rounded-lg"
+         >
+
+          {skill}
+
+         </span>
+
+        ))
+
+       ) : (
+
+        <p className="text-sm text-gray-500">
+
+         No skills added
+
+        </p>
+
+       )}
+
+      </div>
+
+     </div>
+
+    </div>
 
    </div>
 
@@ -276,4 +270,4 @@ const PersonalInfo = ({
 
 };
 
-export default PersonalInfo;
+export default WorkerProfileModal;

@@ -1,308 +1,321 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
-const CalendarCard = ({ isWorker }) => {
+const CalendarCard = ({
+ isWorker,
+ showAll = false
+}) => {
 
-  const [events, setEvents] = useState([]);
+ const [events, setEvents] =
+  useState([]);
 
-  /*
-  =========================
-  FETCH SCHEDULES + REQUESTS
-  =========================
-  */
-  useEffect(() => {
+ /*
+ =========================
+ FETCH SCHEDULES + REQUESTS
+ =========================
+ */
+ useEffect(() => {
 
-    const fetchCalendarData = async () => {
+  const fetchCalendarData = async () => {
 
-      try {
+   try {
 
-        const user = JSON.parse(
-          sessionStorage.getItem("user")
-        );
+    const user = JSON.parse(
+     sessionStorage.getItem("user")
+    );
 
-        /*
-        =========================
-        EXISTING SCHEDULES
-        =========================
-        */
-        const scheduleRes = await axios.get(
+    /*
+    =========================
+    EXISTING SCHEDULES
+    =========================
+    */
+    const scheduleRes = await axios.get(
 
-          isWorker
-            ? "http://localhost:5000/api/schedules/worker"
-            : "http://localhost:5000/api/schedules/admin",
+     isWorker
+      ? "http://localhost:5000/api/schedules/worker"
+      : "http://localhost:5000/api/schedules/admin",
 
-          {
-            headers: {
-              Authorization:
-               `Bearer ${user.token}`
-            }
-          }
+     {
+      headers: {
+       Authorization:
+        `Bearer ${user.token}`
+      }
+     }
 
-        );
+    );
 
-        /*
-        AUTO REMOVE EXPIRED WORK
-        */
-        const validSchedules =
-          (scheduleRes.data || []).filter(
-            (event) => {
+    /*
+    AUTO REMOVE EXPIRED WORK
+    */
+    const validSchedules =
+     (scheduleRes.data || []).filter(
+      (event) => {
 
-              const createdTime =
-                new Date(
-                  event.createdAt
-                ).getTime();
+       const createdTime =
+        new Date(
+         event.createdAt
+        ).getTime();
 
-              const now = Date.now();
+       const now = Date.now();
 
-              let duration = 0;
+       let duration = 0;
 
-              /*
-              DURATION BASED ON URGENCY
-              */
-              if (
-                event?.job?.urgency === "urgent"
-              ) {
+       /*
+       DURATION BASED ON URGENCY
+       */
+       if (
+        event?.job?.urgency === "urgent"
+       ) {
 
-                duration =
-                 5 * 60 * 60 * 1000;
+        duration =
+         5 * 60 * 60 * 1000;
 
-              }
+       }
 
-              else if (
-                event?.job?.urgency === "24hrs"
-              ) {
+       else if (
+        event?.job?.urgency === "24hrs"
+       ) {
 
-                duration =
-                 24 * 60 * 60 * 1000;
+        duration =
+         24 * 60 * 60 * 1000;
 
-              }
+       }
 
-              else {
+       else {
 
-                duration =
-                 3 * 24 * 60 * 60 * 1000;
+        duration =
+         3 * 24 * 60 * 60 * 1000;
 
-              }
+       }
 
-              return (
-                now - createdTime <
-                duration
-              );
-
-            }
-          );
-
-        /*
-        =========================
-        FETCH REQUESTS
-        =========================
-        */
-        const requestRes = await axios.get(
-
-          isWorker
-            ? "http://localhost:5000/api/requests/worker-history"
-            : "http://localhost:5000/api/requests/user",
-
-          {
-            headers:{
-              Authorization:
-               `Bearer ${user.token}`
-            }
-          }
-
-        );
-
-        /*
-        ONLY ACCEPTED / IN PROGRESS
-        */
-        const requestEvents =
-          (requestRes.data || [])
-
-          .filter(
-
-            (request)=>
-
-              request.status === "accepted" ||
-
-              request.status === "in-progress"
-
-          )
-
-          .map((request)=>({
-
-            _id:request._id,
-
-            title:isWorker
-
-             ? `Work for ${request.userId?.firstName}`
-
-             : `${request.workerId?.firstName}`,
-
-            date:request.createdAt,
-
-            urgency:request.urgency,
-
-            type:"request"
-
-          }));
-
-        /*
-        MERGE BOTH
-        */
-        setEvents([
-
-          ...validSchedules,
-
-          ...requestEvents
-
-        ]);
+       return (
+        now - createdTime <
+        duration
+       );
 
       }
+     );
 
-      catch (error) {
+    /*
+    =========================
+    FETCH REQUESTS
+    =========================
+    */
+    const requestRes = await axios.get(
 
-        console.log(error);
+     isWorker
+      ? "http://localhost:5000/api/requests/worker-history"
+      : "http://localhost:5000/api/requests/user",
 
-        setEvents([]);
-
+     {
+      headers:{
+       Authorization:
+        `Bearer ${user.token}`
       }
+     }
 
-    };
+    );
 
-    fetchCalendarData();
+    /*
+    ONLY ACCEPTED / IN PROGRESS
+    */
+    const requestEvents =
+     (requestRes.data || [])
 
-  }, [isWorker]);
+      .filter(
 
-  /*
-  =========================
-  CARD COLOR
-  =========================
-  */
-  const getColor = (urgency) => {
+       (request)=>
 
-    if (
-      urgency === "Urgent" ||
-      urgency === "urgent"
-    ) {
+        request.status === "accepted" ||
 
-      return "border-red-500 bg-red-50";
+        request.status === "in-progress"
 
-    }
+      )
 
-    if (
-      urgency === "24 Hours" ||
-      urgency === "24hrs"
-    ) {
+      .map((request)=>({
 
-      return "border-orange-500 bg-orange-50";
+       _id:request._id,
 
-    }
+       title:isWorker
 
-    return "border-green-500 bg-green-50";
+        ? `Work for ${request.userId?.firstName}`
+
+        : `${request.workerId?.firstName}`,
+
+       date:request.createdAt,
+
+       urgency:request.urgency,
+
+       type:"request"
+
+      }));
+
+    /*
+    MERGE BOTH
+    */
+    setEvents([
+
+     ...validSchedules,
+
+     ...requestEvents
+
+    ]);
+
+   }
+
+   catch (error) {
+
+    console.log(error);
+
+    setEvents([]);
+
+   }
 
   };
 
-  /*
-  =========================
-  TIME LABEL
-  =========================
-  */
-  const getTimeLabel = (urgency) => {
+  fetchCalendarData();
 
-    if (
-      urgency === "Urgent" ||
-      urgency === "urgent"
-    ) {
+ }, [isWorker]);
 
-      return "5 Hours";
+ /*
+ =========================
+ CARD COLOR
+ =========================
+ */
+ const getColor = (urgency) => {
 
-    }
+  if (
+   urgency === "Urgent" ||
+   urgency === "urgent"
+  ) {
 
-    if (
-      urgency === "24 Hours" ||
-      urgency === "24hrs"
-    ) {
+   return "border-red-500 bg-red-50";
 
-      return "1 Day";
+  }
 
-    }
+  if (
+   urgency === "24 Hours" ||
+   urgency === "24hrs"
+  ) {
 
-    return "3 Days";
+   return "border-orange-500 bg-orange-50";
 
-  };
+  }
 
-  return (
+  return "border-green-500 bg-green-50";
 
-    <div className="bg-white p-5 rounded-xl shadow h-fit">
+ };
 
-      <h2 className="font-semibold mb-4">
-        Calendar
-      </h2>
+ /*
+ =========================
+ TIME LABEL
+ =========================
+ */
+ const getTimeLabel = (urgency) => {
 
-      <div className="space-y-3">
+  if (
+   urgency === "Urgent" ||
+   urgency === "urgent"
+  ) {
 
-        {events.length === 0 ? (
+   return "5 Hours";
 
-          <p className="text-sm text-gray-500">
-            No scheduled work
-          </p>
+  }
 
-        ) : (
+  if (
+   urgency === "24 Hours" ||
+   urgency === "24hrs"
+  ) {
 
-          events.map((event) => (
+   return "1 Day";
 
-            <div
-              key={event._id}
-              className={`border-l-4 rounded-lg p-3 ${getColor(
+  }
 
-                event?.job?.urgency ||
+  return "3 Days";
 
-                event?.urgency
+ };
 
-              )}`}
-            >
+ /*
+ =========================
+ SHOW ONLY 10 IN DASHBOARD
+ =========================
+ */
+ const displayedEvents = showAll
+  ? events
+  : events.slice(0,10);
 
-              <div className="flex items-center justify-between">
+ return (
 
-                <p className="font-medium text-sm">
+  <div className="bg-white p-5 rounded-xl shadow h-fit">
 
-                  {event?.title}
+   <h2 className="font-semibold mb-4">
+    Calendar
+   </h2>
 
-                </p>
+   <div className="space-y-3">
 
-                <span className="text-xs font-medium">
+    {displayedEvents.length === 0 ? (
 
-                  {getTimeLabel(
+     <p className="text-sm text-gray-500">
+      No scheduled work
+     </p>
 
-                    event?.job?.urgency ||
+    ) : (
 
-                    event?.urgency
+     displayedEvents.map((event) => (
 
-                  )}
+      <div
+       key={event._id}
+       className={`border-l-4 rounded-lg p-3 ${getColor(
 
-                </span>
+        event?.job?.urgency ||
 
-              </div>
+        event?.urgency
 
-              <p className="text-xs text-gray-500 mt-1">
+       )}`}
+      >
 
-                {new Date(
-                  event?.date
-                ).toLocaleString()}
+       <div className="flex items-center justify-between">
 
-              </p>
+        <p className="font-medium text-sm">
 
-            </div>
+         {event?.title}
 
-          ))
+        </p>
 
-        )}
+        <span className="text-xs font-medium">
+
+         {getTimeLabel(
+
+          event?.job?.urgency ||
+
+          event?.urgency
+
+         )}
+
+        </span>
+
+       </div>
+
+       <p className="text-xs text-gray-500 mt-1">
+
+        {new Date(
+         event?.date
+        ).toLocaleString()}
+
+       </p>
 
       </div>
 
-    </div>
+     ))
 
-  );
+    )}
+
+   </div>
+
+  </div>
+
+ );
 
 };
 

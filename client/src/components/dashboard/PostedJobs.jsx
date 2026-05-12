@@ -1,132 +1,150 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
-const PostedJobs = () => {
+const PostedJobs = ({
+ showAll = false
+}) => {
 
-  const [jobs, setJobs] = useState([]);
+ const [jobs, setJobs] = useState([]);
 
-  const user = JSON.parse(
-    sessionStorage.getItem("user") || "null"
-  );
+ const navigate = useNavigate();
 
-  useEffect(() => {
+ const user = JSON.parse(
+  sessionStorage.getItem("user") || "null"
+ );
 
-    if (!user?._id) return;
+ useEffect(() => {
 
-    const fetchJobs = async () => {
+  if (!user?._id) return;
 
-      try {
+  const fetchJobs = async () => {
 
-        const res = await axios.get(
-          `http://localhost:5000/api/jobs/my-jobs/${user._id}`
-        );
+   try {
 
-        setJobs(res.data || []);
+    const res = await axios.get(
+     `http://localhost:5000/api/jobs/my-jobs/${user._id}`
+    );
 
+    setJobs(res.data || []);
+
+   }
+
+   catch (error) {
+
+    console.log(
+     "FETCH JOBS ERROR:",
+     error
+    );
+
+   }
+
+  };
+
+  fetchJobs();
+
+ }, [user]);
+
+ /*
+ SHOW ONLY 2 IN DASHBOARD
+ */
+ const displayedJobs = showAll
+  ? jobs
+  : jobs.slice(0,2);
+
+ return (
+
+  <div className="bg-white p-5 rounded-xl shadow mb-6">
+
+   <div className="flex justify-between items-center mb-4">
+
+    <h2 className="font-semibold">
+     My Posted Jobs
+    </h2>
+
+    {!showAll && (
+
+     <button
+      onClick={()=>
+       navigate("/my-posted-jobs")
       }
+      className="text-blue-600 text-sm"
+     >
 
-      catch (error) {
+      View All
 
-        console.log(
-          "FETCH JOBS ERROR:",
-          error
-        );
+     </button>
 
-      }
+    )}
 
-    };
+   </div>
 
-    fetchJobs();
+   {displayedJobs.length === 0 ? (
 
-  }, [user]);
+    <p className="text-gray-400 text-sm">
+     No jobs posted yet
+    </p>
 
-  /*
-  ONLY TAKE LATEST 2
-  */
-  const latestJobs = jobs.slice(0, 2);
+   ) : (
 
-  return (
+    displayedJobs.map((job) => (
 
-    <div className="bg-white p-5 rounded-xl shadow mb-6">
+     <div
+      key={job._id}
+      className="border rounded-lg p-4 mb-3 flex justify-between items-center"
+     >
 
-      <div className="flex justify-between items-center mb-4">
+      <div>
 
-        <h2 className="font-semibold">
-          My Posted Jobs
-        </h2>
+       <p className="font-medium">
+        {job.title}
+       </p>
 
-        <button className="text-blue-600 text-sm">
-          View All
-        </button>
+       <p className="text-sm text-gray-500">
+        {job.category} • {job.location}
+       </p>
+
+       <p className="text-sm text-gray-400">
+        Budget: ₹{job.budget}
+       </p>
 
       </div>
 
-      {latestJobs.length === 0 ? (
+      <div className="flex items-center gap-3">
 
-        <p className="text-gray-400 text-sm">
-          No jobs posted yet
-        </p>
+       {/* STATUS */}
+       <span
+        className={`text-xs px-2 py-1 rounded 
 
-      ) : (
+        ${
+         job.status === "accepted"
 
-        latestJobs.map((job) => (
+          ? "bg-green-100 text-green-600"
 
-          <div
-            key={job._id}
-            className="border rounded-lg p-4 mb-3 flex justify-between items-center"
-          >
+          : "bg-blue-100 text-blue-600"
 
-            <div>
+        }`}
+       >
 
-              <p className="font-medium">
-                {job.title}
-              </p>
+        {job.status === "accepted"
 
-              <p className="text-sm text-gray-500">
-                {job.category} • {job.location}
-              </p>
+         ? "Accepted"
 
-              <p className="text-sm text-gray-400">
-                Budget: ₹{job.budget}
-              </p>
+         : "Active"}
 
-            </div>
+       </span>
 
-            <div className="flex items-center gap-3">
+      </div>
 
-              {/* STATUS */}
-              <span
-                className={`text-xs px-2 py-1 rounded 
+     </div>
 
-                ${
-                  job.status === "accepted"
+    ))
 
-                    ? "bg-green-100 text-green-600"
+   )}
 
-                    : "bg-blue-100 text-blue-600"
+  </div>
 
-                }`}
-              >
-
-                {job.status === "accepted"
-
-                  ? "Accepted"
-
-                  : "Active"}
-
-              </span>
-
-            </div>
-
-          </div>
-
-        ))
-
-      )}
-
-    </div>
-
-  );
+ );
 
 };
 

@@ -7,7 +7,6 @@ import ActiveRequests from "../components/dashboard/ActiveRequests";
 import CalendarCard from "../components/dashboard/CalendarCard";
 import WorkerRequests from "../components/dashboard/WorkerRequests";
 import UpcomingWork from "../components/dashboard/UpcomingWork";
-import OrderHistory from "../components/dashboard/OrderHistory";
 import PostedJobs from "../components/dashboard/PostedJobs";
 import MyApplications from "../components/dashboard/MyApplications";
 
@@ -91,7 +90,6 @@ const Dashboard = () => {
 
               <UpcomingWork />
 
-              <OrderHistory />
 
             </div>
 

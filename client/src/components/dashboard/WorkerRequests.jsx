@@ -4,336 +4,366 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 import {
-  HiOutlineChatBubbleLeftRight
+ HiOutlineChatBubbleLeftRight
 } from "react-icons/hi2";
 
 import {
-  BsFileText
+ BsFileText
 } from "react-icons/bs";
 
-const WorkerRequests = () => {
+const WorkerRequests = ({
+ showAll = false
+}) => {
 
-  const [requests, setRequests] =
-    useState([]);
+ const [requests, setRequests] =
+  useState([]);
 
-  const [showDesc, setShowDesc] =
-    useState(null);
+ const [showDesc, setShowDesc] =
+  useState(null);
 
-  const navigate = useNavigate();
+ const navigate = useNavigate();
 
-  /*
-  =========================
-  FETCH REQUESTS
-  =========================
-  */
-  useEffect(() => {
+ /*
+ =========================
+ FETCH REQUESTS
+ =========================
+ */
+ useEffect(() => {
 
-    const fetchRequests = async () => {
+  const fetchRequests = async () => {
 
-      try {
+   try {
 
-        const user = JSON.parse(
-          sessionStorage.getItem("user")
-        );
+    const user = JSON.parse(
+     sessionStorage.getItem("user")
+    );
 
-        const res = await axios.get(
-          "http://localhost:5000/api/requests/worker",
-          {
-            headers: {
-              Authorization:
-                `Bearer ${user.token}`
-            }
-          }
-        );
-
-        setRequests(res.data || []);
-
+    const res = await axios.get(
+     "http://localhost:5000/api/requests/worker",
+     {
+      headers: {
+       Authorization:
+        `Bearer ${user.token}`
       }
+     }
+    );
 
-      catch (error) {
+    setRequests(res.data || []);
 
-        console.log(error);
+   }
 
-        setRequests([]);
+   catch (error) {
 
-      }
+    console.log(error);
 
-    };
+    setRequests([]);
 
-    fetchRequests();
+   }
 
-  }, []);
+  };
 
-  /*
-  =========================
-  UPDATE STATUS
-  =========================
-  */
-const updateStatus = async (
+  fetchRequests();
+
+ }, []);
+
+ /*
+ =========================
+ UPDATE STATUS
+ =========================
+ */
+ const updateStatus = async (
   id,
   type
-) => {
+ ) => {
 
   /*
   REMOVE FROM UI
   */
   setRequests((prev) =>
-    prev.filter(
-      (req) => req._id !== id
-    )
+   prev.filter(
+    (req) => req._id !== id
+   )
   );
 
   try{
 
-    const user = JSON.parse(
-      sessionStorage.getItem("user")
+   const user = JSON.parse(
+    sessionStorage.getItem("user")
+   );
+
+   /*
+   ACCEPT REQUEST
+   */
+   if(type === "accept"){
+
+    await axios.put(
+
+     `http://localhost:5000/api/requests/${id}/status`,
+
+     {
+      status:"accepted"
+     },
+
+     {
+      headers:{
+       Authorization:
+        `Bearer ${user.token}`
+      }
+     }
+
     );
 
-    /*
-    ACCEPT REQUEST
-    */
-    if(type === "accept"){
+   }
 
-      await axios.put(
+   /*
+   REJECT REQUEST
+   */
+   else if(type === "reject"){
 
-        `http://localhost:5000/api/requests/${id}/status`,
+    await axios.put(
 
-        {
-          status:"accepted"
-        },
+     `http://localhost:5000/api/requests/${id}/status`,
 
-        {
-          headers:{
-            Authorization:
-             `Bearer ${user.token}`
-          }
-        }
+     {
+      status:"rejected"
+     },
 
-      );
+     {
+      headers:{
+       Authorization:
+        `Bearer ${user.token}`
+      }
+     }
 
-    }
+    );
 
-    /*
-    REJECT REQUEST
-    */
-    else if(type === "reject"){
-
-      await axios.put(
-
-        `http://localhost:5000/api/requests/${id}/status`,
-
-        {
-          status:"rejected"
-        },
-
-        {
-          headers:{
-            Authorization:
-             `Bearer ${user.token}`
-          }
-        }
-
-      );
-
-    }
+   }
 
   }
 
   catch(error){
 
-    console.log(error);
+   console.log(error);
 
   }
 
-};
+ };
 
-  /*
-  =========================
-  CHAT
-  =========================
-  */
-  const openChat = (request) => {
+ /*
+ =========================
+ CHAT
+ =========================
+ */
+ const openChat = (request) => {
 
-    navigate("/messages", {
-      state: {
-        user: {
-          _id: request.userId?._id,
-          name:
-            request.userId?.firstName
-        }
+  navigate("/messages", {
+   state: {
+    user: {
+     _id: request.userId?._id,
+     name:
+      request.userId?.firstName
+    }
+   }
+  });
+
+ };
+
+ /*
+ =========================
+ URGENCY COLORS
+ =========================
+ */
+ const getUrgencyStyle = (
+  urgency
+ ) => {
+
+  if (urgency === "Urgent") {
+
+   return "bg-red-100 text-red-600";
+
+  }
+
+  if (urgency === "24 Hours") {
+
+   return "bg-orange-100 text-orange-600";
+
+  }
+
+  return "bg-green-100 text-green-600";
+ };
+
+ /*
+ =========================
+ SHOW ONLY 2 IN DASHBOARD
+ =========================
+ */
+ const displayedRequests = showAll
+  ? requests
+  : requests.slice(0,2);
+
+ return (
+
+  <div className="bg-white p-5 rounded-xl shadow mb-6">
+
+   <div className="flex justify-between items-center mb-4">
+
+    <h2 className="font-semibold">
+     Incoming Requests
+    </h2>
+
+    {!showAll && (
+
+     <button
+      onClick={() =>
+      navigate("/worker-requests")
       }
-    });
+      className="text-blue-600 text-sm"
+     >
 
-  };
+      View All
 
-  /*
-  =========================
-  URGENCY COLORS
-  =========================
-  */
-  const getUrgencyStyle = (
-    urgency
-  ) => {
+     </button>
 
-    if (urgency === "Urgent") {
+    )}
 
-      return "bg-red-100 text-red-600";
+   </div>
 
-    }
+   {displayedRequests.length === 0 ? (
 
-    if (urgency === "24 Hours") {
+    <p className="text-sm text-gray-500">
+     No incoming requests
+    </p>
 
-      return "bg-orange-100 text-orange-600";
+   ) : (
 
-    }
+    displayedRequests.map((request) => (
 
-    return "bg-green-100 text-green-600";
-  };
+     <div
+      key={request._id}
+      className="p-4 border rounded-lg mb-4"
+     >
 
-  return (
+      {/* TOP */}
+      <div className="flex items-start justify-between">
 
-    <div className="bg-white p-5 rounded-xl shadow mb-6">
+       <div>
 
-      <h2 className="font-semibold mb-4">
-        Incoming Requests
-      </h2>
-
-      {requests.length === 0 ? (
-
-        <p className="text-sm text-gray-500">
-          No incoming requests
+        <p className="font-medium">
+         Service Request
         </p>
 
-      ) : (
+        <p className="text-sm text-gray-500">
 
-        requests.map((request) => (
+         Client:{" "}
 
-          <div
-            key={request._id}
-            className="p-4 border rounded-lg mb-4"
-          >
+         {request.userId?.firstName}
 
-            {/* TOP */}
-            <div className="flex items-start justify-between">
+        </p>
 
-              <div>
+        <p className="text-sm text-gray-400 mt-1">
 
-                <p className="font-medium">
-                  Service Request
-                </p>
+         Budget: ₹{request.budget}
 
-                <p className="text-sm text-gray-500">
+        </p>
 
-                  Client:{" "}
+       </div>
 
-                  {request.userId?.firstName}
+       <span
+        className={`text-xs px-2 py-1 rounded-full ${getUrgencyStyle(
+         request.urgency
+        )}`}
+       >
+        {request.urgency}
+       </span>
 
-                </p>
+      </div>
 
-                <p className="text-sm text-gray-400 mt-1">
+      {/* ICONS */}
+      <div className="flex justify-end gap-2 mt-3">
 
-                  Budget: ₹{request.budget}
+       {/* DESCRIPTION */}
+       <button
+        onClick={() =>
+         setShowDesc(
+          showDesc === request._id
+           ? null
+           : request._id
+         )
+        }
+        className="p-2 rounded-lg hover:bg-gray-100"
+       >
 
-                </p>
+        <BsFileText
+         size={18}
+         className="text-gray-600"
+        />
 
-              </div>
+       </button>
 
-              <span
-                className={`text-xs px-2 py-1 rounded-full ${getUrgencyStyle(
-                  request.urgency
-                )}`}
-              >
-                {request.urgency}
-              </span>
+       {/* CHAT */}
+       <button
+        onClick={() =>
+         openChat(request)
+        }
+        className="p-2 rounded-lg hover:bg-blue-50"
+       >
 
-            </div>
+        <HiOutlineChatBubbleLeftRight
+         size={20}
+         className="text-blue-600"
+        />
 
-            {/* ICONS */}
-            <div className="flex justify-end gap-2 mt-3">
+       </button>
 
-              {/* DESCRIPTION */}
-              <button
-                onClick={() =>
-                  setShowDesc(
-                    showDesc === request._id
-                      ? null
-                      : request._id
-                  )
-                }
-                className="p-2 rounded-lg hover:bg-gray-100"
-              >
+      </div>
 
-                <BsFileText
-                  size={18}
-                  className="text-gray-600"
-                />
+      {/* DESCRIPTION */}
+      {showDesc === request._id && (
 
-              </button>
+       <div className="mt-3 border-t pt-3 text-sm text-gray-600">
 
-              {/* CHAT */}
-              <button
-                onClick={() =>
-                  openChat(request)
-                }
-                className="p-2 rounded-lg hover:bg-blue-50"
-              >
+        {request.description}
 
-                <HiOutlineChatBubbleLeftRight
-                  size={20}
-                  className="text-blue-600"
-                />
-
-              </button>
-
-            </div>
-
-            {/* DESCRIPTION */}
-            {showDesc === request._id && (
-
-              <div className="mt-3 border-t pt-3 text-sm text-gray-600">
-
-                {request.description}
-
-              </div>
-
-            )}
-
-            {/* ACTIONS */}
-            <div className="flex gap-3 mt-4">
-
-              <button
-               onClick={() =>
-                 updateStatus(
-                 request._id,
-                 "accept"
-                )}
-                className="bg-blue-600 text-white px-4 py-2 rounded"
-              >
-                Accept
-              </button>
-
-              <button
-               onClick={() =>
-               updateStatus(
-               request._id,
-               "reject"
-              )}
-                className="border px-4 py-2 rounded"
-              >
-                Reject
-              </button>
-
-            </div>
-
-          </div>
-
-        ))
+       </div>
 
       )}
 
-    </div>
+      {/* ACTIONS */}
+      <div className="flex gap-3 mt-4">
 
-  );
+       <button
+        onClick={() =>
+         updateStatus(
+          request._id,
+          "accept"
+         )}
+        className="bg-blue-600 text-white px-4 py-2 rounded"
+       >
+        Accept
+       </button>
+
+       <button
+        onClick={() =>
+         updateStatus(
+          request._id,
+          "reject"
+         )}
+        className="border px-4 py-2 rounded"
+       >
+        Reject
+       </button>
+
+      </div>
+
+     </div>
+
+    ))
+
+   )}
+
+  </div>
+
+ );
 
 };
 

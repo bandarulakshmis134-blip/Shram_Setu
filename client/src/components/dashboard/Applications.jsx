@@ -1,225 +1,259 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
+import { useNavigate } from "react-router-dom";
+
 import WorkerProfileModal from "../WorkerProfileModal";
 
-const Applications = () => {
+const Applications = ({
+ showAll = false
+}) => {
 
-  const [apps, setApps] = useState([]);
+ const [apps, setApps] = useState([]);
 
-  const [selectedApp, setSelectedApp] =
-    useState(null);
+ const [selectedApp, setSelectedApp] =
+  useState(null);
 
-  /*
-  ========================
-  FETCH APPLICATIONS
-  ========================
-  */
-  useEffect(() => {
+ const navigate = useNavigate();
 
-    const fetchApps = async () => {
+ /*
+ ========================
+ FETCH APPLICATIONS
+ ========================
+ */
+ useEffect(() => {
 
-      try {
+  const fetchApps = async () => {
 
-        const user = JSON.parse(
-          sessionStorage.getItem("user")
-        );
+   try {
 
-        const res = await axios.get(
-          "http://localhost:5000/api/applications/admin",
-          {
-            headers: {
-              Authorization: `Bearer ${user.token}`
-            }
-          }
-        );
+    const user = JSON.parse(
+     sessionStorage.getItem("user")
+    );
 
-        setApps(res.data || []);
-
+    const res = await axios.get(
+     "http://localhost:5000/api/applications/admin",
+     {
+      headers: {
+       Authorization: `Bearer ${user.token}`
       }
+     }
+    );
 
-      catch (error) {
+    setApps(res.data || []);
 
-        console.log(error);
+   }
 
-        setApps([]);
+   catch (error) {
 
-      }
+    console.log(error);
 
-    };
+    setApps([]);
 
-    fetchApps();
-
-  }, []);
-
-  /*
-  ========================
-  UPDATE STATUS
-  ========================
-  */
-  const updateStatus = async (
-    id,
-    status
-  ) => {
-
-    try {
-
-      const user = JSON.parse(
-        sessionStorage.getItem("user")
-      );
-
-      await axios.put(
-        `http://localhost:5000/api/applications/${id}/status`,
-        { status },
-        {
-          headers: {
-            Authorization: `Bearer ${user.token}`
-          }
-        }
-      );
-
-      /*
-      UPDATE UI
-      */
-      setApps((prev) =>
-        prev.map((app) =>
-          app._id === id
-            ? { ...app, status }
-            : app
-        )
-      );
-
-    }
-
-    catch (error) {
-
-      console.log(error);
-
-    }
+   }
 
   };
 
-  return (
+  fetchApps();
 
-    <div className="bg-white p-5 rounded-xl shadow">
+ }, []);
 
-      <h2 className="font-semibold mb-4">
+ /*
+ ========================
+ UPDATE STATUS
+ ========================
+ */
+ const updateStatus = async (
+  id,
+  status
+ ) => {
 
-        New Job Applications
+  try {
 
-      </h2>
+   const user = JSON.parse(
+    sessionStorage.getItem("user")
+   );
 
-      {apps.length === 0 ? (
+   await axios.put(
+    `http://localhost:5000/api/applications/${id}/status`,
+    { status },
+    {
+     headers: {
+      Authorization: `Bearer ${user.token}`
+     }
+    }
+   );
 
-        <p className="text-gray-500 text-sm">
+   /*
+   UPDATE UI
+   */
+   setApps((prev) =>
+    prev.map((app) =>
+     app._id === id
+      ? { ...app, status }
+      : app
+    )
+   );
 
-          No applications yet
+  }
 
-        </p>
+  catch (error) {
 
-      ) : (
+   console.log(error);
 
-        apps.map((app) => (
+  }
 
-          <div
-            key={app._id}
-            className="border-b py-4"
-          >
+ };
 
-            <p className="font-medium">
+ /*
+ ========================
+ SHOW ONLY 2 IN DASHBOARD
+ ========================
+ */
+ const displayedApps = showAll
+  ? apps
+  : apps.slice(0,2);
 
-              {app?.worker?.firstName}
+ return (
 
-            </p>
+  <div className="bg-white p-5 rounded-xl shadow">
 
-            <p className="text-sm text-gray-500">
+   <div className="flex justify-between items-center mb-4">
 
-              Applied for:
-              {" "}
-              {app?.job?.title}
+    <h2 className="font-semibold">
 
-            </p>
+     New Job Applications
 
-            <p className="text-xs mt-1 capitalize text-gray-400">
+    </h2>
 
-              Status:
-              {" "}
-              {app?.status}
+    {!showAll && (
 
-            </p>
+     <button
+      onClick={() =>
+       navigate("/all-applications")
+      }
+      className="text-blue-600 text-sm"
+     >
 
-            {/* ACTIONS */}
-            {app?.status === "pending" && (
+      View All
 
-              <div className="flex gap-2 mt-3">
+     </button>
 
-                {/* REVIEW */}
-                <button
-                  onClick={() =>
-                    setSelectedApp(app)
-                  }
-                  className="px-3 py-1 text-sm border rounded-lg hover:bg-gray-100"
-                >
+    )}
 
-                  Review
+   </div>
 
-                </button>
+   {displayedApps.length === 0 ? (
 
-                {/* ACCEPT */}
-                <button
-                  onClick={() =>
-                    updateStatus(
-                      app._id,
-                      "accepted"
-                    )
-                  }
-                  className="px-3 py-1 text-sm bg-green-100 text-green-600 rounded-lg hover:bg-green-200"
-                >
+    <p className="text-gray-500 text-sm">
 
-                  Accept
+     No applications yet
 
-                </button>
+    </p>
 
-                {/* REJECT */}
-                <button
-                  onClick={() =>
-                    updateStatus(
-                      app._id,
-                      "rejected"
-                    )
-                  }
-                  className="px-3 py-1 text-sm bg-red-100 text-red-600 rounded-lg hover:bg-red-200"
-                >
+   ) : (
 
-                  Reject
+    displayedApps.map((app) => (
 
-                </button>
+     <div
+      key={app._id}
+      className="border-b py-4"
+     >
 
-              </div>
+      <p className="font-medium">
 
-            )}
+       {app?.worker?.firstName}
 
-          </div>
+      </p>
 
-        ))
+      <p className="text-sm text-gray-500">
+
+       Applied for:
+       {" "}
+       {app?.job?.title}
+
+      </p>
+
+      <p className="text-xs mt-1 capitalize text-gray-400">
+
+       Status:
+       {" "}
+       {app?.status}
+
+      </p>
+
+      {/* ACTIONS */}
+      {app?.status === "pending" && (
+
+       <div className="flex gap-2 mt-3">
+
+        {/* REVIEW */}
+        <button
+         onClick={() =>
+          setSelectedApp(app)
+         }
+         className="px-3 py-1 text-sm border rounded-lg hover:bg-gray-100"
+        >
+
+         Review
+
+        </button>
+
+        {/* ACCEPT */}
+        <button
+         onClick={() =>
+          updateStatus(
+           app._id,
+           "accepted"
+          )
+         }
+         className="px-3 py-1 text-sm bg-green-100 text-green-600 rounded-lg hover:bg-green-200"
+        >
+
+         Accept
+
+        </button>
+
+        {/* REJECT */}
+        <button
+         onClick={() =>
+          updateStatus(
+           app._id,
+           "rejected"
+          )
+         }
+         className="px-3 py-1 text-sm bg-red-100 text-red-600 rounded-lg hover:bg-red-200"
+        >
+
+         Reject
+
+        </button>
+
+       </div>
 
       )}
 
-      {/* WORKER PROFILE MODAL */}
-      {selectedApp && (
+     </div>
 
-        <WorkerProfileModal
-          worker={selectedApp?.worker}
-          onClose={() =>
-            setSelectedApp(null)
-          }
-        />
+    ))
 
-      )}
+   )}
 
-    </div>
+   {/* WORKER PROFILE MODAL */}
+   {selectedApp && (
 
-  );
+    <WorkerProfileModal
+     worker={selectedApp?.worker}
+     onClose={() =>
+      setSelectedApp(null)
+     }
+    />
+
+   )}
+
+  </div>
+
+ );
 
 };
 
