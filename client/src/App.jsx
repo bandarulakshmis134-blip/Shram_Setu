@@ -24,6 +24,7 @@ import FindWorkers from "./pages/FindWorkers";
 import Messages from "./pages/Messages";
 import AllRequests from "./pages/AllRequests";
 import WorkerRequestsPage from "./pages/WorkerRequestsPage";
+import AIAssistant from "./components/AIAssistant";
 
 /*
  NEW PAGES
@@ -104,15 +105,6 @@ function App() {
      path="/"
      element={<Landing />}
     />
-
-    {/* ALL PAGES WITH NAVBAR */}
-    <Route element={<MainLayout />}>
-
-     <Route
-      path="/home"
-      element={<Home />}
-     />
-
      <Route
       path="/login"
       element={<Login />}
@@ -122,6 +114,15 @@ function App() {
       path="/signup"
       element={<Signup />}
      />
+
+    {/* ALL PAGES WITH NAVBAR */}
+    <Route element={<MainLayout />}>
+
+     <Route
+      path="/home"
+      element={<Home />}
+     />
+
 
      <Route
       path="/profile"
@@ -193,6 +194,7 @@ function App() {
     </Route>
 
    </Routes>
+   <AIAssistant/>
 
   </BrowserRouter>
 
