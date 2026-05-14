@@ -25,7 +25,7 @@ import Messages from "./pages/Messages";
 import AllRequests from "./pages/AllRequests";
 import WorkerRequestsPage from "./pages/WorkerRequestsPage";
 import AIAssistant from "./components/AIAssistant";
-
+import ForgotPassword from "./pages/ForgotPassword";
 /*
  NEW PAGES
  */
@@ -114,6 +114,11 @@ function App() {
       path="/signup"
       element={<Signup />}
      />
+     
+     <Route
+      path="/forgot-password"
+      element={<ForgotPassword />}
+     />
 
     {/* ALL PAGES WITH NAVBAR */}
     <Route element={<MainLayout />}>
@@ -190,6 +195,7 @@ function App() {
      path="/worker-requests"
      element={<WorkerRequestsPage />}
      />
+
 
     </Route>
 

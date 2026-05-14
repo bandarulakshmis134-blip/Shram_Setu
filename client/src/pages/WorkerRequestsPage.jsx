@@ -14,23 +14,24 @@ const WorkerRequestsPage = () => {
 
   <div className="min-h-screen bg-gray-100 p-6">
 
-   {/* TOP */}
-   <div className="flex items-center gap-3 mb-5">
+   {/* BACK BUTTON */}
+   <button
 
-    <button
-     onClick={() => navigate(-1)}
-     className="p-2 rounded-lg bg-white shadow hover:bg-gray-100"
-    >
+    onClick={()=>navigate(-1)}
 
-     <ArrowLeft size={18} />
+    className="flex items-center gap-2 mb-4 text-gray-700 hover:text-blue-600 transition"
 
-    </button>
+   >
 
-    <h1 className="text-2xl font-bold">
-     Incoming Requests
-    </h1>
+    <ArrowLeft size={22}/>
 
-   </div>
+    <span className="font-medium">
+
+     Back
+
+    </span>
+
+   </button>
 
    <WorkerRequests showAll={true}/>
 

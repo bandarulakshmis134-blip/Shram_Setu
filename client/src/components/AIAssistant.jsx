@@ -17,11 +17,18 @@ import {
  useLocation
 } from "react-router-dom";
 
+import {
+ useTranslation
+} from "react-i18next";
+
 import botImage from "../assets/kaiyo-bot.png";
 
 const AIAssistant = () => {
 
  const location = useLocation();
+
+ const { t,i18n } =
+  useTranslation();
 
  /*
  ========================
@@ -222,7 +229,8 @@ const AIAssistant = () => {
 
     {
      message:currentMessage,
-     userId:user?._id
+     userId:user?._id,
+     language:i18n.language
     }
 
    );
@@ -402,7 +410,7 @@ const AIAssistant = () => {
 
          <Sparkles size={12}/>
 
-         Smart Assistant
+         {t("smartAssistant")}
 
         </p>
 
@@ -528,7 +536,7 @@ const AIAssistant = () => {
 
        }}
 
-       placeholder="Ask KAIYO anything..."
+       placeholder={t("kaiyoPlaceholder")}
 
        className="flex-1 border border-gray-200 rounded-2xl px-4 py-3 outline-none focus:border-blue-500"
 

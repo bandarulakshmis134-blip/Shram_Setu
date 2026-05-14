@@ -1,6 +1,14 @@
 import { useEffect, useState } from "react";
+
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+
+import {
+ useNavigate
+} from "react-router-dom";
+
+import {
+ ArrowLeft
+} from "lucide-react";
 
 import InvoiceModal from "../components/dashboard/InvoiceModal";
 
@@ -213,6 +221,25 @@ const AllRequests = () => {
   <>
 
    <div className="p-6 bg-gray-100 min-h-screen">
+
+    {/* BACK BUTTON */}
+    <button
+
+     onClick={()=>navigate(-1)}
+
+     className="flex items-center gap-2 mb-4 text-gray-700 hover:text-blue-600 transition"
+
+    >
+
+     <ArrowLeft size={22}/>
+
+     <span className="font-medium">
+
+      Back
+
+     </span>
+
+    </button>
 
     <div className="bg-white rounded-xl shadow p-5">
 

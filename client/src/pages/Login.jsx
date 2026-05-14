@@ -187,6 +187,18 @@ const Login = () => {
           </span>
         </p>
 
+        <p
+
+        onClick={()=>
+          navigate("/forgot-password")
+         }
+
+        className="text-sm text-center text-blue-600 cursor-pointer mt-6"
+
+         >
+        Forgot Password?
+        </p>
+
       </div>
 
     </div>

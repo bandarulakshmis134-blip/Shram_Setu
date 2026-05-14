@@ -48,7 +48,15 @@ const userSchema = new mongoose.Schema({
  role: {
   type: String,
   default: "worker"
- }
+ },
+
+ otp:{
+ type:String
+},
+
+otpExpiry:{
+ type:Date
+}
 
 });
 

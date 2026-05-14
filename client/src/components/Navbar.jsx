@@ -9,12 +9,13 @@ import {
  MessageIcon,
  ProfileIcon
 } from "./icons/NavIcons";
-
+import LanguageSwitcher from "./LanguageSwitcher";
+import { useTranslation } from "react-i18next";
 
 const Navbar = () => {
 
  const navigate = useNavigate();
-
+ const { t } = useTranslation();
 
  /*
  SAFE USER PARSE
@@ -104,7 +105,7 @@ const Navbar = () => {
 
       <HomeIcon size={18}/>
 
-      Home
+     {t("home")}
 
      </NavLink>
 
@@ -123,7 +124,7 @@ const Navbar = () => {
 
       <SearchIcon size={18}/>
 
-      Find Workers
+      {t("findWorkers")}
 
      </NavLink>
 
@@ -142,7 +143,7 @@ const Navbar = () => {
 
       <JobsIcon size={18}/>
 
-      Post Jobs
+      {t("postJob")}
 
      </NavLink>
 
@@ -161,7 +162,7 @@ const Navbar = () => {
 
       <DashboardIcon size={18}/>
 
-      Dashboard
+     {t("dashboard")}
 
      </NavLink>
 
@@ -182,7 +183,7 @@ const Navbar = () => {
 
       <MessageIcon size={18}/>
 
-      Messages
+      {t("messages")}
 
      </NavLink>
 
@@ -201,9 +202,11 @@ const Navbar = () => {
 
       <ProfileIcon size={18}/>
 
-      Profile
+     {t("profile")}
 
      </NavLink>
+
+     <LanguageSwitcher />
 
 
     </ul>

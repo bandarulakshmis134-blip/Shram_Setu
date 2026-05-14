@@ -20,6 +20,7 @@ const Message = require("./models/Message");
 const Worker = require("./models/Worker"); // 🔥 important
 const invoiceRoutes = require("./routes/invoiceRoutes");
 const aiRoutes = require("./routes/aiRoutes");
+const forgotPasswordRoutes = require("./routes/forgotPasswordRoutes");
 /*
 ========================
 APP INIT
@@ -91,6 +92,7 @@ app.use("/api/applications", applicationRoutes);
 app.use("/api/schedules",scheduleRoutes);
 app.use("/api/invoices",invoiceRoutes);
 app.use("/api/ai",aiRoutes);
+app.use("/api/forgot-password",forgotPasswordRoutes);
 /*
 ========================
 TEST ROUTE
