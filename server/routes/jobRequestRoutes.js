@@ -17,7 +17,9 @@ const {
 
 const {
 
-  verifyToken
+  verifyToken,
+  sendWorkOTP,
+  verifyWorkOTP
 
 } = require(
   "../middleware/authMiddleware"
@@ -69,5 +71,24 @@ router.delete(
   verifyToken,
   deleteRequest
 );
+
+/*
+SEND WORK OTP
+*/
+router.post(
+ "/:id/send-work-otp",
+ verifyToken,
+ sendWorkOTP
+);
+
+/*
+VERIFY WORK OTP
+*/
+router.post(
+ "/:id/verify-work-otp",
+ verifyToken,
+ verifyWorkOTP
+);
+
 
 module.exports = router;

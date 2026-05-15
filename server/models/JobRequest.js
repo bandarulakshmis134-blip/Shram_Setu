@@ -46,6 +46,15 @@ const jobRequestSchema = new mongoose.Schema({
   ],
   default:"pending"
  },
+ workOTP:{
+ type:String,
+ default:null
+},
+
+workOTPExpiry:{
+ type:Date,
+ default:null
+},
 
  /*
  AUTO DELETE FIELD

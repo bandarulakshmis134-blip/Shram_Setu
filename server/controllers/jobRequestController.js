@@ -1,6 +1,7 @@
 const JobRequest = require("../models/JobRequest");
 const Invoice = require("../models/Invoice");
-
+const sendEmail = require("../utils/sendEmail");
+const User = require("../models/User");
 
 /*
 ========================
@@ -380,6 +381,182 @@ exports.deleteRequest = async (
   res.json({
 
    message:"Request deleted successfully"
+
+  });
+
+ }
+
+ catch(error){
+
+  console.log(error);
+
+  res.status(500).json({
+
+   message:error.message
+
+  });
+
+ }
+
+};
+
+/*
+========================
+SEND WORK OTP
+========================
+*/
+exports.sendWorkOTP = async (
+ req,
+ res
+)=>{
+
+ try{
+
+  const request =
+   await JobRequest.findById(
+    req.params.id
+   )
+
+   .populate(
+    "userId"
+   );
+
+  if(!request){
+
+   return res.status(404).json({
+
+    message:"Request not found"
+
+   });
+
+  }
+
+  /*
+  GENERATE OTP
+  */
+  const otp = Math.floor(
+
+   100000 +
+   Math.random() * 900000
+
+  ).toString();
+
+  /*
+  SAVE OTP
+  */
+  request.workOTP = otp;
+
+  request.workOTPExpiry =
+
+   Date.now() +
+
+   2 * 60 * 1000;
+
+  await request.save();
+
+  /*
+  SEND EMAIL
+  */
+  await sendEmail(
+
+   request.userId.email,
+
+   "Shram Setu Work Completion OTP",
+
+   `Your work completion OTP is ${otp}`
+
+  );
+
+  res.json({
+
+   message:"OTP sent to customer"
+
+  });
+
+ }
+
+ catch(error){
+
+  console.log(error);
+
+  res.status(500).json({
+
+   message:error.message
+
+  });
+
+ }
+
+};
+
+/*
+========================
+VERIFY WORK OTP
+========================
+*/
+exports.verifyWorkOTP = async (
+ req,
+ res
+)=>{
+
+ try{
+
+  const {
+   otp
+  } = req.body;
+
+  const request =
+   await JobRequest.findById(
+    req.params.id
+   );
+
+  if(!request){
+
+   return res.status(404).json({
+
+    message:"Request not found"
+
+   });
+
+  }
+
+  /*
+  INVALID OTP
+  */
+  if(
+
+   request.workOTP !== otp ||
+
+   request.workOTPExpiry < Date.now()
+
+  ){
+
+   return res.status(400).json({
+
+    message:"Invalid or expired OTP"
+
+   });
+
+  }
+
+  /*
+  COMPLETE WORK
+  */
+  request.status =
+   "completed";
+
+  request.workOTP =
+   null;
+
+  request.workOTPExpiry =
+   null;
+
+  await request.save();
+
+  res.json({
+
+   message:
+    "Work completed successfully"
 
   });
 
