@@ -475,17 +475,29 @@ exports.searchWorkers = async (req,res)=>{
    category,
    location,
    search,
+   rating,
    userId,
-   registrationType
+   registrationType,
+   page = 1
   } = req.query;
+
+  /*
+  =============================
+  PAGINATION
+  =============================
+  */
+  const limit = 12;
+
+  const skip =
+   (Number(page) - 1) * limit;
 
   const query = {};
 
   /*
- =============================
- EXCLUDE OWN PROFILE
- =============================
- */
+  =============================
+  EXCLUDE OWN PROFILE
+  =============================
+  */
   if(userId){
 
    query.userId = {
@@ -495,10 +507,10 @@ exports.searchWorkers = async (req,res)=>{
   }
 
   /*
- =============================
- CATEGORY FILTER
- =============================
- */
+  =============================
+  CATEGORY FILTER
+  =============================
+  */
   if(category){
 
    query.skills = {
@@ -508,10 +520,10 @@ exports.searchWorkers = async (req,res)=>{
   }
 
   /*
- =============================
- LOCATION FILTER
- =============================
- */
+  =============================
+  LOCATION FILTER
+  =============================
+  */
   if(location){
 
    query.location = {
@@ -525,64 +537,84 @@ exports.searchWorkers = async (req,res)=>{
   }
 
   /*
-=============================
-REGISTRATION TYPE FILTER
-=============================
-*/
-if(registrationType){
+  =============================
+  REGISTRATION TYPE
+  =============================
+  */
+  if(registrationType){
 
- query.registrationType =
-  registrationType;
-
-}
-
-  /*
- =============================
- SEARCH FILTER
- =============================
- */
-  if(search){
-
-   const searchText =
-    search.toString().trim();
-
-   if(searchText.length > 0){
-
-    const searchRegex =
-     new RegExp(
-      searchText,
-      "i"
-     );
-
-    query.$or = [
-
-     {
-      firstName:
-       searchRegex
-     },
-
-     {
-      groupName:
-       searchRegex
-     },
-
-     {
-      location:
-       searchRegex
-     },
-
-     {
-      skills:{
-       $in:[searchRegex]
-      }
-     }
-
-    ];
-
-   }
+   query.registrationType =
+    registrationType;
 
   }
 
+  /*
+  =============================
+  SEARCH FILTER
+  =============================
+  */
+  if(search){
+
+   const searchRegex =
+    new RegExp(
+     search,
+     "i"
+    );
+
+   query.$or = [
+
+    {
+     firstName:
+      searchRegex
+    },
+
+    {
+     groupName:
+      searchRegex
+    },
+
+    {
+     location:
+      searchRegex
+    },
+
+    {
+     skills:{
+      $in:[searchRegex]
+     }
+    }
+
+   ];
+
+  }
+
+  /*
+  =============================
+  GET USER LOCATION
+  =============================
+  */
+  let userLocation = "";
+
+  if(userId){
+
+   const currentUser =
+    await User.findById(
+     userId
+    );
+
+   userLocation =
+
+    currentUser?.location
+     ?.toLowerCase()
+     ?.trim() || "";
+
+  }
+
+  /*
+  =============================
+  FETCH WORKERS
+  =============================
+  */
   const workers =
    await Worker.find(query)
 
@@ -597,32 +629,187 @@ if(registrationType){
    .lean();
 
   /*
+  =============================
   MERGE USER DATA
+  =============================
   */
-  const result =
-   workers.map((w)=>({
+  let result =
+   workers.map((worker)=>({
 
-    ...w,
+    ...worker,
 
     profilePic:
-     w.userId?.profilePic || "",
+     worker.userId?.profilePic || "",
 
     averageRating:
-     w.userId?.averageRating || 0,
+     worker.userId?.averageRating || 0,
 
     totalRatings:
-     w.userId?.totalRatings || 0
+     worker.userId?.totalRatings || 0
 
    }));
 
-  res.json(result);
+  /*
+  =============================
+  RATING FILTER
+  =============================
+  */
+  if(Number(rating) > 0){
+
+   result = result.filter(
+
+    (worker)=>
+
+     worker.averageRating >=
+     Number(rating)
+
+   );
+
+  }
+
+  /*
+  =============================
+  SMART SORTING
+  =============================
+  */
+  result.sort((a,b)=>{
+
+   /*
+   ===================================
+   LOCATION PRIORITY
+   ===================================
+   */
+   const aSameLocation =
+
+    a.location
+     ?.toLowerCase()
+     ?.includes(
+      userLocation
+     );
+
+   const bSameLocation =
+
+    b.location
+     ?.toLowerCase()
+     ?.includes(
+      userLocation
+     );
+
+   /*
+   ONLY APPLY LOCATION PRIORITY
+   WHEN LOCATION FILTER NOT USED
+   */
+   if(!location){
+
+    if(
+     aSameLocation &&
+     !bSameLocation
+    ){
+
+     return -1;
+
+    }
+
+    if(
+     !aSameLocation &&
+     bSameLocation
+    ){
+
+     return 1;
+
+    }
+
+   }
+
+   /*
+   ===================================
+   HIGHER RATING FIRST
+   ===================================
+   */
+   if(
+
+    b.averageRating !==
+    a.averageRating
+
+   ){
+
+    return (
+
+     b.averageRating -
+     a.averageRating
+
+    );
+
+   }
+
+   /*
+   ===================================
+   MORE TOTAL RATINGS
+   ===================================
+   */
+   if(
+
+    b.totalRatings !==
+    a.totalRatings
+
+   ){
+
+    return (
+
+     b.totalRatings -
+     a.totalRatings
+
+    );
+
+   }
+
+   /*
+   ===================================
+   ALPHABETICAL ORDER
+   ===================================
+   */
+   return (
+
+    (a.firstName ||
+     a.groupName ||
+     "")
+
+    .localeCompare(
+
+     b.firstName ||
+     b.groupName ||
+     ""
+
+    )
+
+   );
+
+  });
+
+  /*
+  =============================
+  PAGINATION
+  =============================
+  */
+  const paginatedWorkers =
+   result.slice(
+
+    skip,
+
+    skip + limit
+
+   );
+
+  res.json(
+   paginatedWorkers
+  );
 
  }
 
  catch(error){
 
   console.log(
-   "ERROR:",
+   "SEARCH WORKERS ERROR:",
    error
   );
 

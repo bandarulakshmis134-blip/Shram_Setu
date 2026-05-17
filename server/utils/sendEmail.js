@@ -21,17 +21,23 @@ const sendEmail = async (
 
  to,
  subject,
- text
+ html
 
 )=>{
 
  await transporter.sendMail({
 
-  from:"lixiu797@gmail.com",
+  from:`"Shram Setu" <lixiu797@gmail.com>`,
 
   to,
+
   subject,
-  text
+
+  /*
+  IMPORTANT
+  SEND HTML INSTEAD OF TEXT
+  */
+  html
 
  });
 

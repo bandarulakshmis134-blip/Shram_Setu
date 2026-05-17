@@ -1,7 +1,7 @@
 import {
  useState,
  useEffect,
- useCallback
+ useRef
 } from "react";
 
 import axios from "axios";
@@ -16,6 +16,8 @@ import FilterSidebar from "../components/findWorkers/FilterSidebar";
 
 import SearchBar from "../components/findWorkers/SearchBar";
 
+/* eslint-disable react-hooks/exhaustive-deps */
+
 const FindWorkers = ()=>{
 
  const [workers,setWorkers] =
@@ -23,6 +25,20 @@ const FindWorkers = ()=>{
 
  const [loading,setLoading] =
   useState(false);
+
+ const [page,setPage] =
+  useState(1);
+
+ const [hasMore,setHasMore] =
+  useState(true);
+
+ /*
+ =====================
+ ACTIVE FILTERS
+ =====================
+ */
+ const [filters,setFilters] =
+  useState({});
 
  /*
  =====================
@@ -36,7 +52,23 @@ const FindWorkers = ()=>{
 
  /*
  =====================
- GET LOGGED IN USER
+ OBSERVER REF
+ =====================
+ */
+ const observerRef =
+  useRef(null);
+
+ /*
+ =====================
+ PREVENT MULTIPLE CALLS
+ =====================
+ */
+ const fetchingRef =
+  useRef(false);
+
+ /*
+ =====================
+ GET USER
  =====================
  */
  const user = JSON.parse(
@@ -49,7 +81,7 @@ const FindWorkers = ()=>{
 
  /*
  =====================
- GET URL PARAMS
+ URL PARAMS
  =====================
  */
  const locationHook =
@@ -61,72 +93,141 @@ const FindWorkers = ()=>{
  =====================
  */
  const fetchWorkers =
-  useCallback(
+  async (
 
-   async (filters={})=>{
+   pageNum = 1,
+   currentFilters = {},
+   reset = false
 
-    try{
+  )=>{
 
-     setLoading(true);
+   /*
+   PREVENT DUPLICATE CALLS
+   */
+   if(fetchingRef.current){
 
-     const res =
-      await axios.get(
+    return;
 
-       "http://localhost:5000/api/workers/search",
+   }
 
-       {
-        params:{
+   try{
 
-         ...filters,
+    fetchingRef.current =
+     true;
 
-         userId:user?._id,
+    setLoading(true);
 
-         registrationType:
-          activePanel
+    const res =
+     await axios.get(
 
-        }
+      "http://localhost:5000/api/workers/search",
+
+      {
+       params:{
+
+        ...currentFilters,
+
+        page:pageNum,
+
+        userId:user?._id,
+
+        registrationType:
+         activePanel
+
        }
-
-      );
-
-     setWorkers(
-      res.data || []
-     );
-
-    }
-
-    catch(error){
-
-     console.log(
-
-      "Error fetching workers",
-
-      error
+      }
 
      );
 
-     setWorkers([]);
+    const newWorkers =
+     res.data || [];
+
+    /*
+    NO MORE DATA
+    */
+    if(newWorkers.length < 12){
+
+     setHasMore(false);
 
     }
 
-    finally{
+    /*
+    RESET
+    */
+    if(reset){
 
-     setLoading(false);
+     setWorkers(newWorkers);
 
     }
 
-   },
+    /*
+    APPEND
+    */
+    else{
 
-   [
-    user?._id,
-    activePanel
-   ]
+     setWorkers((prev)=>{
 
- );
+      const existingIds =
+       new Set(
+
+        prev.map(
+         (worker)=>
+          worker._id
+        )
+
+       );
+
+      const uniqueWorkers =
+       newWorkers.filter(
+
+        (worker)=>
+
+         !existingIds.has(
+          worker._id
+         )
+
+       );
+
+      return [
+
+       ...prev,
+
+       ...uniqueWorkers
+
+      ];
+
+     });
+
+    }
+
+   }
+
+   catch(error){
+
+    console.log(
+
+     "Error fetching workers",
+
+     error
+
+    );
+
+   }
+
+   finally{
+
+    fetchingRef.current =
+     false;
+
+    setLoading(false);
+
+   }
+
+  };
 
  /*
  =====================
- LOAD FROM HERO SEARCH
+ INITIAL LOAD
  =====================
  */
  useEffect(()=>{
@@ -158,15 +259,140 @@ const FindWorkers = ()=>{
 
   }
 
+  /*
+  RESET EVERYTHING
+  */
+  setWorkers([]);
+
+  setPage(1);
+
+  setHasMore(true);
+
+  setFilters(initialFilters);
+
   fetchWorkers(
-   initialFilters
+   1,
+   initialFilters,
+   true
   );
 
  },[
-   fetchWorkers,
-   locationHook.search,
-   activePanel
+   activePanel,
+   locationHook.search
  ]);
+
+ /*
+ =====================
+ LOAD MORE
+ =====================
+ */
+ useEffect(()=>{
+
+  if(page === 1){
+
+   return;
+
+  }
+
+  fetchWorkers(
+   page,
+   filters
+  );
+
+ },[
+   page
+ ]);
+
+ /*
+ =====================
+ INFINITE SCROLL
+ =====================
+ */
+ useEffect(()=>{
+
+  const observer =
+   new IntersectionObserver(
+
+    (entries)=>{
+
+     const first =
+      entries[0];
+
+     if(
+
+      first.isIntersecting &&
+
+      !loading &&
+
+      hasMore
+
+     ){
+
+      setPage((prev)=>
+       prev + 1
+      );
+
+     }
+
+    },
+
+    {
+     threshold:0.5
+    }
+
+   );
+
+  const currentRef =
+   observerRef.current;
+
+  if(currentRef){
+
+   observer.observe(
+    currentRef
+   );
+
+  }
+
+  return ()=>{
+
+   if(currentRef){
+
+    observer.unobserve(
+     currentRef
+    );
+
+   }
+
+  };
+
+ },[
+    loading,
+    hasMore
+ ]);
+
+ /*
+ =====================
+ APPLY FILTERS
+ =====================
+ */
+ const handleApplyFilters =
+  (newFilters)=>{
+
+   setWorkers([]);
+
+   setPage(1);
+
+   setHasMore(true);
+
+   setFilters(newFilters);
+
+   fetchWorkers(
+    1,
+    newFilters,
+    true
+   );
+
+  };
 
  /*
  =====================
@@ -181,7 +407,9 @@ const FindWorkers = ()=>{
    <div className="w-1/4">
 
     <FilterSidebar
-     onApply={fetchWorkers}
+     onApply={
+      handleApplyFilters
+     }
     />
 
    </div>
@@ -246,15 +474,16 @@ const FindWorkers = ()=>{
 
     </div>
 
-    {/* SEARCH BAR */}
+    {/* SEARCH */}
     <SearchBar
-     onSearch={fetchWorkers}
+     onSearch={
+      handleApplyFilters
+     }
     />
 
     {/* WORKERS */}
-    {loading
-
-     ?
+    {loading &&
+     workers.length === 0 ? (
 
      <p className="mt-6">
 
@@ -262,13 +491,31 @@ const FindWorkers = ()=>{
 
      </p>
 
-     :
+    ) : (
 
      <WorkerList
       workers={workers}
      />
 
-    }
+    )}
+
+    {/* LOADING MORE */}
+    {loading &&
+     workers.length > 0 && (
+
+     <p className="mt-6 text-center text-gray-500">
+
+      Loading more workers...
+
+     </p>
+
+    )}
+
+    {/* OBSERVER */}
+    <div
+     ref={observerRef}
+     className="h-10"
+    />
 
    </div>
 
