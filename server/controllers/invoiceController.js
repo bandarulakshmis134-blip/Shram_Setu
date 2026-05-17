@@ -1,4 +1,5 @@
 const Invoice = require("../models/Invoice");
+
 const JobRequest = require("../models/JobRequest");
 
 /*
@@ -183,6 +184,62 @@ exports.getWorkerInvoices = async (
    });
 
   res.json(invoices);
+
+ }
+
+ catch(error){
+
+  console.log(error);
+
+  res.status(500).json({
+
+   message:error.message
+
+  });
+
+ }
+
+};
+
+/*
+========================
+GET INVOICE BY REQUEST
+========================
+*/
+exports.getInvoiceByRequestId =
+ async (req,res)=>{
+
+ try{
+
+  const invoice =
+   await Invoice.findOne({
+
+    requestId:
+     req.params.requestId
+
+   })
+
+   .populate(
+    "workerId",
+    "firstName location"
+   )
+
+   .populate(
+    "userId",
+    "firstName location"
+   );
+
+  if(!invoice){
+
+   return res.status(404).json({
+
+    message:"Invoice not found"
+
+   });
+
+  }
+
+  res.json(invoice);
 
  }
 

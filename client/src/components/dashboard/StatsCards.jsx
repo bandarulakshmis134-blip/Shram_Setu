@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+
 import axios from "axios";
 
 const StatsCards = ({ type }) => {
@@ -10,6 +11,9 @@ const StatsCards = ({ type }) => {
     useState(0);
 
   const [completedCount, setCompletedCount] =
+    useState(0);
+
+  const [avgRating,setAvgRating] =
     useState(0);
 
   /*
@@ -28,11 +32,16 @@ const StatsCards = ({ type }) => {
         );
 
         /*
-        WORKER REQUESTS
+        =========================
+        WORKER PANEL
+        =========================
         */
         if (type === "worker") {
 
-          const res = await axios.get(
+          /*
+          NEW REQUESTS
+          */
+          const requestRes = await axios.get(
 
             "http://localhost:5000/api/requests/worker",
 
@@ -46,13 +55,54 @@ const StatsCards = ({ type }) => {
           );
 
           setRequestCount(
-            res.data?.length || 0
+            requestRes.data?.length || 0
+          );
+
+          /*
+          COMPLETED REQUESTS
+          */
+          const completedRes =
+            await axios.get(
+
+              "http://localhost:5000/api/requests/worker-completed",
+
+              {
+                headers:{
+                  Authorization:
+                   `Bearer ${user.token}`
+                }
+              }
+
+            );
+
+          const completedWorks =
+            (completedRes.data || []).filter(
+
+              (request)=>
+
+                request.status === "completed"
+
+            ).length;
+
+          setCompletedCount(
+            completedWorks
+          );
+
+          /*
+          AVG RATING
+          */
+          setAvgRating(
+
+           user.averageRating || 0
+
           );
 
         }
 
         /*
-        ADMIN ACTIVE JOBS
+        =========================
+        ADMIN PANEL
+        =========================
         */
         if(type === "admin"){
 
@@ -129,9 +179,11 @@ const StatsCards = ({ type }) => {
       ? [
           {
            title:
-               "Total Workers Hired",   
+               "Total Workers Hired",
+
            value:
-           activeJobsCount + completedCount},
+           activeJobsCount + completedCount
+          },
 
           {
             title: "Active Jobs",
@@ -154,12 +206,16 @@ const StatsCards = ({ type }) => {
 
           {
             title: "Completed",
-            value: 28
+
+            value: completedCount
           },
 
           {
             title: "Avg Rating",
-            value: 4.9
+
+            value:
+             Number(avgRating)
+             .toFixed(1)
           }
         ];
 

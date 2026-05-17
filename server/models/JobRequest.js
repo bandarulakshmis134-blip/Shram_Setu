@@ -2,6 +2,12 @@ const mongoose = require("mongoose");
 
 const jobRequestSchema = new mongoose.Schema({
 
+ jobId:{
+  type:mongoose.Schema.Types.ObjectId,
+  ref:"Job",
+  default:null
+ },
+
  userId:{
   type:mongoose.Schema.Types.ObjectId,
   ref:"User",
@@ -46,15 +52,16 @@ const jobRequestSchema = new mongoose.Schema({
   ],
   default:"pending"
  },
- workOTP:{
- type:String,
- default:null
-},
 
-workOTPExpiry:{
- type:Date,
- default:null
-},
+ workOTP:{
+  type:String,
+  default:null
+ },
+
+ workOTPExpiry:{
+  type:Date,
+  default:null
+ },
 
  /*
  AUTO DELETE FIELD
@@ -70,7 +77,7 @@ workOTPExpiry:{
 });
 
 /*
- TTL INDEX
+TTL INDEX
 */
 jobRequestSchema.index(
  { expiresAt:1 },

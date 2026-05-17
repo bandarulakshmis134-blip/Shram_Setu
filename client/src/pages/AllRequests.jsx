@@ -107,7 +107,7 @@ const AllRequests = () => {
   switch(request.status){
 
    case "completed":
-    return "Rebook";
+    return "Rating";
 
    case "accepted":
    case "in-progress":

@@ -32,6 +32,9 @@ const Dashboard = () => {
 
     ).length > 0;
 
+  /*
+  DEFAULT PANEL
+  */
   const [activePanel, setActivePanel] =
     useState("admin");
 
@@ -89,7 +92,6 @@ const Dashboard = () => {
               <MyApplications />
 
               <UpcomingWork />
-
 
             </div>
 

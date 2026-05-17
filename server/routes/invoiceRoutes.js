@@ -6,7 +6,8 @@ const {
 
  createInvoice,
  getUserInvoices,
- getWorkerInvoices
+ getWorkerInvoices,
+ getInvoiceByRequestId
 
 } = require(
  "../controllers/invoiceController"
@@ -43,6 +44,15 @@ router.get(
  "/worker",
  verifyToken,
  getWorkerInvoices
+);
+
+/*
+GET INVOICE BY REQUEST ID
+*/
+router.get(
+ "/request/:requestId",
+ verifyToken,
+ getInvoiceByRequestId
 );
 
 module.exports = router;

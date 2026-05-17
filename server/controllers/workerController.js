@@ -126,30 +126,58 @@ exports.registerWorker = async (req, res) => {
 =====================================
 */
 
-exports.getTopWorkers = async (req, res) => {
+exports.getTopWorkers = async (
+ req,
+ res
+) => {
 
-  try {
+ try {
 
-    const workers = await Worker.find()
+  const workers =
+   await Worker.find()
 
-      .sort({ createdAt: -1 })
+   .populate(
 
-      .limit(6);
+    "userId",
 
+    "profilePic averageRating totalRatings"
 
-    res.json(workers);
+   )
 
-  }
+   .lean();
 
-  catch (error) {
+  /*
+  MERGE USER DATA
+  */
+  const mergedWorkers =
+   workers.map((worker)=>({
 
-    res.status(500).json({
+    ...worker,
 
-      message: error.message
+    profilePic:
+     worker.userId?.profilePic || "",
 
-    });
+    averageRating:
+     worker.userId?.averageRating || 0,
 
-  }
+    totalRatings:
+     worker.userId?.totalRatings || 0
+
+   }));
+
+  res.json(mergedWorkers);
+
+ }
+
+ catch (error) {
+
+  res.status(500).json({
+
+   message:error.message
+
+  });
+
+ }
 
 };
 
@@ -242,7 +270,7 @@ exports.updateWorkerSkills = async (req,res)=>{
 
    },
 
-   { new:true }
+   { returnDocument:"after" }
 
   );
 
@@ -433,11 +461,23 @@ SEARCH WORKERS
 =====================================
 */
 
+/*
+=====================================
+SEARCH WORKERS
+=====================================
+*/
+
 exports.searchWorkers = async (req,res)=>{
 
  try{
 
-  const { category, location, search, userId } = req.query;
+  const {
+   category,
+   location,
+   search,
+   userId,
+   registrationType
+  } = req.query;
 
   const query = {};
 
@@ -447,7 +487,11 @@ exports.searchWorkers = async (req,res)=>{
  =============================
  */
   if(userId){
-   query.userId = { $ne:userId };
+
+   query.userId = {
+    $ne:userId
+   };
+
   }
 
   /*
@@ -456,7 +500,11 @@ exports.searchWorkers = async (req,res)=>{
  =============================
  */
   if(category){
-   query.skills = { $in:[category] };
+
+   query.skills = {
+    $in:[category]
+   };
+
   }
 
   /*
@@ -465,11 +513,28 @@ exports.searchWorkers = async (req,res)=>{
  =============================
  */
   if(location){
+
    query.location = {
+
     $regex:location,
+
     $options:"i"
+
    };
+
   }
+
+  /*
+=============================
+REGISTRATION TYPE FILTER
+=============================
+*/
+if(registrationType){
+
+ query.registrationType =
+  registrationType;
+
+}
 
   /*
  =============================
@@ -478,19 +543,39 @@ exports.searchWorkers = async (req,res)=>{
  */
   if(search){
 
-   const searchText = search.toString().trim();
+   const searchText =
+    search.toString().trim();
 
    if(searchText.length > 0){
 
-    const searchRegex = new RegExp(searchText,"i");
+    const searchRegex =
+     new RegExp(
+      searchText,
+      "i"
+     );
 
     query.$or = [
 
-     { firstName: searchRegex },
-     { groupName: searchRegex },
-     { location: searchRegex },
+     {
+      firstName:
+       searchRegex
+     },
 
-     { skills: { $in: [searchRegex] } }
+     {
+      groupName:
+       searchRegex
+     },
+
+     {
+      location:
+       searchRegex
+     },
+
+     {
+      skills:{
+       $in:[searchRegex]
+      }
+     }
 
     ];
 
@@ -498,16 +583,37 @@ exports.searchWorkers = async (req,res)=>{
 
   }
 
-  const workers = await Worker.find(query)
-   .populate("userId","profilePic")
+  const workers =
+   await Worker.find(query)
+
+   .populate(
+
+    "userId",
+
+    "profilePic averageRating totalRatings"
+
+   )
+
    .lean();
 
+  /*
+  MERGE USER DATA
+  */
+  const result =
+   workers.map((w)=>({
 
-  const result = workers.map(w=>({
-   ...w,
-   profilePic:w.userId?.profilePic || ""
-  }));
+    ...w,
 
+    profilePic:
+     w.userId?.profilePic || "",
+
+    averageRating:
+     w.userId?.averageRating || 0,
+
+    totalRatings:
+     w.userId?.totalRatings || 0
+
+   }));
 
   res.json(result);
 
@@ -515,10 +621,15 @@ exports.searchWorkers = async (req,res)=>{
 
  catch(error){
 
-  console.log("ERROR:",error);
+  console.log(
+   "ERROR:",
+   error
+  );
 
   res.status(500).json({
+
    message:error.message
+
   });
 
  }

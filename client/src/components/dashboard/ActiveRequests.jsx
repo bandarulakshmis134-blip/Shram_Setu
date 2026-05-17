@@ -10,6 +10,8 @@ import { useNavigate } from "react-router-dom";
 
 import InvoiceModal from "./InvoiceModal";
 
+import RatingModal from "./RatingModal";
+
 const ActiveRequests = ({
  showAll = false
 }) => {
@@ -21,6 +23,16 @@ const ActiveRequests = ({
   selectedInvoice,
   setSelectedInvoice
  ] = useState(null);
+
+ const [
+ showRating,
+ setShowRating
+] = useState(false);
+
+const [
+ selectedRequest,
+ setSelectedRequest
+] = useState(null);
 
  const navigate = useNavigate();
 
@@ -49,21 +61,139 @@ const ActiveRequests = ({
 
    const user = getUser();
 
-   const res = await axios.get(
+   /*
+   NORMAL REQUESTS
+   */
+   const requestRes =
+    await axios.get(
 
-    "http://localhost:5000/api/requests/user",
+     "http://localhost:5000/api/requests/user",
 
-    {
-     headers:{
-      Authorization:
-       `Bearer ${user.token}`
+     {
+      headers:{
+       Authorization:
+        `Bearer ${user.token}`
+      }
      }
-    }
+
+    );
+
+   /*
+   ADMIN SCHEDULES
+   */
+   const scheduleRes =
+    await axios.get(
+
+     "http://localhost:5000/api/schedules/admin",
+
+     {
+      headers:{
+       Authorization:
+        `Bearer ${user.token}`
+      }
+     }
+
+    );
+
+   const normalRequests =
+    requestRes.data || [];
+
+   const schedules =
+    scheduleRes.data || [];
+
+   /*
+   MERGE ACCEPTED JOB WORKS
+   */
+   const mergedScheduleRequests =
+
+    schedules.map((schedule)=>{
+
+     const matchedRequest =
+
+      normalRequests.find(
+
+       (request)=>
+
+        request._id ===
+        schedule.requestId
+
+      );
+
+     /*
+     USE REAL REQUEST
+     */
+     if(matchedRequest){
+
+      return matchedRequest;
+
+     }
+
+     /*
+     FALLBACK
+     */
+     return {
+
+      _id:
+       schedule._id,
+
+      workerId:{
+       firstName:"Worker",
+       skills:[]
+      },
+
+      /*
+      SERVICE FROM
+      POST JOB FORM
+      */
+      service:
+
+       schedule?.job?.title ||
+
+       schedule?.job?.category ||
+
+       "Service",
+
+      createdAt:
+       schedule.createdAt,
+
+      status:"accepted",
+
+      budget:
+       schedule?.job?.budget ||
+
+       0
+
+     };
+
+    });
+
+   /*
+   REMOVE DUPLICATES
+   */
+   const uniqueRequests = [
+
+    ...normalRequests,
+
+    ...mergedScheduleRequests
+
+   ].filter(
+
+    (request,index,self)=>
+
+     index ===
+
+     self.findIndex(
+
+      (r)=>
+
+       r._id === request._id
+
+     )
 
    );
 
    setRequests(
-    res.data || []
+    uniqueRequests
    );
 
   }
@@ -186,7 +316,7 @@ const ActiveRequests = ({
   switch(request.status){
 
    case "completed":
-    return "Rebook";
+    return "Rating";
 
    case "accepted":
    case "in-progress":
@@ -245,7 +375,90 @@ const ActiveRequests = ({
 
   }
 
+  /*
+  RATING
+  */
+  /*
+RATING
+*/
+else if(action === "Rating"){
+
+ setSelectedRequest(
+  request
+ );
+
+ setShowRating(true);
+
+}
+
  };
+
+ /*
+=========================
+SUBMIT RATING
+=========================
+*/
+/*
+=========================
+SUBMIT RATING
+=========================
+*/
+const handleRatingSubmit = async (
+ rating
+)=>{
+
+ try{
+
+  const user = JSON.parse(
+
+   sessionStorage.getItem(
+    "user"
+   )
+
+  );
+
+  await axios.post(
+
+   `http://localhost:5000/api/requests/${selectedRequest._id}/rate`,
+
+   {
+    stars:rating
+   },
+
+   {
+    headers:{
+     Authorization:
+      `Bearer ${user.token}`
+    }
+   }
+
+  );
+
+  alert(
+   "Rating submitted successfully"
+  );
+
+  setShowRating(false);
+
+  setSelectedRequest(null);
+
+ }
+
+ catch(error){
+
+  console.log(error);
+
+  alert(
+
+   error.response?.data?.message ||
+
+   "Failed to submit rating"
+
+  );
+
+ }
+
+};
 
  /*
  =========================
@@ -341,7 +554,10 @@ const ActiveRequests = ({
 
          <td>
 
-          {r.workerId?.skills?.[0] ||
+          {r.service ||
+
+           r.workerId?.skills?.[0] ||
+
            "Service"}
 
          </td>
@@ -398,6 +614,25 @@ const ActiveRequests = ({
     )}
 
    </div>
+
+   {/* RATING MODAL */}
+<RatingModal
+
+ isOpen={showRating}
+
+ onClose={()=>{
+
+  setShowRating(false);
+
+  setSelectedRequest(null);
+
+ }}
+
+ onSubmit={
+  handleRatingSubmit
+ }
+
+/>
 
    {/* INVOICE MODAL */}
    {selectedInvoice && (

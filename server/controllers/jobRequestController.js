@@ -1,6 +1,11 @@
 const JobRequest = require("../models/JobRequest");
+
 const Invoice = require("../models/Invoice");
+
+const Schedule = require("../models/Schedule");
+
 const sendEmail = require("../utils/sendEmail");
+
 const User = require("../models/User");
 
 /*
@@ -224,6 +229,16 @@ exports.getUserRequests = async (
 GET WORKER HISTORY
 ========================
 */
+/*
+========================
+GET WORKER HISTORY
+========================
+*/
+/*
+========================
+GET WORKER HISTORY
+========================
+*/
 exports.getWorkerHistory = async (
  req,
  res
@@ -277,6 +292,54 @@ exports.getWorkerHistory = async (
 
 };
 
+/*
+========================
+GET WORKER COMPLETED
+========================
+*/
+exports.getWorkerCompleted = async (
+ req,
+ res
+) => {
+
+ try {
+
+  const requests =
+   await JobRequest.find({
+
+    workerId:req.user.id,
+
+    status:"completed"
+
+   })
+
+   .populate(
+    "userId",
+    "firstName"
+   )
+
+   .sort({
+    createdAt:-1
+   });
+
+  res.json(requests);
+
+ }
+
+ catch(error){
+
+  console.log(error);
+
+  res.status(500).json({
+
+   message:error.message
+
+  });
+
+ }
+
+};
+
 
 /*
 ========================
@@ -300,7 +363,7 @@ exports.updateRequestStatus = async (
     },
 
     {
-     new:true
+     returnDocument:"after"
     }
 
    );
@@ -312,6 +375,15 @@ WHEN WORK COMPLETES
 if(req.body.status === "completed"){
 
  await Invoice.findOneAndDelete({
+
+  requestId:req.params.id
+
+ });
+
+ /*
+ REMOVE COMPLETED SCHEDULE
+ */
+ await Schedule.findOneAndDelete({
 
   requestId:req.params.id
 
@@ -553,6 +625,26 @@ exports.verifyWorkOTP = async (
 
   await request.save();
 
+  /*
+  DELETE INVOICE
+  */
+  await Invoice.findOneAndDelete({
+
+   requestId:
+    request._id
+
+  });
+
+  /*
+  REMOVE COMPLETED SCHEDULE
+  */
+  await Schedule.findOneAndDelete({
+
+   requestId:
+    request._id
+
+  });
+
   res.json({
 
    message:
@@ -576,3 +668,166 @@ exports.verifyWorkOTP = async (
 
 };
 
+/*
+========================
+RATE WORKER
+========================
+*/
+exports.rateWorker = async (
+ req,
+ res
+)=>{
+
+ try{
+
+  const {
+   stars
+  } = req.body;
+
+  const request =
+   await JobRequest.findById(
+    req.params.id
+   );
+
+  if(!request){
+
+   return res.status(404).json({
+
+    message:"Request not found"
+
+   });
+
+  }
+
+  /*
+  ONLY COMPLETED WORK
+  */
+  if(request.status !== "completed"){
+
+   return res.status(400).json({
+
+    message:
+     "Work not completed yet"
+
+   });
+
+  }
+
+  /*
+  ONLY REQUEST OWNER
+  CAN RATE
+  */
+  if(
+   request.userId.toString()
+   !== req.user.id
+  ){
+
+   return res.status(403).json({
+
+    message:
+     "Unauthorized"
+
+   });
+
+  }
+
+  const worker =
+   await User.findById(
+    request.workerId
+   );
+
+  if(!worker){
+
+   return res.status(404).json({
+
+    message:"Worker not found"
+
+   });
+
+  }
+
+  /*
+  PREVENT DUPLICATE RATING
+  */
+  const alreadyRated =
+   worker.ratings?.find(
+
+    (rating)=>
+
+     rating.requestId.toString()
+     === request._id.toString()
+
+   );
+
+  if(alreadyRated){
+
+   return res.status(400).json({
+
+    message:
+     "You already rated this work"
+
+   });
+
+  }
+
+  /*
+  ADD RATING
+  */
+  worker.ratings.push({
+
+   userId:req.user.id,
+
+   requestId:
+    request._id,
+
+   stars
+
+  });
+
+  /*
+  CALCULATE AVERAGE
+  */
+  const total =
+   worker.ratings.reduce(
+
+    (sum,rating)=>
+
+     sum + rating.stars,
+
+    0
+
+   );
+
+  worker.totalRatings =
+   worker.ratings.length;
+
+  worker.averageRating =
+
+   total /
+
+   worker.totalRatings;
+
+  await worker.save();
+
+  res.json({
+
+   message:
+    "Rating submitted successfully"
+
+  });
+
+ }
+
+ catch(error){
+
+  console.log(error);
+
+  res.status(500).json({
+
+   message:error.message
+
+  });
+
+ }
+
+};

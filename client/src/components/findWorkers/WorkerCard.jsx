@@ -24,6 +24,15 @@ const WorkerCard = ({ worker }) => {
 
   const navigate = useNavigate();
 
+  /*
+  =========================
+  RATING
+  =========================
+  */
+  const avgRating = Number(
+   worker?.averageRating || 0
+  );
+
   return (
 
     <>
@@ -74,15 +83,29 @@ const WorkerCard = ({ worker }) => {
 
             </div>
 
+            {/* RATING */}
             <div className="flex items-center mt-1 text-yellow-500">
 
-              <Star size={16} />
+              <Star
+               size={16}
+               fill="currentColor"
+              />
 
               <span className="ml-1 text-sm">
 
-                {worker.rating || 4.5}
+                {avgRating.toFixed(1)}
 
               </span>
+
+              {worker?.totalRatings > 0 && (
+
+               <span className="ml-1 text-xs text-gray-400">
+
+                ({worker.totalRatings})
+
+               </span>
+
+              )}
 
             </div>
 
