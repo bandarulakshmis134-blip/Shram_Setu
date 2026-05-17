@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
+
 import axios from "axios";
+
+import {
+ useNavigate
+} from "react-router-dom";
 
 const CalendarCard = ({
  isWorker,
@@ -8,6 +13,9 @@ const CalendarCard = ({
 
  const [events, setEvents] =
   useState([]);
+
+ const navigate =
+  useNavigate();
 
  /*
  =========================
@@ -237,20 +245,54 @@ const CalendarCard = ({
 
  /*
  =========================
- SHOW ONLY 10 IN DASHBOARD
+ SHOW ONLY 5 IN DASHBOARD
  =========================
  */
  const displayedEvents = showAll
   ? events
-  : events.slice(0,10);
+  : events.slice(0,5);
 
  return (
 
   <div className="bg-white p-5 rounded-xl shadow h-fit">
 
-   <h2 className="font-semibold mb-4">
-    Calendar
-   </h2>
+   <div className="flex items-center justify-between mb-4">
+
+    <h2 className="font-semibold">
+     Calendar
+    </h2>
+
+    {!showAll && (
+
+     <button
+
+      onClick={()=>
+
+       navigate(
+
+        "/all-calendar",
+
+        {
+         state:{
+          isWorker
+         }
+        }
+
+       )
+
+      }
+
+      className="text-sm text-blue-600 hover:text-blue-700"
+
+     >
+
+      View All
+
+     </button>
+
+    )}
+
+   </div>
 
    <div className="space-y-3">
 

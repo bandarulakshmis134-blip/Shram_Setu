@@ -8,6 +8,7 @@ const sendEmail = require("../utils/sendEmail");
 
 const User = require("../models/User");
 
+const Notification = require("../models/Notification");
 /*
 ========================
 CREATE REQUEST
@@ -71,6 +72,24 @@ exports.createRequest = async(req,res)=>{
  });
 
  await newRequest.save();
+
+ /*
+========================
+CREATE NOTIFICATION
+========================
+*/
+await Notification.create({
+
+ userId:workerId,
+
+ message:
+  "You received a new work request",
+
+ type:"request",
+
+ link:"/dashboard"
+
+});
 
  res.status(201).json({
 

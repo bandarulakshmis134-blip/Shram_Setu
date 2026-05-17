@@ -1,12 +1,15 @@
 const mongoose =
  require("mongoose");
 
-const messageSchema =
+const notificationSchema =
  new mongoose.Schema(
 
   {
 
-   senderId:{
+   /*
+   RECEIVER
+   */
+   userId:{
 
     type:
      mongoose.Schema.Types.ObjectId,
@@ -17,18 +20,10 @@ const messageSchema =
 
    },
 
-   receiverId:{
-
-    type:
-     mongoose.Schema.Types.ObjectId,
-
-    ref:"User",
-
-    required:true
-
-   },
-
-   text:{
+   /*
+   MESSAGE
+   */
+   message:{
 
     type:String,
 
@@ -37,15 +32,41 @@ const messageSchema =
    },
 
    /*
-   =========================
-   MESSAGE SEEN STATUS
-   =========================
+   TYPE
    */
-   isSeen:{
+   type:{
+
+    type:String,
+
+    enum:[
+     "request",
+     "application",
+     "message"
+    ],
+
+    required:true
+
+   },
+
+   /*
+   READ STATUS
+   */
+   isRead:{
 
     type:Boolean,
 
     default:false
+
+   },
+
+   /*
+   OPTIONAL LINK
+   */
+   link:{
+
+    type:String,
+
+    default:""
 
    }
 
@@ -62,10 +83,8 @@ const messageSchema =
 module.exports =
  mongoose.model(
 
-  "Message",
+  "Notification",
 
-  messageSchema
+  notificationSchema
 
  );
-
- 

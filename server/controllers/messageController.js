@@ -1,31 +1,83 @@
-const Message = require("../models/Message");
-const User = require("../models/User");
+const Message =
+ require("../models/Message");
+
+const User =
+ require("../models/User");
+
+const Notification =
+ require("../models/Notification");
 
 /*
 =====================================
 1. GET MESSAGES BETWEEN TWO USERS
 =====================================
 */
-exports.getMessages = async (req, res) => {
-  try {
-    let { userId, receiverId } = req.query;
+exports.getMessages =
+ async (req,res)=>{
 
-    // 🔥 normalize to string
-    userId = userId.toString();
-    receiverId = receiverId.toString();
+ try{
 
-    const messages = await Message.find({
-      $or: [
-        { senderId: userId, receiverId: receiverId },
-        { senderId: receiverId, receiverId: userId },
-      ],
-    }).sort({ createdAt: 1 });
+  let {
+   userId,
+   receiverId
+  } = req.query;
 
-    res.json(messages);
+  /*
+  NORMALIZE
+  */
+  userId =
+   userId.toString();
 
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
+  receiverId =
+   receiverId.toString();
+
+  const messages =
+   await Message.find({
+
+    $or:[
+
+     {
+
+      senderId:userId,
+
+      receiverId:receiverId
+
+     },
+
+     {
+
+      senderId:receiverId,
+
+      receiverId:userId
+
+     }
+
+    ]
+
+   })
+
+   .sort({
+
+    createdAt:1
+
+   });
+
+  res.json(
+   messages
+  );
+
+ }
+
+ catch(error){
+
+  res.status(500).json({
+
+   message:error.message
+
+  });
+
+ }
+
 };
 
 /*
@@ -33,45 +85,343 @@ exports.getMessages = async (req, res) => {
 2. GET CONVERSATIONS
 =====================================
 */
-exports.getConversations = async (req, res) => {
-  try {
+exports.getConversations =
+ async (req,res)=>{
 
-    const { userId } = req.query;
+ try{
 
-    const messages = await Message.find({
-      $or: [
-        { senderId: userId },
-        { receiverId: userId }
-      ]
-    }).sort({ createdAt: -1 });
+  const {
+   userId
+  } = req.query;
 
-    const uniqueUserIds = new Set();
+  const messages =
+   await Message.find({
 
-    messages.forEach(msg => {
+    $or:[
 
-      if (msg.senderId.toString() !== userId) {
-        uniqueUserIds.add(msg.senderId.toString());
-      }
+     {
+      senderId:userId
+     },
 
-      if (msg.receiverId.toString() !== userId) {
-        uniqueUserIds.add(msg.receiverId.toString());
-      }
+     {
+      receiverId:userId
+     }
 
-    });
+    ]
 
-    const users = await User.find({
-      _id: { $in: Array.from(uniqueUserIds) }
-    }).select("firstName lastName email");
+   })
 
-    const formatted = users.map(u => ({
-      _id: u._id, // ✅ ALWAYS USER ID
-      name: `${u.firstName || ""} ${u.lastName || ""}`.trim(),
-      email: u.email
-    }));
+   .sort({
 
-    res.json(formatted);
+    createdAt:-1
 
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
+   });
+
+  const uniqueUserIds =
+   new Set();
+
+  messages.forEach(msg=>{
+
+   if(
+
+    msg.senderId.toString() !==
+    userId
+
+   ){
+
+    uniqueUserIds.add(
+
+     msg.senderId.toString()
+
+    );
+
+   }
+
+   if(
+
+    msg.receiverId.toString() !==
+    userId
+
+   ){
+
+    uniqueUserIds.add(
+
+     msg.receiverId.toString()
+
+    );
+
+   }
+
+  });
+
+  const users =
+   await User.find({
+
+    _id:{
+
+     $in:Array.from(
+      uniqueUserIds
+     )
+
+    }
+
+   })
+
+   .select(
+
+    "firstName lastName email"
+
+   );
+
+  /*
+  =====================================
+  FORMAT CONVERSATIONS
+  =====================================
+  */
+  const formatted =
+   await Promise.all(
+
+    users.map(async (u)=>{
+
+     /*
+     =====================
+     LAST MESSAGE
+     =====================
+     */
+     const lastMessage =
+      await Message.findOne({
+
+       $or:[
+
+        {
+
+         senderId:userId,
+
+         receiverId:u._id
+
+        },
+
+        {
+
+         senderId:u._id,
+
+         receiverId:userId
+
+        }
+
+       ]
+
+      })
+
+      .sort({
+
+       createdAt:-1
+
+      });
+
+     /*
+     =====================
+     UNREAD COUNT
+     =====================
+     */
+     const unreadCount =
+      await Message.countDocuments({
+
+       senderId:u._id,
+
+       receiverId:userId,
+
+       isSeen:false
+
+      });
+
+     return{
+
+      _id:u._id,
+
+      name:`${
+
+        u.firstName || ""
+
+       } ${
+
+        u.lastName || ""
+
+       }`.trim(),
+
+      email:u.email,
+
+      unreadCount,
+
+      lastMessage:
+       lastMessage?.text || "",
+
+      lastMessageTime:
+       lastMessage?.createdAt || null
+
+     };
+
+    })
+
+   );
+
+  res.json(
+   formatted
+  );
+
+ }
+
+ catch(error){
+
+  res.status(500).json({
+
+   message:error.message
+
+  });
+
+ }
+
+};
+
+/*
+=====================================
+3. SEND MESSAGE
+=====================================
+*/
+exports.sendMessage =
+ async (req,res)=>{
+
+ try{
+
+  const {
+
+   senderId,
+   receiverId,
+   text
+
+  } = req.body;
+
+  /*
+  CREATE MESSAGE
+  */
+  const newMessage =
+   new Message({
+
+    senderId,
+    receiverId,
+    text
+
+   });
+
+  await newMessage.save();
+
+  /*
+  =========================
+  CREATE NOTIFICATION
+  =========================
+  */
+  await Notification.create({
+
+   userId:receiverId,
+
+   message:
+    "You received a new message",
+
+   type:"message",
+
+   link:"/messages"
+
+  });
+
+  res.status(201).json({
+
+   message:
+    "Message sent successfully",
+
+   newMessage
+
+  });
+
+ }
+
+ catch(error){
+
+  console.log(error);
+
+  res.status(500).json({
+
+   message:error.message
+
+  });
+
+ }
+
+};
+
+/*
+=====================================
+4. MARK MESSAGES AS SEEN
+=====================================
+*/
+exports.markMessagesAsSeen =
+ async (req,res)=>{
+
+ try{
+
+  const {
+
+   senderId,
+   receiverId
+
+  } = req.body;
+
+  /*
+  MARK ALL RECEIVED
+  MESSAGES AS SEEN
+  */
+  await Message.updateMany(
+
+   {
+
+    senderId,
+
+    receiverId,
+
+    isSeen:false
+
+   },
+
+   {
+
+    $set:{
+
+     isSeen:true
+
+    }
+
+   }
+
+  );
+
+  res.json({
+
+   message:
+    "Messages marked as seen"
+
+  });
+
+ }
+
+ catch(error){
+
+  console.log(error);
+
+  res.status(500).json({
+
+   message:error.message
+
+  });
+
+ }
+
 };

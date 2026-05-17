@@ -11,7 +11,7 @@ import JobCard from "../components/JobCard";
 
 import PostJobModal from "../components/PostJobModal";
 
-const PostJobs = () => {
+const PostJobs = ()=>{
 
  const [openModal,setOpenModal] =
   useState(false);
@@ -59,6 +59,15 @@ const PostJobs = () => {
 
  /*
  ==========================
+ CHECK IF WORKER
+ ==========================
+ */
+ const isWorker =
+
+  user?.skills?.length > 0;
+
+ /*
+ ==========================
  FETCH JOBS
  ==========================
  */
@@ -66,7 +75,18 @@ const PostJobs = () => {
   useCallback(async ()=>{
 
    /*
-   PREVENT DUPLICATE API CALLS
+   ONLY WORKERS CAN VIEW JOBS
+   */
+   if(!isWorker){
+
+    setLoading(false);
+
+    return;
+
+   }
+
+   /*
+   PREVENT DUPLICATE CALLS
    */
    if(fetchingRef.current){
 
@@ -76,14 +96,15 @@ const PostJobs = () => {
 
    try{
 
-    fetchingRef.current = true;
+    fetchingRef.current =
+     true;
 
     setLoading(true);
 
     const res =
      await axios.get(
 
-      `http://localhost:5000/api/jobs?page=${page}`
+      `http://localhost:5000/api/jobs?page=${page}&userId=${user?._id}`
 
      );
 
@@ -166,13 +187,10 @@ const PostJobs = () => {
      }));
 
     /*
-    APPEND NEW JOBS
+    APPEND UNIQUE JOBS
     */
     setJobs((prev)=>{
 
-     /*
-     REMOVE DUPLICATES
-     */
      const existingIds =
       new Set(
 
@@ -204,7 +222,9 @@ const PostJobs = () => {
     });
 
     setTotalPages(
+
      res.data.totalPages || 1
+
     );
 
    }
@@ -232,7 +252,8 @@ const PostJobs = () => {
 
   },[
     page,
-    user?._id
+    user?._id,
+    isWorker
   ]);
 
  /*
@@ -244,7 +265,9 @@ const PostJobs = () => {
 
   fetchJobs();
 
- },[fetchJobs]);
+ },[
+    fetchJobs
+ ]);
 
  /*
  ==========================
@@ -252,6 +275,15 @@ const PostJobs = () => {
  ==========================
  */
  useEffect(()=>{
+
+  /*
+  ONLY WORKERS
+  */
+  if(!isWorker){
+
+   return;
+
+  }
 
   const observer =
    new IntersectionObserver(
@@ -283,7 +315,9 @@ const PostJobs = () => {
     },
 
     {
+
      threshold:0.5
+
     }
 
    );
@@ -314,7 +348,8 @@ const PostJobs = () => {
  },[
     loading,
     page,
-    totalPages
+    totalPages,
+    isWorker
  ]);
 
  /*
@@ -363,6 +398,7 @@ const PostJobs = () => {
 
     </div>
 
+    {/* POST BUTTON */}
     <button
 
      onClick={()=>
@@ -379,48 +415,82 @@ const PostJobs = () => {
 
    </div>
 
-   {/* JOBS */}
-   <div className="grid md:grid-cols-2 gap-8 px-6 pb-6">
+   {/* NON WORKER */}
+   {!isWorker ? (
 
-    {jobs.length === 0 && !loading ? (
+    <div className="flex items-center justify-center px-6 py-20">
 
-     <p>No jobs found</p>
+     <div className="bg-white rounded-2xl shadow-md p-10 text-center max-w-lg w-full">
 
-    ) : (
+      <h2 className="text-2xl font-bold text-gray-800 mb-4">
 
-     jobs.map((job)=>(
+       Register as a Worker
 
-      <JobCard
-       key={job._id}
-       job={job}
-      />
+      </h2>
 
-     ))
+      <p className="text-gray-500 leading-relaxed">
 
-    )}
+       Complete your worker profile and add your skills to view jobs that match your services.
 
-   </div>
+      </p>
 
-   {/* LOADING */}
-   {loading && (
-
-    <div className="text-center pb-10">
-
-     <p className="text-gray-500">
-
-      Loading jobs...
-
-     </p>
+     </div>
 
     </div>
 
-   )}
+   ) : (
 
-   {/* OBSERVER TARGET */}
-   <div
-    ref={observerRef}
-    className="h-10"
-   />
+    <>
+     {/* JOBS */}
+     <div className="grid md:grid-cols-2 gap-8 px-6 pb-6">
+
+      {jobs.length === 0 && !loading ? (
+
+       <p>
+
+        No matching jobs found
+
+       </p>
+
+      ) : (
+
+       jobs.map((job)=>(
+
+        <JobCard
+         key={job._id}
+         job={job}
+        />
+
+       ))
+
+      )}
+
+     </div>
+
+     {/* LOADING */}
+     {loading && (
+
+      <div className="text-center pb-10">
+
+       <p className="text-gray-500">
+
+        Loading jobs...
+
+       </p>
+
+      </div>
+
+     )}
+
+     {/* OBSERVER */}
+     <div
+      ref={observerRef}
+      className="h-10"
+     />
+
+    </>
+
+   )}
 
    {/* MODAL */}
    <PostJobModal

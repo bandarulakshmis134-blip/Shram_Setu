@@ -4,10 +4,9 @@ const Job = require("../models/Job");
 
 const Schedule = require("../models/Schedule");
 
-const JobRequest = require(
- "../models/JobRequest"
-);
+const JobRequest = require("../models/JobRequest");
 
+const Notification = require("../models/Notification");
 /*
 ========================
 APPLY FOR JOB
@@ -59,6 +58,24 @@ exports.applyJob = async (
    });
 
   await application.save();
+
+  /*
+========================
+NOTIFICATION
+========================
+*/
+await Notification.create({
+
+ userId:job.postedBy,
+
+ message:
+  "You received a new job application",
+
+ type:"application",
+
+ link:"/dashboard"
+
+});
 
   res.status(201).json({
 

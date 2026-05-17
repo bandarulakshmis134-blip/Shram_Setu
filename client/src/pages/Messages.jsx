@@ -111,10 +111,39 @@ const Messages = () => {
           receiverId: selectedUser._id,
         },
       })
-      .then((res) => setMessages(res.data || []))
-      .catch((err) => console.log(err));
+    .then(async (res) => {
 
-    inputRef.current?.focus();
+ setMessages(
+  res.data || []
+ );
+
+ /*
+ =====================
+ MARK AS SEEN
+ =====================
+ */
+ await axios.put(
+
+  "http://localhost:5000/api/messages/seen",
+
+  {
+
+   senderId:
+    selectedUser._id,
+
+   receiverId:
+    user._id
+
+  }
+
+ );
+
+})
+.catch((err) =>
+ console.log(err)
+);
+
+inputRef.current?.focus();
 
   }, [selectedUser, user?._id]);
 
@@ -152,7 +181,18 @@ const Messages = () => {
     };
 
     setMessages((prev) => [...prev, msg]);
-    socket.emit("sendMessage", msg);
+    axios.post(
+
+ "http://localhost:5000/api/messages/send",
+
+ msg
+
+);
+
+socket.emit(
+ "sendMessage",
+ msg
+);
     setText("");
 
   };
@@ -286,7 +326,10 @@ const Messages = () => {
                       <div className="text-xs text-gray-400 mt-1 flex justify-end gap-1">
                         {formatTime(m.createdAt)}
                         {isMine && (
-                          <span>{m.seen ? "✔✔" : "✔"}</span>
+                          <span>
+
+                          {m.isSeen ? "✔✔" : "✔"}
+                          </span>
                         )}
                       </div>
 
