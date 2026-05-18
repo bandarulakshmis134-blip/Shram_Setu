@@ -92,3 +92,42 @@ exports.markAsRead =
  }
 
 };
+
+/*
+========================
+CLEAR ALL NOTIFICATIONS
+========================
+*/
+exports.clearNotifications =
+ async (req,res)=>{
+
+ try{
+
+  await Notification.deleteMany({
+
+   userId:req.user.id
+
+  });
+
+  res.json({
+
+   message:
+    "Notifications cleared"
+
+  });
+
+ }
+
+ catch(error){
+
+  console.log(error);
+
+  res.status(500).json({
+
+   message:error.message
+
+  });
+
+ }
+
+};

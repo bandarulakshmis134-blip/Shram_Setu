@@ -7,6 +7,9 @@ const User =
 const Notification =
  require("../models/Notification");
 
+const Worker =
+ require("../models/Worker");
+
 /*
 =====================================
 1. GET MESSAGES BETWEEN TWO USERS
@@ -94,6 +97,11 @@ exports.getConversations =
    userId
   } = req.query;
 
+  /*
+  =====================
+  GET ALL USER MESSAGES
+  =====================
+  */
   const messages =
    await Message.find({
 
@@ -117,6 +125,11 @@ exports.getConversations =
 
    });
 
+  /*
+  =====================
+  UNIQUE USER IDS
+  =====================
+  */
   const uniqueUserIds =
    new Set();
 
@@ -154,6 +167,11 @@ exports.getConversations =
 
   });
 
+  /*
+  =====================
+  FETCH USERS
+  =====================
+  */
   const users =
    await User.find({
 
@@ -182,6 +200,18 @@ exports.getConversations =
    await Promise.all(
 
     users.map(async (u)=>{
+
+     /*
+     =====================
+     CHECK WORKER PROFILE
+     =====================
+     */
+     const workerProfile =
+      await Worker.findOne({
+
+       userId:u._id
+
+      });
 
      /*
      =====================
@@ -235,6 +265,11 @@ exports.getConversations =
 
       });
 
+     /*
+     =====================
+     RETURN FORMATTED USER
+     =====================
+     */
      return{
 
       _id:u._id,
@@ -251,6 +286,22 @@ exports.getConversations =
 
       email:u.email,
 
+      /*
+      =====================
+      WORKER STATUS
+      =====================
+      */
+      isWorker:
+       !!workerProfile,
+
+      workerId:
+       workerProfile?._id || null,
+
+      /*
+      =====================
+      CHAT DATA
+      =====================
+      */
       unreadCount,
 
       lastMessage:
@@ -265,6 +316,11 @@ exports.getConversations =
 
    );
 
+  /*
+  =====================
+  SEND RESPONSE
+  =====================
+  */
   res.json(
    formatted
   );
@@ -272,6 +328,8 @@ exports.getConversations =
  }
 
  catch(error){
+
+  console.log(error);
 
   res.status(500).json({
 
@@ -302,7 +360,9 @@ exports.sendMessage =
   } = req.body;
 
   /*
+  =========================
   CREATE MESSAGE
+  =========================
   */
   const newMessage =
    new Message({
@@ -333,6 +393,11 @@ exports.sendMessage =
 
   });
 
+  /*
+  =========================
+  RESPONSE
+  =========================
+  */
   res.status(201).json({
 
    message:
@@ -376,8 +441,9 @@ exports.markMessagesAsSeen =
   } = req.body;
 
   /*
-  MARK ALL RECEIVED
-  MESSAGES AS SEEN
+  =========================
+  MARK RECEIVED MESSAGES
+  =========================
   */
   await Message.updateMany(
 
@@ -403,6 +469,11 @@ exports.markMessagesAsSeen =
 
   );
 
+  /*
+  =========================
+  RESPONSE
+  =========================
+  */
   res.json({
 
    message:

@@ -1,6 +1,11 @@
 const nodemailer =
  require("nodemailer");
 
+/*
+========================
+TRANSPORTER
+========================
+*/
 const transporter =
 
  nodemailer.createTransport({
@@ -9,14 +14,21 @@ const transporter =
 
   auth:{
 
-   user:"lixiu797@gmail.com",
+   user:
+    process.env.EMAIL_USER,
 
-   pass:"vrga wvqr rchz pjap"
+   pass:
+    process.env.EMAIL_PASS
 
   }
 
  });
 
+/*
+========================
+SEND EMAIL FUNCTION
+========================
+*/
 const sendEmail = async (
 
  to,
@@ -27,16 +39,17 @@ const sendEmail = async (
 
  await transporter.sendMail({
 
-  from:`"Shram Setu" <lixiu797@gmail.com>`,
+  from:`Shram Setu <${
+
+   process.env.EMAIL_USER
+
+  }>`,
+
 
   to,
 
   subject,
 
-  /*
-  IMPORTANT
-  SEND HTML INSTEAD OF TEXT
-  */
   html
 
  });

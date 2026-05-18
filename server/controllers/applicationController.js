@@ -26,18 +26,41 @@ exports.applyJob = async (
    req.user.id;
 
   /*
+  ========================
+  GET JOB
+  ========================
+  */
+  const job =
+   await Job.findById(
+    jobId
+   );
+
+  if(!job){
+
+   return res.status(404).json({
+
+    message:
+     "Job not found"
+
+   });
+
+  }
+
+  /*
+  ========================
   PREVENT DUPLICATE
+  ========================
   */
   const existing =
    await Application.findOne({
 
-    job: jobId,
+    job:jobId,
 
-    worker: userId
+    worker:userId
 
    });
 
-  if (existing) {
+  if(existing){
 
    return res.status(400).json({
 
@@ -48,34 +71,40 @@ exports.applyJob = async (
 
   }
 
+  /*
+  ========================
+  CREATE APPLICATION
+  ========================
+  */
   const application =
    new Application({
 
-    job: jobId,
+    job:jobId,
 
-    worker: userId
+    worker:userId
 
    });
 
   await application.save();
 
   /*
-========================
-NOTIFICATION
-========================
-*/
-await Notification.create({
+  ========================
+  NOTIFICATION
+  ========================
+  */
+  await Notification.create({
 
- userId:job.postedBy,
+   userId:
+    job.postedBy,
 
- message:
-  "You received a new job application",
+   message:
+    "You received a new job application",
 
- type:"application",
+   type:"application",
 
- link:"/dashboard"
+   link:"/dashboard"
 
-});
+  });
 
   res.status(201).json({
 
@@ -86,7 +115,7 @@ await Notification.create({
 
  }
 
- catch (error) {
+ catch(error){
 
   console.log(
    "APPLY ERROR:",
@@ -102,7 +131,6 @@ await Notification.create({
  }
 
 };
-
 
 
 /*

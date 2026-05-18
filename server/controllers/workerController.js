@@ -126,15 +126,54 @@ exports.registerWorker = async (req, res) => {
 =====================================
 */
 
-exports.getTopWorkers = async (
- req,
- res
-) => {
+/*
+=====================================
+2. GET TOP WORKERS
+=====================================
+*/
+exports.getTopWorkers =
+ async (req,res)=>{
 
- try {
+ try{
 
+  const {
+   userId
+  } = req.query;
+
+  /*
+  ============================
+  GET CURRENT USER LOCATION
+  ============================
+  */
+  let userLocation = "";
+
+  if(userId){
+
+   const currentUser =
+    await User.findById(
+     userId
+    );
+
+   userLocation =
+
+    currentUser?.location
+     ?.toLowerCase()
+     ?.trim() || "";
+
+  }
+
+  /*
+  ============================
+  ONLY INDIVIDUAL WORKERS
+  ============================
+  */
   const workers =
-   await Worker.find()
+   await Worker.find({
+
+    registrationType:
+     "individual"
+
+   })
 
    .populate(
 
@@ -147,9 +186,11 @@ exports.getTopWorkers = async (
    .lean();
 
   /*
+  ============================
   MERGE USER DATA
+  ============================
   */
-  const mergedWorkers =
+  let mergedWorkers =
    workers.map((worker)=>({
 
     ...worker,
@@ -165,11 +206,107 @@ exports.getTopWorkers = async (
 
    }));
 
-  res.json(mergedWorkers);
+  /*
+  ============================
+  SAME LOCATION FIRST
+  ============================
+  */
+  mergedWorkers =
+   mergedWorkers.filter((worker)=>
+
+    worker.location
+     ?.toLowerCase()
+     ?.includes(
+      userLocation
+     )
+
+   );
+
+  /*
+  ============================
+  SORT BY:
+  1. RATING
+  2. TOTAL RATINGS
+  ============================
+  */
+  mergedWorkers.sort((a,b)=>{
+
+   if(
+
+    b.averageRating !==
+    a.averageRating
+
+   ){
+
+    return (
+
+     b.averageRating -
+     a.averageRating
+
+    );
+
+   }
+
+   return (
+
+    b.totalRatings -
+    a.totalRatings
+
+   );
+
+  });
+
+  /*
+  ============================
+  UNIQUE SERVICES
+  ============================
+  */
+  const uniqueWorkers = [];
+
+  const usedSkills =
+   new Set();
+
+ /*
+============================
+AGGREGATE RANKING
+============================
+*/
+mergedWorkers.sort((a,b)=>{
+
+ /*
+ COMBINED SCORE
+ */
+
+ const aScore =
+
+  (a.averageRating * 10) +
+
+  (a.totalRatings || 0);
+
+ const bScore =
+
+  (b.averageRating * 10) +
+
+  (b.totalRatings || 0);
+
+ return bScore - aScore;
+
+});
+  /*
+  ============================
+  FINAL TOP 3
+  ============================
+  */
+  const topWorkers =
+   uniqueWorkers.slice(0,3);
+
+  res.json(
+   topWorkers
+  );
 
  }
 
- catch (error) {
+ catch(error){
 
   res.status(500).json({
 
@@ -506,18 +643,27 @@ exports.searchWorkers = async (req,res)=>{
 
   }
 
-  /*
-  =============================
-  CATEGORY FILTER
-  =============================
-  */
-  if(category){
+/*
+=============================
+CATEGORY FILTER
+CASE INSENSITIVE
+=============================
+*/
+if(category){
 
-   query.skills = {
-    $in:[category]
-   };
+ query.skills = {
+
+  $elemMatch:{
+
+   $regex:category,
+
+   $options:"i"
 
   }
+
+ };
+
+}
 
   /*
   =============================

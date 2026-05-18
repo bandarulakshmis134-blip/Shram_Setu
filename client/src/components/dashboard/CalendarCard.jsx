@@ -158,16 +158,54 @@ const CalendarCard = ({
 
       }));
 
-    /*
-    MERGE BOTH
-    */
-    setEvents([
+   /*
+=========================
+MERGE + REMOVE DUPLICATES
+=========================
+*/
+const mergedEvents = [
 
-     ...validSchedules,
+ ...validSchedules,
 
-     ...requestEvents
+ ...requestEvents
 
-    ]);
+];
+
+/*
+REMOVE DUPLICATES
+*/
+const uniqueEvents = [
+
+ ...new Map(
+
+  mergedEvents.map((event)=>([
+
+   event._id,
+
+   event
+
+  ]))
+
+ ).values()
+
+];
+
+/*
+LATEST FIRST
+*/
+uniqueEvents.sort(
+
+ (a,b)=>
+
+  new Date(b.date) -
+
+  new Date(a.date)
+
+);
+
+setEvents(
+ uniqueEvents
+);
 
    }
 

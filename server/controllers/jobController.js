@@ -352,3 +352,97 @@ exports.getMyJobs =
  }
 
 };
+
+/*
+============================
+DELETE JOB
+============================
+Only owner can delete
+============================
+*/
+exports.deleteJob =
+ async (req,res)=>{
+
+ try{
+
+  const job =
+   await Job.findById(
+    req.params.id
+   );
+
+  /*
+  JOB NOT FOUND
+  */
+  if(!job){
+
+   return res.status(404).json({
+
+    message:"Job not found"
+
+   });
+
+  }
+
+  /*
+  SECURITY CHECK
+  */
+  if(
+
+   job.postedBy.toString() !==
+   req.user.id
+
+  ){
+
+   return res.status(403).json({
+
+    message:
+     "Unauthorized"
+
+   });
+
+  }
+
+  /*
+  DELETE RELATED
+  APPLICATIONS
+  */
+  await Application.deleteMany({
+
+   job:req.params.id
+
+  });
+
+  /*
+  DELETE JOB
+  */
+  await Job.findByIdAndDelete(
+   req.params.id
+  );
+
+  res.json({
+
+   message:
+    "Job deleted successfully"
+
+  });
+
+ }
+
+ catch(error){
+
+  console.log(
+
+   "DELETE JOB ERROR:",
+   error
+
+  );
+
+  res.status(500).json({
+
+   message:error.message
+
+  });
+
+ }
+
+};

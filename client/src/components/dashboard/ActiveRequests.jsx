@@ -12,6 +12,8 @@ import InvoiceModal from "./InvoiceModal";
 
 import RatingModal from "./RatingModal";
 
+import RequestModal from "../findWorkers/RequestModal";
+
 const ActiveRequests = ({
  showAll = false
 }) => {
@@ -23,6 +25,11 @@ const ActiveRequests = ({
   selectedInvoice,
   setSelectedInvoice
  ] = useState(null);
+
+ const [
+ showRebookModal,
+ setShowRebookModal
+] = useState(false);
 
  const [
  showRating,
@@ -309,26 +316,42 @@ const [
  ACTION BUTTON
  =========================
  */
- const getAction = (
-  request
- )=>{
+const getAction = (
+ request
+)=>{
 
-  switch(request.status){
+ /*
+ =========================
+ ALREADY RATED
+ =========================
+ */
+ if(
 
-   case "completed":
-    return "Rating";
+  request.status === "completed" &&
 
-   case "accepted":
-   case "in-progress":
-    return "Bill";
+  request.isRated
 
-   default:
-    return "Message";
+ ){
 
-  }
+  return "Rebook";
 
- };
+ }
 
+ switch(request.status){
+
+  case "completed":
+   return "Rating";
+
+  case "accepted":
+  case "in-progress":
+   return "Bill";
+
+  default:
+   return "Message";
+
+ }
+
+};
  /*
  =========================
  BUTTON CLICK
@@ -375,11 +398,10 @@ const [
 
   }
 
-  /*
-  RATING
-  */
-  /*
+/*
+=========================
 RATING
+=========================
 */
 else if(action === "Rating"){
 
@@ -388,6 +410,23 @@ else if(action === "Rating"){
  );
 
  setShowRating(true);
+
+}
+
+/*
+=========================
+REBOOK
+=========================
+*/
+else if(action === "Rebook"){
+
+ setSelectedRequest(
+  request
+ );
+
+ setShowRebookModal(
+  true
+ );
 
 }
 
@@ -438,9 +477,33 @@ const handleRatingSubmit = async (
    "Rating submitted successfully"
   );
 
-  setShowRating(false);
+  /*
+UPDATE UI
+*/
+setRequests((prev)=>
 
-  setSelectedRequest(null);
+ prev.map((request)=>
+
+  request._id ===
+  selectedRequest._id
+
+   ? {
+
+      ...request,
+
+      isRated:true
+
+     }
+
+   : request
+
+ )
+
+);
+
+setShowRating(false);
+
+setSelectedRequest(null);
 
  }
 
@@ -633,6 +696,45 @@ const handleRatingSubmit = async (
  }
 
 />
+
+{/*
+=========================
+REBOOK MODAL
+=========================
+*/}
+{showRebookModal &&
+ selectedRequest && (
+
+ <RequestModal
+
+  worker={{
+
+   _id:
+    selectedRequest.workerId?._id,
+
+   firstName:
+    selectedRequest.workerId?.firstName,
+
+   skills:
+    selectedRequest.workerId?.skills
+
+  }}
+
+  onClose={()=>{
+
+   setShowRebookModal(
+    false
+   );
+
+   setSelectedRequest(
+    null
+   );
+
+  }}
+
+ />
+
+)}
 
    {/* INVOICE MODAL */}
    {selectedInvoice && (

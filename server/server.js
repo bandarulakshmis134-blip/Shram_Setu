@@ -106,120 +106,224 @@ app.get("/", (req, res) => {
 
 /*
 ========================
-SOCKET LOGIC (FINAL FIXED)
+SOCKET LOGIC
 ========================
 */
 io.on("connection", (socket) => {
 
-  console.log("User connected:", socket.id);
+ console.log(
+  "User connected:",
+  socket.id
+ );
+
+ /*
+ ========================
+ JOIN USER
+ ========================
+ */
+ socket.on("join", (userId) => {
+
+  if(!onlineUsers[userId]){
+
+   onlineUsers[userId] =
+    new Set();
+
+  }
+
+  onlineUsers[userId]
+   .add(socket.id);
+
+  console.log(
+   "User joined:",
+   userId
+  );
 
   /*
-  ========================
-  JOIN USER
-  ========================
+  SEND ONLINE USERS
   */
-  socket.on("join", (userId) => {
+  socket.emit(
 
-    if (!onlineUsers[userId]) {
-      onlineUsers[userId] = new Set();
-    }
+   "onlineUsers",
 
-    onlineUsers[userId].add(socket.id);
+   Object.keys(
+    onlineUsers
+   )
 
-    console.log("User joined:", userId);
-
-    // send current online users
-    socket.emit("onlineUsers", Object.keys(onlineUsers));
-
-    // notify all
-    io.emit("userOnline", userId);
-  });
+  );
 
   /*
-  ========================
-  SEND MESSAGE (🔥 FIXED)
-  ========================
+  NOTIFY ALL
   */
-  socket.on("sendMessage", async (data) => {
+  io.emit(
+   "userOnline",
+   userId
+  );
 
-    try {
+ });
 
-      const { senderId, receiverId, text } = data;
+ /*
+ ========================
+ SEND MESSAGE
+ ========================
+ ONLY REALTIME DELIVERY
+ DATABASE SAVE IS DONE
+ INSIDE CONTROLLER
+ ========================
+ */
+ socket.on(
 
-      let finalReceiverId = receiverId;
+  "sendMessage",
 
-      /*
-      ====================================
-      🔥 FIX: HANDLE WORKER ID → USER ID
-      ====================================
-      */
-      const worker = await Worker.findById(receiverId);
+  async (data)=>{
 
-      if (worker) {
-        finalReceiverId = worker.userId.toString();
-      }
+   try{
 
-      console.log("Message:", senderId, "→", finalReceiverId);
+    const {
 
-      const newMsg = new Message({
-        senderId,
-        receiverId: finalReceiverId,
-        text
-      });
+     senderId,
+     receiverId
 
-      await newMsg.save();
+    } = data;
 
-      const receiverSockets = onlineUsers[finalReceiverId];
+    let finalReceiverId =
+     receiverId;
 
-      if (receiverSockets) {
+    /*
+    HANDLE WORKER ID
+    */
+    const worker =
+     await Worker.findById(
+      receiverId
+     );
 
-        receiverSockets.forEach((sockId) => {
-          io.to(sockId).emit("receiveMessage", newMsg);
-        });
+    if(worker){
 
-        console.log("Delivered to:", finalReceiverId);
+     finalReceiverId =
+      worker.userId.toString();
 
-      } else {
-
-        console.log("User offline:", finalReceiverId);
-
-      }
-
-    } catch (error) {
-      console.log("Socket error:", error);
     }
 
-  });
+    console.log(
 
-  /*
-  ========================
-  DISCONNECT
-  ========================
-  */
-  socket.on("disconnect", () => {
+     "Realtime message:",
+     senderId,
+     "→",
+     finalReceiverId
 
-    console.log("User disconnected:", socket.id);
+    );
 
-    for (let userId in onlineUsers) {
+    /*
+    FIND RECEIVER SOCKETS
+    */
+    const receiverSockets =
 
-      if (onlineUsers[userId].has(socket.id)) {
+     onlineUsers[
+      finalReceiverId
+     ];
 
-        onlineUsers[userId].delete(socket.id);
+    /*
+    SEND REALTIME MESSAGE
+    */
+    if(receiverSockets){
 
-        if (onlineUsers[userId].size === 0) {
-          delete onlineUsers[userId];
+     receiverSockets.forEach(
+      (sockId)=>{
 
-          io.emit("userOffline", userId);
-        }
+       io.to(sockId).emit(
 
-        break;
+        "receiveMessage",
+
+        data
+
+       );
+
       }
+     );
+
+     console.log(
+      "Delivered realtime"
+     );
+
     }
 
-  });
+   }
+
+   catch(error){
+
+    console.log(
+     "Socket error:",
+     error
+    );
+
+   }
+
+  }
+
+ );
+
+ /*
+ ========================
+ DISCONNECT
+ ========================
+ */
+ socket.on(
+  "disconnect",
+  ()=>{
+
+   console.log(
+    "User disconnected:",
+    socket.id
+   );
+
+   for(
+
+    let userId
+    in onlineUsers
+
+   ){
+
+    if(
+
+     onlineUsers[userId]
+      .has(socket.id)
+
+    ){
+
+     onlineUsers[userId]
+      .delete(socket.id);
+
+     /*
+     REMOVE EMPTY USERS
+     */
+     if(
+
+      onlineUsers[userId]
+       .size === 0
+
+     ){
+
+      delete onlineUsers[
+       userId
+      ];
+
+      io.emit(
+       "userOffline",
+       userId
+      );
+
+     }
+
+     break;
+
+    }
+
+   }
+
+  }
+
+ );
 
 });
-
 /*
 ========================
 START SERVER

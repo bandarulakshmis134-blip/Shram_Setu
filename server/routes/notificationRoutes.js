@@ -7,7 +7,8 @@ const router =
 const {
 
  getNotifications,
- markAsRead
+ markAsRead,
+ clearNotifications
 
 } = require(
 
@@ -24,6 +25,8 @@ const {
  "../middleware/authMiddleware"
 
 );
+
+
 
 /*
 ========================
@@ -55,5 +58,19 @@ router.put(
 
 );
 
+/*
+========================
+CLEAR NOTIFICATIONS
+========================
+*/
+router.delete(
+
+ "/clear",
+
+ verifyToken,
+
+ clearNotifications
+
+);
 module.exports =
  router;

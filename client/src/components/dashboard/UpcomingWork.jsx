@@ -25,11 +25,30 @@ const UpcomingWork = ({
  const [jobs,setJobs] =
   useState([]);
 
+ /*
+ =========================
+ OTP FLOW STATES
+ =========================
+ */
  const [otpInputs,setOtpInputs] =
+  useState({});
+
+ const [otpSent,setOtpSent] =
   useState({});
 
  const [loadingId,setLoadingId] =
   useState(null);
+
+ /*
+ =========================
+ OTP TIMER
+ =========================
+ */
+ const [timers,setTimers] =
+  useState({});
+
+ const [canResend,setCanResend] =
+  useState({});
 
  const [
   selectedInvoice,
@@ -91,17 +110,13 @@ const UpcomingWork = ({
    const requests =
     requestRes.data || [];
 
-   /*
-   START WITH REAL REQUESTS
-   */
    const mergedJobs = [
 
     ...(requests || []).map(
 
      (request)=>({
 
-      _id:
-       request._id,
+      _id:request._id,
 
       description:
        request.description,
@@ -136,10 +151,6 @@ const UpcomingWork = ({
 
    ];
 
-   /*
-   ADD SCHEDULE WORKS
-   ONLY IF MISSING
-   */
    (scheduleRes.data || [])
 
    .forEach((schedule)=>{
@@ -159,19 +170,15 @@ const UpcomingWork = ({
 
      mergedJobs.push({
 
-      _id:
-       schedule._id,
+      _id:schedule._id,
 
       description:
        schedule.title,
 
-      client:
-       "Client",
+      client:"Client",
 
       budget:
-       schedule?.job?.budget ||
-
-       0,
+       schedule?.job?.budget || 0,
 
       location:
        schedule?.job?.location ||
@@ -207,13 +214,80 @@ const UpcomingWork = ({
  };
 
  /*
+ =========================
  LOAD
+ =========================
  */
  useEffect(()=>{
 
   fetchUpcomingWork();
 
  },[]);
+
+ /*
+ =========================
+ TIMER EFFECT
+ =========================
+ */
+ useEffect(()=>{
+
+  const interval =
+   setInterval(()=>{
+
+    setTimers((prev)=>{
+
+     const updated = {
+
+      ...prev
+
+     };
+
+     Object.keys(updated)
+     .forEach((id)=>{
+
+      if(updated[id] > 0){
+
+       updated[id] -= 1;
+
+      }
+
+     });
+
+     return updated;
+
+    });
+
+   },1000);
+
+  return ()=> clearInterval(interval);
+
+ },[]);
+
+ /*
+ =========================
+ ENABLE RESEND
+ =========================
+ */
+ useEffect(()=>{
+
+  Object.keys(timers)
+  .forEach((id)=>{
+
+   if(timers[id] === 0){
+
+    setCanResend(prev=>({
+
+     ...prev,
+
+     [id]:true
+
+    }));
+
+   }
+
+  });
+
+ },[timers]);
 
  /*
  =========================
@@ -254,6 +328,36 @@ const UpcomingWork = ({
    alert(
     res.data.message
    );
+
+   /*
+   OTP FLOW
+   */
+   setOtpSent(prev=>({
+
+    ...prev,
+
+    [requestId]:true
+
+   }));
+
+   /*
+   START TIMER
+   */
+   setTimers(prev=>({
+
+    ...prev,
+
+    [requestId]:120
+
+   }));
+
+   setCanResend(prev=>({
+
+    ...prev,
+
+    [requestId]:false
+
+   }));
 
   }
 
@@ -301,8 +405,10 @@ const UpcomingWork = ({
     `http://localhost:5000/api/requests/${requestId}/verify-work-otp`,
 
     {
+
      otp:
       otpInputs[requestId]
+
     },
 
     {
@@ -358,7 +464,7 @@ const UpcomingWork = ({
 
  /*
  =========================
- OPEN / CREATE INVOICE
+ OPEN INVOICE
  =========================
  */
  const openInvoice = async (
@@ -376,9 +482,6 @@ const UpcomingWork = ({
 
    );
 
-   /*
-   TRY FETCH EXISTING
-   */
    try{
 
     const existing =
@@ -405,9 +508,6 @@ const UpcomingWork = ({
 
    catch(fetchError){
 
-    /*
-    IF NOT 404
-    */
     if(
 
      fetchError.response?.status
@@ -421,9 +521,6 @@ const UpcomingWork = ({
 
    }
 
-   /*
-   CREATE NEW INVOICE
-   */
    const created =
     await axios.post(
 
@@ -462,11 +559,12 @@ const UpcomingWork = ({
  };
 
  /*
- SHOW ONLY 2
+ SHOW LIMITED
  */
- const displayedJobs = showAll
-  ? jobs
-  : jobs.slice(0,2);
+ const displayedJobs =
+  showAll
+   ? jobs
+   : jobs.slice(0,2);
 
  return (
 
@@ -513,11 +611,8 @@ const UpcomingWork = ({
      displayedJobs.map((job)=>(
 
       <div
-
        key={job._id}
-
        className="border rounded p-4 mb-4"
-
       >
 
        <div className="flex items-start justify-between">
@@ -536,43 +631,8 @@ const UpcomingWork = ({
 
          </p>
 
-         <p className="text-sm text-gray-500">
-
-          Budget: ₹{job.budget}
-
-         </p>
-
-         <p className="text-sm text-gray-500">
-
-          Location: {job.location}
-
-         </p>
-
-         <p className="text-sm text-gray-500">
-
-          Status:{" "}
-
-          <span className="capitalize">
-
-           {job.status}
-
-          </span>
-
-         </p>
-
-         <p className="text-sm text-gray-500">
-
-          Date:{" "}
-
-          {new Date(
-           job.createdAt
-          ).toLocaleDateString()}
-
-         </p>
-
         </div>
 
-        {/* INVOICE ICON */}
         <button
 
          onClick={()=>
@@ -595,90 +655,160 @@ const UpcomingWork = ({
 
        </div>
 
-       <button
+       {!otpSent[job.requestId] ? (
 
-        onClick={()=>
-         sendOTP(
+        <button
+
+         onClick={()=>
+          sendOTP(
+           job.requestId
+          )
+         }
+
+         disabled={
+          loadingId ===
           job.requestId
-         )
-        }
+         }
 
-        disabled={
-         loadingId ===
-         job.requestId
-        }
+         className="mt-3 w-full bg-green-600 text-white py-2 rounded"
 
-        className="mt-3 w-full bg-green-600 text-white py-2 rounded"
+        >
 
-       >
-
-        {loadingId ===
-         job.requestId
-
-         ? "Sending..."
-
-         : "Send OTP"
-
-        }
-
-       </button>
-
-       <input
-
-        type="text"
-
-        placeholder="Enter customer OTP"
-
-        value={
-         otpInputs[
+         {loadingId ===
           job.requestId
-         ] || ""
-        }
 
-        onChange={(e)=>
+          ? "Sending..."
 
-         setOtpInputs({
+          : "Send OTP"}
 
-          ...otpInputs,
+        </button>
 
-          [job.requestId]:
-           e.target.value
+       ) : (
 
-         })
+        <>
 
-        }
+         <input
 
-        className="w-full border rounded px-3 py-2 mt-3 outline-none"
+          type="text"
 
-       />
+          placeholder="Enter customer OTP"
 
-       <button
+          value={
+           otpInputs[
+            job.requestId
+           ] || ""
+          }
 
-        onClick={()=>
-         verifyOTP(
-          job.requestId
-         )
-        }
+          onChange={(e)=>
 
-        disabled={
-         loadingId ===
-         job.requestId
-        }
+           setOtpInputs({
 
-        className="mt-2 w-full bg-blue-600 text-white py-2 rounded"
+            ...otpInputs,
 
-       >
+            [job.requestId]:
+             e.target.value
 
-        {loadingId ===
-         job.requestId
+           })
 
-         ? "Verifying..."
+          }
 
-         : "Complete Work"
+          className="w-full border rounded px-3 py-2 mt-3 outline-none"
 
-        }
+         />
 
-       </button>
+         <button
+
+          onClick={()=>
+           verifyOTP(
+            job.requestId
+           )
+          }
+
+          disabled={
+           loadingId ===
+           job.requestId
+          }
+
+          className="mt-2 w-full bg-blue-600 text-white py-2 rounded"
+
+         >
+
+          {loadingId ===
+           job.requestId
+
+           ? "Verifying..."
+
+           : "Verify OTP"}
+
+         </button>
+
+         <div className="text-center mt-3">
+
+          <p className="text-sm text-gray-500">
+
+           OTP expires in:
+
+           <span className="font-semibold text-red-500 ml-1">
+
+            {Math.floor(
+
+             (timers[
+              job.requestId
+             ] || 0) / 60
+
+            )}
+
+            :
+
+            {((timers[
+              job.requestId
+             ] || 0) % 60)
+
+             .toString()
+
+             .padStart(2,"0")}
+
+           </span>
+
+          </p>
+
+          <button
+
+           disabled={
+            !canResend[
+             job.requestId
+            ]
+           }
+
+           onClick={()=>
+            sendOTP(
+             job.requestId
+            )
+           }
+
+           className={`mt-2 text-sm font-medium
+
+           ${canResend[
+             job.requestId
+            ]
+
+             ? "text-blue-600"
+
+             : "text-gray-400 cursor-not-allowed"
+
+           }`}
+
+          >
+
+           Resend OTP
+
+          </button>
+
+         </div>
+
+        </>
+
+       )}
 
       </div>
 
@@ -688,7 +818,6 @@ const UpcomingWork = ({
 
    </div>
 
-   {/* INVOICE MODAL */}
    {selectedInvoice && (
 
     <InvoiceModal
