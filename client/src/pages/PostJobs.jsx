@@ -104,7 +104,7 @@ const PostJobs = ()=>{
     const res =
      await axios.get(
 
-      `http://localhost:5000/api/jobs?page=${page}&userId=${user?._id}`
+      `${import.meta.env.VITE_API_URL}/api/jobs?page=${page}&userId=${user?._id}`
 
      );
 

@@ -57,7 +57,7 @@ const PostedJobs = ({
      const res =
       await axios.get(
 
-       `http://localhost:5000/api/jobs/my-jobs/${user._id}`
+       `${import.meta.env.VITE_API_URL}/api/jobs/my-jobs/${user._id}`
 
       );
 
@@ -115,7 +115,7 @@ const PostedJobs = ({
 
     await axios.delete(
 
-     `http://localhost:5000/api/jobs/${jobId}`,
+     `${import.meta.env.VITE_API_URL}/api/jobs/${jobId}`,
 
      {
 

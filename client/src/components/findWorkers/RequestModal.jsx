@@ -69,7 +69,7 @@ const RequestModal = ({ worker, onClose }) => {
 
    const res = await axios.post(
 
-    "http://localhost:5000/api/requests/create",
+    `${import.meta.env.VITE_API_URL}/api/requests/create`,
 
     {
 

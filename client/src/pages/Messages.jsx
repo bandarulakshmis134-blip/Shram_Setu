@@ -173,7 +173,7 @@ useEffect(()=>{
      const res =
       await axios.get(
 
-       "http://localhost:5000/api/messages/conversations",
+       `${import.meta.env.VITE_API_URL}/api/messages/conversations`,
 
        {
 
@@ -341,7 +341,7 @@ useEffect(()=>{
      */
      await axios.put(
 
-      "http://localhost:5000/api/messages/seen",
+      `${import.meta.env.VITE_API_URL}/api/messages/seen`,
 
       {
 
@@ -417,7 +417,7 @@ useEffect(()=>{
      const res =
       await axios.get(
 
-       "http://localhost:5000/api/messages",
+       `${import.meta.env.VITE_API_URL}/api/messages`,
 
        {
 
@@ -444,7 +444,7 @@ useEffect(()=>{
      */
      await axios.put(
 
-      "http://localhost:5000/api/messages/seen",
+      `${import.meta.env.VITE_API_URL}/api/messages/seen`,
 
       {
 
@@ -530,7 +530,7 @@ useEffect(()=>{
     const res =
      await axios.post(
 
-      "http://localhost:5000/api/messages/send",
+      `${import.meta.env.VITE_API_URL}/api/messages/send`,
 
       msg
 

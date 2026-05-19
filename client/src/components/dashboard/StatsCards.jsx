@@ -43,7 +43,7 @@ const StatsCards = ({ type }) => {
           */
           const requestRes = await axios.get(
 
-            "http://localhost:5000/api/requests/worker",
+            `${import.meta.env.VITE_API_URL}/api/requests/worker`,
 
             {
               headers: {
@@ -64,7 +64,7 @@ const StatsCards = ({ type }) => {
           const completedRes =
             await axios.get(
 
-              "http://localhost:5000/api/requests/worker-completed",
+              `${import.meta.env.VITE_API_URL}/api/requests/worker-completed`,
 
               {
                 headers:{
@@ -108,7 +108,7 @@ const StatsCards = ({ type }) => {
 
           const res = await axios.get(
 
-            "http://localhost:5000/api/requests/user",
+            `${import.meta.env.VITE_API_URL}/api/requests/user`,
 
             {
               headers:{

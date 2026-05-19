@@ -79,7 +79,7 @@ const UpcomingWork = ({
    const scheduleRes =
     await axios.get(
 
-     "http://localhost:5000/api/schedules/worker",
+     `${import.meta.env.VITE_API_URL}/api/schedules/worker`,
 
      {
       headers:{
@@ -96,7 +96,7 @@ const UpcomingWork = ({
    const requestRes =
     await axios.get(
 
-     "http://localhost:5000/api/requests/worker-history",
+     `${import.meta.env.VITE_API_URL}/api/requests/worker-history`,
 
      {
       headers:{
@@ -312,7 +312,7 @@ const UpcomingWork = ({
 
    const res = await axios.post(
 
-    `http://localhost:5000/api/requests/${requestId}/send-work-otp`,
+    `${import.meta.env.VITE_API_URL}/api/requests/${requestId}/send-work-otp`,
 
     {},
 
@@ -402,7 +402,7 @@ const UpcomingWork = ({
 
    const res = await axios.post(
 
-    `http://localhost:5000/api/requests/${requestId}/verify-work-otp`,
+    `${import.meta.env.VITE_API_URL}/api/requests/${requestId}/verify-work-otp`,
 
     {
 
@@ -487,7 +487,7 @@ const UpcomingWork = ({
     const existing =
      await axios.get(
 
-      `http://localhost:5000/api/invoices/request/${requestId}`,
+      `${import.meta.env.VITE_API_URL}/api/invoices/request/${requestId}`,
 
       {
        headers:{
@@ -524,7 +524,7 @@ const UpcomingWork = ({
    const created =
     await axios.post(
 
-     "http://localhost:5000/api/invoices/create",
+     `${import.meta.env.VITE_API_URL}/api/invoices/create`,
 
      {
       requestId,

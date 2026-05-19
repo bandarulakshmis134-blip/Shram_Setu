@@ -110,7 +110,7 @@ const Profile = () => {
 
    const res = await axios.put(
 
-    `http://localhost:5000/api/users/update/${user._id}`,
+    `${import.meta.env.VITE_API_URL}/api/users/update/${user._id}`,
 
     updatedData
 
@@ -123,7 +123,7 @@ const Profile = () => {
 
     await axios.put(
 
-     "http://localhost:5000/api/workers/sync-skills",
+     `${import.meta.env.VITE_API_URL}/api/workers/sync-skills`,
 
      {
 

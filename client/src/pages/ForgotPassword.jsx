@@ -91,7 +91,7 @@ const ForgotPassword = () => {
 
    const res = await axios.post(
 
-    "http://localhost:5000/api/forgot-password/send-otp",
+    `${import.meta.env.VITE_API_URL}/api/forgot-password/send-otp`,
 
     {
      email
@@ -149,7 +149,7 @@ const ForgotPassword = () => {
 
    const res = await axios.post(
 
-    "http://localhost:5000/api/forgot-password/verify-otp",
+    `${import.meta.env.VITE_API_URL}/api/forgot-password/verify-otp`,
 
     {
      email,
@@ -201,7 +201,7 @@ const ForgotPassword = () => {
 
    await axios.post(
 
-    "http://localhost:5000/api/forgot-password/send-otp",
+    `${import.meta.env.VITE_API_URL}/api/forgot-password/send-otp`,
 
     {
      email
@@ -253,7 +253,7 @@ const ForgotPassword = () => {
 
    const res = await axios.post(
 
-    "http://localhost:5000/api/forgot-password/reset-password",
+    `${import.meta.env.VITE_API_URL}/api/forgot-password/reset-password`,
 
     {
      email,

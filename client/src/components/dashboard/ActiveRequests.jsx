@@ -74,7 +74,7 @@ const [
    const requestRes =
     await axios.get(
 
-     "http://localhost:5000/api/requests/user",
+     `${import.meta.env.VITE_API_URL}/api/requests/user`,
 
      {
       headers:{
@@ -91,7 +91,7 @@ const [
    const scheduleRes =
     await axios.get(
 
-     "http://localhost:5000/api/schedules/admin",
+     `${import.meta.env.VITE_API_URL}/api/schedules/admin`,
 
      {
       headers:{
@@ -248,7 +248,7 @@ const [
 
    const res = await axios.post(
 
-    "http://localhost:5000/api/invoices/create",
+    `${import.meta.env.VITE_API_URL}/api/invoices/create`,
 
     {
      requestId:request._id,
@@ -458,7 +458,7 @@ const handleRatingSubmit = async (
 
   await axios.post(
 
-   `http://localhost:5000/api/requests/${selectedRequest._id}/rate`,
+   `${import.meta.env.VITE_API_URL}/api/requests/${selectedRequest._id}/rate`,
 
    {
     stars:rating

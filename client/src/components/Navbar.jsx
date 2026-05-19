@@ -124,7 +124,7 @@ const Navbar = () => {
      const res =
       await axios.get(
 
-       "http://localhost:5000/api/notifications/user",
+       `${import.meta.env.VITE_API_URL}/api/notifications/user`,
 
        {
 
@@ -262,7 +262,7 @@ const Navbar = () => {
 
     await axios.put(
 
-     `http://localhost:5000/api/notifications/${notification._id}/read`,
+     `${import.meta.env.VITE_API_URL}/api/notifications/${notification._id}/read`,
 
      {},
 
@@ -544,7 +544,7 @@ setNotifications((prev)=>
 
     await axios.delete(
 
-     "http://localhost:5000/api/notifications/clear",
+     `${import.meta.env.VITE_API_URL}/api/notifications/clear`,
 
      {
 

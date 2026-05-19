@@ -40,8 +40,8 @@ const CalendarCard = ({
     const scheduleRes = await axios.get(
 
      isWorker
-      ? "http://localhost:5000/api/schedules/worker"
-      : "http://localhost:5000/api/schedules/admin",
+      ? `${import.meta.env.VITE_API_URL}/api/schedules/worker`
+      : `${import.meta.env.VITE_API_URL}/api/schedules/admin`,
 
      {
       headers: {
@@ -112,8 +112,8 @@ const CalendarCard = ({
     const requestRes = await axios.get(
 
      isWorker
-      ? "http://localhost:5000/api/requests/worker-history"
-      : "http://localhost:5000/api/requests/user",
+      ? `${import.meta.env.VITE_API_URL}/api/requests/worker-history`
+      : `${import.meta.env.VITE_API_URL}/api/requests/user`,
 
      {
       headers:{

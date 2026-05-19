@@ -32,7 +32,7 @@ const Applications = ({
     );
 
     const res = await axios.get(
-     "http://localhost:5000/api/applications/admin",
+     `${import.meta.env.VITE_API_URL}/api/applications/admin`,
      {
       headers: {
        Authorization: `Bearer ${user.token}`
@@ -75,7 +75,7 @@ const Applications = ({
    );
 
    await axios.put(
-    `http://localhost:5000/api/applications/${id}/status`,
+    `${import.meta.env.VITE_API_URL}/api/applications/${id}/status`,
     { status },
     {
      headers: {

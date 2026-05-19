@@ -76,7 +76,7 @@ const Home = ()=>{
 
     const workersRes = await axios.get(
 
-     "http://localhost:5000/api/workers/top-workers"
+     `${import.meta.env.VITE_API_URL}/api/workers/top-workers`
 
     );
 
@@ -98,7 +98,7 @@ const Home = ()=>{
 
      const checkRes = await axios.get(
 
-      `http://localhost:5000/api/workers/check/${userId}`
+      `${import.meta.env.VITE_API_URL}/api/workers/check/${userId}`
 
      );
 

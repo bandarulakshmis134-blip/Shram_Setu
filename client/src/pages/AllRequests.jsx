@@ -37,7 +37,7 @@ const AllRequests = () => {
 
    const res = await axios.get(
 
-    "http://localhost:5000/api/requests/user",
+    `${import.meta.env.VITE_API_URL}/api/requests/user`,
 
     {
      headers:{
@@ -135,7 +135,7 @@ const AllRequests = () => {
 
    const res = await axios.post(
 
-    "http://localhost:5000/api/invoices/create",
+    `${import.meta.env.VITE_API_URL}/api/invoices/create`,
 
     {
      requestId:request._id,
