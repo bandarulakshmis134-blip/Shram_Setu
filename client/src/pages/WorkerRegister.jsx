@@ -74,7 +74,7 @@ const WorkerRegister = () => {
 
     const res = await axios.get(
 
-     `http://localhost:5000/api/workers/check/${user._id}`
+     `${import.meta.env.VITE_API_URL}/api/workers/check/${user._id}`
 
     );
 
@@ -276,7 +276,7 @@ const WorkerRegister = () => {
 
    await axios.post(
 
-    "http://localhost:5000/api/workers/register",
+    `${import.meta.env.VITE_API_URL}/api/workers/register`,
 
     workerData
 

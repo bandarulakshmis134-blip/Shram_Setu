@@ -17,6 +17,14 @@ const scheduleSchema = new mongoose.Schema({
     ref: "User"
   },
 
+  /*
+  REAL WORK REQUEST LINK
+  */
+  requestId:{
+    type:mongoose.Schema.Types.ObjectId,
+    ref:"JobRequest"
+  },
+
   title: {
     type: String,
     required: true

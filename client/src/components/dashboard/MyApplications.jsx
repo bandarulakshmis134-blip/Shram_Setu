@@ -27,7 +27,7 @@ const MyApplications = ({
     );
 
     const res = await axios.get(
-     "http://localhost:5000/api/applications/worker",
+     `${import.meta.env.VITE_API_URL}/api/applications/worker`,
      {
       headers: {
        Authorization: `Bearer ${user.token}`
@@ -70,7 +70,7 @@ const MyApplications = ({
    );
 
    await axios.delete(
-    `http://localhost:5000/api/applications/${id}`,
+    `${import.meta.env.VITE_API_URL}/api/applications/${id}`,
     {
      headers: {
       Authorization: `Bearer ${user.token}`

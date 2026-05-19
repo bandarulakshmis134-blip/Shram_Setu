@@ -26,6 +26,7 @@ import AllRequests from "./pages/AllRequests";
 import WorkerRequestsPage from "./pages/WorkerRequestsPage";
 import AIAssistant from "./components/AIAssistant";
 import ForgotPassword from "./pages/ForgotPassword";
+import AllCalendarPage from "./pages/AllCalendarPage";
 /*
  NEW PAGES
  */
@@ -194,6 +195,11 @@ function App() {
      <Route
      path="/worker-requests"
      element={<WorkerRequestsPage />}
+     />
+
+     <Route
+     path="/all-calendar"
+     element={<AllCalendarPage />}
      />
 
 

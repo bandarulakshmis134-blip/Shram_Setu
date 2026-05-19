@@ -56,6 +56,36 @@ const userSchema = new mongoose.Schema({
 
 otpExpiry:{
  type:Date
+},
+
+ratings:[
+ {
+  userId:{
+   type:mongoose.Schema.Types.ObjectId,
+   ref:"User"
+  },
+
+  requestId:{
+   type:mongoose.Schema.Types.ObjectId,
+   ref:"JobRequest"
+  },
+
+  stars:{
+   type:Number,
+   min:1,
+   max:5
+  }
+ }
+],
+
+averageRating:{
+ type:Number,
+ default:0
+},
+
+totalRatings:{
+ type:Number,
+ default:0
 }
 
 });

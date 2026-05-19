@@ -4,7 +4,7 @@ export const updateUserProfile = async (userData) => {
 
   const response = await axios.put(
 
-    "http://localhost:5000/api/user/update",
+    `${import.meta.env.VITE_API_URL}/api/user/update`,
 
     userData
 

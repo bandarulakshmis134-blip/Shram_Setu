@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
+
 import axios from "axios";
+
+import {
+ useNavigate
+} from "react-router-dom";
 
 const CalendarCard = ({
  isWorker,
@@ -8,6 +13,9 @@ const CalendarCard = ({
 
  const [events, setEvents] =
   useState([]);
+
+ const navigate =
+  useNavigate();
 
  /*
  =========================
@@ -32,8 +40,8 @@ const CalendarCard = ({
     const scheduleRes = await axios.get(
 
      isWorker
-      ? "http://localhost:5000/api/schedules/worker"
-      : "http://localhost:5000/api/schedules/admin",
+      ? `${import.meta.env.VITE_API_URL}/api/schedules/worker`
+      : `${import.meta.env.VITE_API_URL}/api/schedules/admin`,
 
      {
       headers: {
@@ -104,8 +112,8 @@ const CalendarCard = ({
     const requestRes = await axios.get(
 
      isWorker
-      ? "http://localhost:5000/api/requests/worker-history"
-      : "http://localhost:5000/api/requests/user",
+      ? `${import.meta.env.VITE_API_URL}/api/requests/worker-history`
+      : `${import.meta.env.VITE_API_URL}/api/requests/user`,
 
      {
       headers:{
@@ -150,16 +158,54 @@ const CalendarCard = ({
 
       }));
 
-    /*
-    MERGE BOTH
-    */
-    setEvents([
+   /*
+=========================
+MERGE + REMOVE DUPLICATES
+=========================
+*/
+const mergedEvents = [
 
-     ...validSchedules,
+ ...validSchedules,
 
-     ...requestEvents
+ ...requestEvents
 
-    ]);
+];
+
+/*
+REMOVE DUPLICATES
+*/
+const uniqueEvents = [
+
+ ...new Map(
+
+  mergedEvents.map((event)=>([
+
+   event._id,
+
+   event
+
+  ]))
+
+ ).values()
+
+];
+
+/*
+LATEST FIRST
+*/
+uniqueEvents.sort(
+
+ (a,b)=>
+
+  new Date(b.date) -
+
+  new Date(a.date)
+
+);
+
+setEvents(
+ uniqueEvents
+);
 
    }
 
@@ -237,20 +283,54 @@ const CalendarCard = ({
 
  /*
  =========================
- SHOW ONLY 10 IN DASHBOARD
+ SHOW ONLY 5 IN DASHBOARD
  =========================
  */
  const displayedEvents = showAll
   ? events
-  : events.slice(0,10);
+  : events.slice(0,5);
 
  return (
 
   <div className="bg-white p-5 rounded-xl shadow h-fit">
 
-   <h2 className="font-semibold mb-4">
-    Calendar
-   </h2>
+   <div className="flex items-center justify-between mb-4">
+
+    <h2 className="font-semibold">
+     Calendar
+    </h2>
+
+    {!showAll && (
+
+     <button
+
+      onClick={()=>
+
+       navigate(
+
+        "/all-calendar",
+
+        {
+         state:{
+          isWorker
+         }
+        }
+
+       )
+
+      }
+
+      className="text-sm text-blue-600 hover:text-blue-700"
+
+     >
+
+      View All
+
+     </button>
+
+    )}
+
+   </div>
 
    <div className="space-y-3">
 

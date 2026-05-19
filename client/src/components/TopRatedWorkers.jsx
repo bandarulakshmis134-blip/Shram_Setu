@@ -1,48 +1,55 @@
-const TopRatedWorkers = ({ workers }) => {
-  return (
-    <div className="mt-8 px-6">
+import WorkerCard
+ from "./findWorkers/WorkerCard";
 
-      {/* ✅ Always visible */}
-      <h2 className="text-2xl font-bold mb-4">
-        ⭐ Top Rated Workers
-      </h2>
+const TopRatedWorkers = ({
+ workers
+})=>{
 
-      {/* 🔥 Conditional rendering */}
-      {!workers || workers.length === 0 ? (
-        <p className="text-center text-gray-500">
-          No workers found
-        </p>
-      ) : (
-        <div className="grid md:grid-cols-3 gap-6">
+ return(
 
-          {workers.map((worker, index) => (
-            <div
-              key={index}
-              className="bg-white p-4 rounded-xl shadow-md hover:shadow-lg transition"
-            >
-              <h3 className="text-lg font-semibold">
-                {worker.firstName}
-              </h3>
+  <div className="mt-8 px-6">
 
-              <p className="text-gray-500 text-sm">
-                📍 {worker.location}
-              </p>
+   {/* TITLE */}
+   <h2 className="text-2xl font-bold mb-4">
 
-              <p className="text-gray-600 mt-2">
-                Skills: {worker.skills?.join(", ")}
-              </p>
+    ⭐ Top Rated Workers
 
-              <p className="mt-2 text-yellow-500 font-semibold">
-                ⭐ {worker.rating || "4.5"}
-              </p>
-            </div>
-          ))}
+   </h2>
 
-        </div>
-      )}
+   {/* EMPTY */}
+   {!workers ||
+    workers.length === 0 ? (
+
+    <p className="text-center text-gray-500">
+
+     No workers found in your area
+
+    </p>
+
+   ) : (
+
+    <div className="grid md:grid-cols-3 gap-6">
+
+     {workers.map((worker)=>(
+
+      <WorkerCard
+
+       key={worker._id}
+
+       worker={worker}
+
+      />
+
+     ))}
 
     </div>
-  );
+
+   )}
+
+  </div>
+
+ );
+
 };
 
 export default TopRatedWorkers;

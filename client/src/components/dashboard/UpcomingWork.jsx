@@ -9,6 +9,12 @@ import {
  useNavigate
 } from "react-router-dom";
 
+import {
+ Receipt
+} from "lucide-react";
+
+import InvoiceModal from "./InvoiceModal";
+
 const UpcomingWork = ({
  showAll = false
 }) => {
@@ -19,11 +25,35 @@ const UpcomingWork = ({
  const [jobs,setJobs] =
   useState([]);
 
+ /*
+ =========================
+ OTP FLOW STATES
+ =========================
+ */
  const [otpInputs,setOtpInputs] =
+  useState({});
+
+ const [otpSent,setOtpSent] =
   useState({});
 
  const [loadingId,setLoadingId] =
   useState(null);
+
+ /*
+ =========================
+ OTP TIMER
+ =========================
+ */
+ const [timers,setTimers] =
+  useState({});
+
+ const [canResend,setCanResend] =
+  useState({});
+
+ const [
+  selectedInvoice,
+  setSelectedInvoice
+ ] = useState(null);
 
  /*
  =========================
@@ -43,20 +73,133 @@ const UpcomingWork = ({
 
    );
 
-   const res = await axios.get(
+   /*
+   FETCH SCHEDULES
+   */
+   const scheduleRes =
+    await axios.get(
 
-    "http://localhost:5000/api/requests/worker-history",
+     `${import.meta.env.VITE_API_URL}/api/schedules/worker`,
 
-    {
-     headers:{
-      Authorization:
-       `Bearer ${user.token}`
+     {
+      headers:{
+       Authorization:
+        `Bearer ${user.token}`
+      }
      }
+
+    );
+
+   /*
+   FETCH REQUESTS
+   */
+   const requestRes =
+    await axios.get(
+
+     `${import.meta.env.VITE_API_URL}/api/requests/worker-history`,
+
+     {
+      headers:{
+       Authorization:
+        `Bearer ${user.token}`
+      }
+     }
+
+    );
+
+   const requests =
+    requestRes.data || [];
+
+   const mergedJobs = [
+
+    ...(requests || []).map(
+
+     (request)=>({
+
+      _id:request._id,
+
+      description:
+       request.description,
+
+      client:
+       request.userId?.firstName ||
+
+       "Client",
+
+      budget:
+       request.budget || 0,
+
+      location:
+       request.location ||
+
+       "Not specified",
+
+      status:
+       request.status ||
+
+       "accepted",
+
+      createdAt:
+       request.createdAt,
+
+      requestId:
+       request._id
+
+     })
+
+    )
+
+   ];
+
+   (scheduleRes.data || [])
+
+   .forEach((schedule)=>{
+
+    const alreadyExists =
+
+     mergedJobs.find(
+
+      (job)=>
+
+       job.requestId ===
+       schedule.requestId
+
+     );
+
+    if(!alreadyExists){
+
+     mergedJobs.push({
+
+      _id:schedule._id,
+
+      description:
+       schedule.title,
+
+      client:"Client",
+
+      budget:
+       schedule?.job?.budget || 0,
+
+      location:
+       schedule?.job?.location ||
+
+       "Not specified",
+
+      status:"accepted",
+
+      createdAt:
+       schedule.createdAt,
+
+      requestId:
+       schedule.requestId
+
+     });
+
     }
 
-   );
+   });
 
-   setJobs(res.data || []);
+   setJobs(mergedJobs);
 
   }
 
@@ -71,13 +214,80 @@ const UpcomingWork = ({
  };
 
  /*
+ =========================
  LOAD
+ =========================
  */
  useEffect(()=>{
 
   fetchUpcomingWork();
 
  },[]);
+
+ /*
+ =========================
+ TIMER EFFECT
+ =========================
+ */
+ useEffect(()=>{
+
+  const interval =
+   setInterval(()=>{
+
+    setTimers((prev)=>{
+
+     const updated = {
+
+      ...prev
+
+     };
+
+     Object.keys(updated)
+     .forEach((id)=>{
+
+      if(updated[id] > 0){
+
+       updated[id] -= 1;
+
+      }
+
+     });
+
+     return updated;
+
+    });
+
+   },1000);
+
+  return ()=> clearInterval(interval);
+
+ },[]);
+
+ /*
+ =========================
+ ENABLE RESEND
+ =========================
+ */
+ useEffect(()=>{
+
+  Object.keys(timers)
+  .forEach((id)=>{
+
+   if(timers[id] === 0){
+
+    setCanResend(prev=>({
+
+     ...prev,
+
+     [id]:true
+
+    }));
+
+   }
+
+  });
+
+ },[timers]);
 
  /*
  =========================
@@ -102,7 +312,7 @@ const UpcomingWork = ({
 
    const res = await axios.post(
 
-    `http://localhost:5000/api/requests/${requestId}/send-work-otp`,
+    `${import.meta.env.VITE_API_URL}/api/requests/${requestId}/send-work-otp`,
 
     {},
 
@@ -118,6 +328,36 @@ const UpcomingWork = ({
    alert(
     res.data.message
    );
+
+   /*
+   OTP FLOW
+   */
+   setOtpSent(prev=>({
+
+    ...prev,
+
+    [requestId]:true
+
+   }));
+
+   /*
+   START TIMER
+   */
+   setTimers(prev=>({
+
+    ...prev,
+
+    [requestId]:120
+
+   }));
+
+   setCanResend(prev=>({
+
+    ...prev,
+
+    [requestId]:false
+
+   }));
 
   }
 
@@ -162,11 +402,13 @@ const UpcomingWork = ({
 
    const res = await axios.post(
 
-    `http://localhost:5000/api/requests/${requestId}/verify-work-otp`,
+    `${import.meta.env.VITE_API_URL}/api/requests/${requestId}/verify-work-otp`,
 
     {
+
      otp:
       otpInputs[requestId]
+
     },
 
     {
@@ -183,14 +425,14 @@ const UpcomingWork = ({
    );
 
    /*
-   REMOVE COMPLETED WORK
+   REMOVE COMPLETED
    */
    setJobs(prev =>
 
     prev.filter(
 
      job =>
-      job._id !== requestId
+      job.requestId !== requestId
 
     )
 
@@ -221,195 +463,376 @@ const UpcomingWork = ({
  };
 
  /*
- SHOW ONLY 2
+ =========================
+ OPEN INVOICE
+ =========================
  */
- const displayedJobs = showAll
-  ? jobs
-  : jobs.slice(0,2);
+ const openInvoice = async (
+  requestId,
+  amount
+ )=>{
+
+  try{
+
+   const user = JSON.parse(
+
+    sessionStorage.getItem(
+     "user"
+    )
+
+   );
+
+   try{
+
+    const existing =
+     await axios.get(
+
+      `${import.meta.env.VITE_API_URL}/api/invoices/request/${requestId}`,
+
+      {
+       headers:{
+        Authorization:
+         `Bearer ${user.token}`
+       }
+      }
+
+     );
+
+    setSelectedInvoice(
+     existing.data
+    );
+
+    return;
+
+   }
+
+   catch(fetchError){
+
+    if(
+
+     fetchError.response?.status
+     !== 404
+
+    ){
+
+     throw fetchError;
+
+    }
+
+   }
+
+   const created =
+    await axios.post(
+
+     `${import.meta.env.VITE_API_URL}/api/invoices/create`,
+
+     {
+      requestId,
+      amount
+     },
+
+     {
+      headers:{
+       Authorization:
+        `Bearer ${user.token}`
+      }
+     }
+
+    );
+
+   setSelectedInvoice(
+    created.data
+   );
+
+  }
+
+  catch(error){
+
+   console.log(error);
+
+   alert(
+    "Failed to open invoice"
+   );
+
+  }
+
+ };
+
+ /*
+ SHOW LIMITED
+ */
+ const displayedJobs =
+  showAll
+   ? jobs
+   : jobs.slice(0,2);
 
  return (
 
-  <div className="bg-white p-5 rounded-xl shadow mb-6">
+  <>
 
-   <div className="flex justify-between items-center mb-4">
+   <div className="bg-white p-5 rounded-xl shadow mb-6">
 
-    <h2 className="font-semibold">
-     Upcoming Work
-    </h2>
+    <div className="flex justify-between items-center mb-4">
 
-    {!showAll && (
+     <h2 className="font-semibold">
+      Upcoming Work
+     </h2>
 
-     <button
+     {!showAll && (
 
-      onClick={()=>
-       navigate("/upcoming-work")
-      }
+      <button
 
-      className="text-blue-600 text-sm"
+       onClick={()=>
+        navigate("/upcoming-work")
+       }
 
-     >
+       className="text-blue-600 text-sm"
 
-      View All
+      >
 
-     </button>
+       View All
+
+      </button>
+
+     )}
+
+    </div>
+
+    {displayedJobs.length === 0 ? (
+
+     <p className="text-sm text-gray-500">
+
+      No upcoming work
+
+     </p>
+
+    ) : (
+
+     displayedJobs.map((job)=>(
+
+      <div
+       key={job._id}
+       className="border rounded p-4 mb-4"
+      >
+
+       <div className="flex items-start justify-between">
+
+        <div>
+
+         <p className="font-medium">
+
+          {job.description}
+
+         </p>
+
+         <p className="text-sm text-gray-500">
+
+          Client: {job.client}
+
+         </p>
+
+        </div>
+
+        <button
+
+         onClick={()=>
+          openInvoice(
+           job.requestId,
+           job.budget
+          )
+         }
+
+         className="p-2 rounded-lg hover:bg-gray-100 transition"
+
+        >
+
+         <Receipt
+          size={20}
+          className="text-blue-600"
+         />
+
+        </button>
+
+       </div>
+
+       {!otpSent[job.requestId] ? (
+
+        <button
+
+         onClick={()=>
+          sendOTP(
+           job.requestId
+          )
+         }
+
+         disabled={
+          loadingId ===
+          job.requestId
+         }
+
+         className="mt-3 w-full bg-green-600 text-white py-2 rounded"
+
+        >
+
+         {loadingId ===
+          job.requestId
+
+          ? "Sending..."
+
+          : "Send OTP"}
+
+        </button>
+
+       ) : (
+
+        <>
+
+         <input
+
+          type="text"
+
+          placeholder="Enter customer OTP"
+
+          value={
+           otpInputs[
+            job.requestId
+           ] || ""
+          }
+
+          onChange={(e)=>
+
+           setOtpInputs({
+
+            ...otpInputs,
+
+            [job.requestId]:
+             e.target.value
+
+           })
+
+          }
+
+          className="w-full border rounded px-3 py-2 mt-3 outline-none"
+
+         />
+
+         <button
+
+          onClick={()=>
+           verifyOTP(
+            job.requestId
+           )
+          }
+
+          disabled={
+           loadingId ===
+           job.requestId
+          }
+
+          className="mt-2 w-full bg-blue-600 text-white py-2 rounded"
+
+         >
+
+          {loadingId ===
+           job.requestId
+
+           ? "Verifying..."
+
+           : "Verify OTP"}
+
+         </button>
+
+         <div className="text-center mt-3">
+
+          <p className="text-sm text-gray-500">
+
+           OTP expires in:
+
+           <span className="font-semibold text-red-500 ml-1">
+
+            {Math.floor(
+
+             (timers[
+              job.requestId
+             ] || 0) / 60
+
+            )}
+
+            :
+
+            {((timers[
+              job.requestId
+             ] || 0) % 60)
+
+             .toString()
+
+             .padStart(2,"0")}
+
+           </span>
+
+          </p>
+
+          <button
+
+           disabled={
+            !canResend[
+             job.requestId
+            ]
+           }
+
+           onClick={()=>
+            sendOTP(
+             job.requestId
+            )
+           }
+
+           className={`mt-2 text-sm font-medium
+
+           ${canResend[
+             job.requestId
+            ]
+
+             ? "text-blue-600"
+
+             : "text-gray-400 cursor-not-allowed"
+
+           }`}
+
+          >
+
+           Resend OTP
+
+          </button>
+
+         </div>
+
+        </>
+
+       )}
+
+      </div>
+
+     ))
 
     )}
 
    </div>
 
-   {displayedJobs.length === 0 ? (
+   {selectedInvoice && (
 
-    <p className="text-sm text-gray-500">
+    <InvoiceModal
 
-     No upcoming work
+     invoice={selectedInvoice}
 
-    </p>
+     onClose={()=>
+      setSelectedInvoice(null)
+     }
 
-   ) : (
-
-    displayedJobs.map((job)=>(
-
-     <div
-
-      key={job._id}
-
-      className="border rounded p-4 mb-4"
-
-     >
-
-      <p className="font-medium">
-
-       {job.description}
-
-      </p>
-
-      <p className="text-sm text-gray-500">
-
-       Client:{" "}
-
-       {job.userId?.firstName}
-
-      </p>
-
-      <p className="text-sm text-gray-500">
-
-       Budget: ₹{job.budget}
-
-      </p>
-
-      <p className="text-sm text-gray-500">
-
-       Location: {job.location}
-
-      </p>
-
-      <p className="text-sm text-gray-500">
-
-       Status:{" "}
-
-       <span className="capitalize">
-
-        {job.status}
-
-       </span>
-
-      </p>
-
-      <p className="text-sm text-gray-500">
-
-       Date:{" "}
-
-       {new Date(
-        job.createdAt
-       ).toLocaleDateString()}
-
-      </p>
-
-      {/* SEND OTP */}
-      <button
-
-       onClick={()=>
-        sendOTP(job._id)
-       }
-
-       disabled={
-        loadingId === job._id
-       }
-
-       className="mt-3 w-full bg-green-600 text-white py-2 rounded"
-
-      >
-
-       {loadingId === job._id
-
-        ? "Sending..."
-
-        : "Send OTP"
-
-       }
-
-      </button>
-
-      {/* OTP INPUT */}
-      <input
-
-       type="text"
-
-       placeholder="Enter customer OTP"
-
-       value={
-        otpInputs[job._id] || ""
-       }
-
-       onChange={(e)=>
-
-        setOtpInputs({
-
-         ...otpInputs,
-
-         [job._id]:
-          e.target.value
-
-        })
-
-       }
-
-       className="w-full border rounded px-3 py-2 mt-3 outline-none"
-
-      />
-
-      {/* VERIFY */}
-      <button
-
-       onClick={()=>
-        verifyOTP(job._id)
-       }
-
-       disabled={
-        loadingId === job._id
-       }
-
-       className="mt-2 w-full bg-blue-600 text-white py-2 rounded"
-
-      >
-
-       {loadingId === job._id
-
-        ? "Verifying..."
-
-        : "Complete Work"
-
-       }
-
-      </button>
-
-     </div>
-
-    ))
+    />
 
    )}
 
-  </div>
+  </>
 
  );
 

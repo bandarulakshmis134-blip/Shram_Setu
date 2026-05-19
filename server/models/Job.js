@@ -62,4 +62,32 @@ jobSchema.index(
  { expireAfterSeconds:0 }
 );
 
+/*
+=========================
+JOB INDEXES
+=========================
+*/
+jobSchema.index({
+
+ category:1
+
+});
+
+jobSchema.index({
+
+ postedBy:1
+
+});
+
+jobSchema.index({
+
+ expiryDate:1
+
+});
+
+jobSchema.index({
+
+ updatedAt:-1
+
+});
 module.exports = mongoose.model("Job", jobSchema);

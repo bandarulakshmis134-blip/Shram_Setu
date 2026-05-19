@@ -67,7 +67,7 @@ const Categories = () => {
    try{
 
     const res = await axios.get(
-     "http://localhost:5000/api/workers/count-by-skill"
+     `${import.meta.env.VITE_API_URL}/api/workers/count-by-skill`
     );
 
     setWorkerCounts(res.data || {});

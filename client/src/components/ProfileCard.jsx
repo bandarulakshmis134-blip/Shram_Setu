@@ -1,4 +1,8 @@
-import { FaUserCircle, FaStar, FaCamera } from "react-icons/fa";
+import {
+ FaUserCircle,
+ FaStar,
+ FaCamera
+} from "react-icons/fa";
 
 const ProfileCard = ({
  user,
@@ -13,15 +17,15 @@ const ProfileCard = ({
 
   if(!file) return;
 
-
   if(file.size > 2000000){
 
-   alert("Please choose image smaller than 2MB");
+   alert(
+    "Please choose image smaller than 2MB"
+   );
 
    return;
 
   }
-
 
   const reader = new FileReader();
 
@@ -36,19 +40,24 @@ const ProfileCard = ({
 
   };
 
-
   reader.readAsDataURL(file);
 
  };
 
+ /*
+ =========================
+ RATING
+ =========================
+ */
+ const avgRating = Number(
+  user?.averageRating || 0
+ );
 
  return(
 
   <div className="bg-white rounded-xl shadow-md p-6 flex flex-col items-center">
 
-
    <div className="relative mb-4">
-
 
     {user.profilePic ? (
 
@@ -62,7 +71,6 @@ const ProfileCard = ({
      <FaUserCircle size={120}/>
 
     )}
-
 
     {isEditing && (
 
@@ -81,16 +89,13 @@ const ProfileCard = ({
 
     )}
 
-
    </div>
-
 
    <h2 className="text-xl font-semibold">
 
     {`${user.firstName || ""} ${user.lastName || ""}`.trim()}
 
    </h2>
-
 
    {user.skills?.length > 0 && (
 
@@ -100,17 +105,45 @@ const ProfileCard = ({
 
    )}
 
-
-   <div className="flex mt-2 text-yellow-400">
+   {/* RATING */}
+   <div className="flex items-center gap-1 mt-2 text-yellow-400">
 
     {[...Array(5)].map((_,i)=>(
 
-     <FaStar key={i}/>
+     <FaStar
+
+      key={i}
+
+      className={
+       i < Math.round(avgRating)
+
+        ? "text-yellow-400"
+
+        : "text-gray-300"
+      }
+
+     />
 
     ))}
 
+    <span className="ml-2 text-sm text-gray-600 font-medium">
+
+     {avgRating.toFixed(1)}
+
+    </span>
+
    </div>
 
+   {/* TOTAL RATINGS */}
+   {user?.totalRatings > 0 && (
+
+    <p className="text-xs text-gray-500 mt-1">
+
+     {user.totalRatings} ratings
+
+    </p>
+
+   )}
 
    <button
 
@@ -123,7 +156,6 @@ const ProfileCard = ({
     Edit Profile
 
    </button>
-
 
   </div>
 

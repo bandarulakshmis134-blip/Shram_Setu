@@ -39,7 +39,7 @@ const WorkerRequests = ({
     );
 
     const res = await axios.get(
-     "http://localhost:5000/api/requests/worker",
+     `${import.meta.env.VITE_API_URL}/api/requests/worker`,
      {
       headers: {
        Authorization:
@@ -98,7 +98,7 @@ const WorkerRequests = ({
 
     await axios.put(
 
-     `http://localhost:5000/api/requests/${id}/status`,
+     `${import.meta.env.VITE_API_URL}/api/requests/${id}/status`,
 
      {
       status:"accepted"
@@ -122,7 +122,7 @@ const WorkerRequests = ({
 
     await axios.put(
 
-     `http://localhost:5000/api/requests/${id}/status`,
+     `${import.meta.env.VITE_API_URL}/api/requests/${id}/status`,
 
      {
       status:"rejected"

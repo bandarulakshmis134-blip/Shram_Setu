@@ -22,4 +22,27 @@ const applicationSchema = new mongoose.Schema({
 
 }, { timestamps: true });
 
+/*
+=========================
+APPLICATION INDEXES
+=========================
+*/
+applicationSchema.index({
+
+ job:1
+
+});
+
+applicationSchema.index({
+
+ worker:1
+
+});
+
+applicationSchema.index({
+
+ status:1
+
+});
+
 module.exports = mongoose.model("Application", applicationSchema);

@@ -8,8 +8,12 @@ const {
   getWorkerRequests,
   getUserRequests,
   getWorkerHistory,
+  getWorkerCompleted,
   updateRequestStatus,
-  deleteRequest
+  deleteRequest,
+  sendWorkOTP,
+  verifyWorkOTP,
+  rateWorker
 
 } = require(
   "../controllers/jobRequestController"
@@ -18,8 +22,6 @@ const {
 const {
 
   verifyToken,
-  sendWorkOTP,
-  verifyWorkOTP
 
 } = require(
   "../middleware/authMiddleware"
@@ -52,6 +54,15 @@ router.get(
 );
 
 /*
+GET WORKER COMPLETED
+*/
+router.get(
+ "/worker-completed",
+ verifyToken,
+ getWorkerCompleted
+);
+
+/*
 GET USER REQUESTS
 */
 router.get(
@@ -81,6 +92,11 @@ router.post(
  sendWorkOTP
 );
 
+router.post(
+ "/:id/rate",
+ verifyToken,
+ rateWorker
+);
 /*
 VERIFY WORK OTP
 */
@@ -89,6 +105,5 @@ router.post(
  verifyToken,
  verifyWorkOTP
 );
-
 
 module.exports = router;

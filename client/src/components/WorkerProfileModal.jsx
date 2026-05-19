@@ -4,6 +4,7 @@ import {
  MapPin,
  Briefcase
 } from "lucide-react";
+
 import { Logo } from "./Logo";
 
 const WorkerProfileModal = ({
@@ -12,6 +13,15 @@ const WorkerProfileModal = ({
 }) => {
 
  if(!worker) return null;
+
+ /*
+ =========================
+ RATING
+ =========================
+ */
+ const avgRating = Number(
+  worker?.averageRating || 0
+ );
 
  return (
 
@@ -33,11 +43,12 @@ const WorkerProfileModal = ({
     <div className="bg-blue-600 px-5 py-3 flex items-center">
 
      <div className="flex items-center gap-2">
-         <div className="w-9 h-9 bg-white rounded-lg flex items-center justify-center shadow-sm">
 
-              <Logo className="w-6 h-6"/>
+      <div className="w-9 h-9 bg-white rounded-lg flex items-center justify-center shadow-sm">
 
-         </div>
+       <Logo className="w-6 h-6"/>
+
+      </div>
 
       <h2 className="text-white font-semibold text-lg">
 
@@ -103,18 +114,52 @@ const WorkerProfileModal = ({
 
        </div>
 
-       <div className="flex items-center mt-2 text-yellow-500">
+       {/* RATING */}
+       <div className="flex items-center mt-2 gap-1">
 
-        <Star
-         size={16}
-         fill="currentColor"
-        />
+        {[...Array(5)].map((_,i)=>(
 
-        <span className="ml-1 text-sm font-medium">
+         <Star
 
-         {worker.rating || 4.5}
+          key={i}
+
+          size={16}
+
+          fill={
+           i < Math.round(avgRating)
+
+            ? "currentColor"
+
+            : "none"
+          }
+
+          className={
+           i < Math.round(avgRating)
+
+            ? "text-yellow-500"
+
+            : "text-gray-300"
+          }
+
+         />
+
+        ))}
+
+        <span className="ml-1 text-sm font-medium text-gray-700">
+
+         {avgRating.toFixed(1)}
 
         </span>
+
+        {worker?.totalRatings > 0 && (
+
+         <span className="text-xs text-gray-500">
+
+          ({worker.totalRatings})
+
+         </span>
+
+        )}
 
        </div>
 
