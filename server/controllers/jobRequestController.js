@@ -1,20 +1,25 @@
-const JobRequest = require("../models/JobRequest");
+const JobRequest =
+ require("../models/JobRequest");
 
-const Invoice = require("../models/Invoice");
+const Invoice =
+ require("../models/Invoice");
 
-const Schedule = require("../models/Schedule");
+const Schedule =
+ require("../models/Schedule");
 
-const sendEmail = require("../utils/sendEmail");
+const User =
+ require("../models/User");
 
-const User = require("../models/User");
+const sendEmail =
+ require("../utils/sendEmail");
 
-const Notification = require("../models/Notification");
 /*
 ========================
 CREATE REQUEST
 ========================
 */
-exports.createRequest = async(req,res)=>{
+exports.createRequest =
+ async (req,res)=>{
 
  try{
 
@@ -29,84 +34,129 @@ exports.createRequest = async(req,res)=>{
 
   } = req.body;
 
- /*
- SET EXPIRY TIME
- */
+  /*
+  ========================
+  VALIDATION
+  ========================
+  */
+  if(
 
- let expiryTime = new Date();
+   !userId ||
+   !workerId ||
+   !description ||
+   !location ||
+   !budget
 
- if(urgency === "Flexible"){
+  ){
 
-  expiryTime.setDate(
-   expiryTime.getDate() + 3
-  );
+   return res.status(400).json({
 
- }
+    message:
+     "All fields are required"
 
- else if(urgency === "24 Hours"){
+   });
 
-  expiryTime.setHours(
-   expiryTime.getHours() + 24
-  );
+  }
 
- }
+  if(Number(budget) <= 0){
 
- else if(urgency === "Urgent"){
+   return res.status(400).json({
 
-  expiryTime.setHours(
-   expiryTime.getHours() + 6
-  );
+    message:
+     "Invalid budget"
 
- }
+   });
 
- const newRequest = new JobRequest({
+  }
 
-  userId,
-  workerId,
-  description,
-  location,
-  budget,
-  urgency,
-  expiresAt:expiryTime
+  /*
+  ========================
+  SET EXPIRY TIME
+  ========================
+  */
+  const expiryTime =
+   new Date();
 
- });
+  if(
+   urgency === "Flexible"
+  ){
 
- await newRequest.save();
+   expiryTime.setDate(
 
- /*
-========================
-CREATE NOTIFICATION
-========================
-*/
-await Notification.create({
+    expiryTime.getDate() + 3
 
- userId:workerId,
+   );
 
- message:
-  "You received a new work request",
+  }
 
- type:"request",
+  else if(
+   urgency === "24 Hours"
+  ){
 
- link:"/dashboard"
+   expiryTime.setHours(
 
-});
+    expiryTime.getHours() + 24
 
- res.status(201).json({
+   );
 
-  message:"Request created",
-  request:newRequest
+  }
 
- });
+  else if(
+   urgency === "Urgent"
+  ){
+
+   expiryTime.setHours(
+
+    expiryTime.getHours() + 6
+
+   );
+
+  }
+
+  /*
+  ========================
+  CREATE REQUEST
+  ========================
+  */
+  const newRequest =
+   new JobRequest({
+
+    userId,
+    workerId,
+    description,
+    location,
+    budget,
+    urgency,
+    expiresAt:expiryTime
+
+   });
+
+  await newRequest.save();
+
+  res.status(201).json({
+
+   message:
+    "Request created successfully",
+
+   request:newRequest
+
+  });
 
  }
 
  catch(error){
 
-  console.log(error);
+  console.log(
+   "CREATE REQUEST ERROR:",
+   error
+  );
 
   res.status(500).json({
 
-   message:error.message
+   message:
+    error.message ||
+
+    "Failed to create request"
 
   });
 
@@ -114,31 +164,21 @@ await Notification.create({
 
 };
 
-
-
 /*
 ========================
 GET WORKER REQUESTS
 ========================
 */
-exports.getWorkerRequests = async (
- req,
- res
-) => {
+exports.getWorkerRequests =
+ async (req,res)=>{
 
- try {
+ try{
 
-  /*
-  GET ONLY PENDING REQUESTS
-  */
   const allRequests =
    await JobRequest.find({
 
     workerId:req.user.id,
 
-    /*
-    SHOW ONLY PENDING
-    */
     status:"pending"
 
    })
@@ -149,34 +189,39 @@ exports.getWorkerRequests = async (
    )
 
    .sort({
+
     createdAt:-1
+
    });
 
   /*
-  REMOVE EXPIRED REQUESTS
+  REMOVE EXPIRED
   */
   const validRequests = [];
 
-  for(const request of allRequests){
+  for(
+   const request of allRequests
+  ){
 
-   /*
-   STILL VALID
-   */
    if(
-    request.expiresAt > new Date()
+
+    request.expiresAt >
+    new Date()
+
    ){
 
-    validRequests.push(request);
+    validRequests.push(
+     request
+    );
 
    }
 
-   /*
-   EXPIRED -> DELETE
-   */
    else{
 
     await JobRequest.findByIdAndDelete(
+
      request._id
+
     );
 
    }
@@ -187,12 +232,18 @@ exports.getWorkerRequests = async (
 
  }
 
- catch (error) {
+ catch(error){
 
-  console.log(error);
+  console.log(
+   "GET WORKER REQUESTS ERROR:",
+   error
+  );
 
   res.status(500).json({
-   message:error.message
+
+   message:
+    error.message
+
   });
 
  }
@@ -204,12 +255,10 @@ exports.getWorkerRequests = async (
 GET USER REQUESTS
 ========================
 */
-exports.getUserRequests = async (
- req,
- res
-) => {
+exports.getUserRequests =
+ async (req,res)=>{
 
- try {
+ try{
 
   const requests =
    await JobRequest.find({
@@ -219,24 +268,66 @@ exports.getUserRequests = async (
    })
 
    .populate(
+
     "workerId",
-    "firstName skills"
+
+    "firstName skills averageRating totalRatings"
+
    )
 
    .sort({
+
     createdAt:-1
+
    });
 
-  res.json(requests);
+  /*
+  ENSURE RATING STATUS
+  */
+  const updatedRequests =
+   requests.map((request)=>{
+
+    const requestObj =
+     request.toObject();
+
+    return{
+
+     ...requestObj,
+
+     isRated:
+
+      Boolean(
+       requestObj.ratedAt
+      ) ||
+
+      requestObj.isRated ||
+
+      false
+
+    };
+
+   });
+
+  res.status(200).json(
+   updatedRequests
+  );
 
  }
 
  catch(error){
 
-  console.log(error);
+  console.log(
+   "GET USER REQUESTS ERROR:",
+   error
+  );
 
   res.status(500).json({
-   message:error.message
+
+   message:
+    error.message ||
+
+    "Failed to fetch requests"
+
   });
 
  }
@@ -248,22 +339,10 @@ exports.getUserRequests = async (
 GET WORKER HISTORY
 ========================
 */
-/*
-========================
-GET WORKER HISTORY
-========================
-*/
-/*
-========================
-GET WORKER HISTORY
-========================
-*/
-exports.getWorkerHistory = async (
- req,
- res
-) => {
+exports.getWorkerHistory =
+ async (req,res)=>{
 
- try {
+ try{
 
   const requests =
    await JobRequest.find({
@@ -272,13 +351,13 @@ exports.getWorkerHistory = async (
 
     $or:[
 
-      {
-       status:"accepted"
-      },
+     {
+      status:"accepted"
+     },
 
-      {
-       status:"in-progress"
-      }
+     {
+      status:"in-progress"
+     }
 
     ]
 
@@ -290,7 +369,9 @@ exports.getWorkerHistory = async (
    )
 
    .sort({
+
     createdAt:-1
+
    });
 
   res.json(requests);
@@ -299,7 +380,10 @@ exports.getWorkerHistory = async (
 
  catch(error){
 
-  console.log(error);
+  console.log(
+   "GET WORKER HISTORY ERROR:",
+   error
+  );
 
   res.status(500).json({
 
@@ -316,12 +400,10 @@ exports.getWorkerHistory = async (
 GET WORKER COMPLETED
 ========================
 */
-exports.getWorkerCompleted = async (
- req,
- res
-) => {
+exports.getWorkerCompleted =
+ async (req,res)=>{
 
- try {
+ try{
 
   const requests =
    await JobRequest.find({
@@ -338,20 +420,57 @@ exports.getWorkerCompleted = async (
    )
 
    .sort({
+
     createdAt:-1
+
    });
 
-  res.json(requests);
+  /*
+  ENSURE RATING STATUS
+  */
+  const updatedRequests =
+   requests.map((request)=>{
+
+    const requestObj =
+     request.toObject();
+
+    return{
+
+     ...requestObj,
+
+     isRated:
+
+      Boolean(
+       requestObj.ratedAt
+      ) ||
+
+      requestObj.isRated ||
+
+      false
+
+    };
+
+   });
+
+  res.status(200).json(
+   updatedRequests
+  );
 
  }
 
  catch(error){
 
-  console.log(error);
+  console.log(
+   "GET WORKER COMPLETED ERROR:",
+   error
+  );
 
   res.status(500).json({
 
-   message:error.message
+   message:
+    error.message ||
+
+    "Failed to fetch completed requests"
 
   });
 
@@ -359,58 +478,25 @@ exports.getWorkerCompleted = async (
 
 };
 
-
 /*
 ========================
 UPDATE REQUEST STATUS
 ========================
 */
-exports.updateRequestStatus = async (
- req,
- res
-) => {
+exports.updateRequestStatus =
+ async (req,res)=>{
 
  try{
 
-  const updatedRequest =
-   await JobRequest.findByIdAndUpdate(
-
-    req.params.id,
-
-    {
-     status:req.body.status
-    },
-
-    {
-     returnDocument:"after"
-    }
-
+  const request =
+   await JobRequest.findById(
+    req.params.id
    );
 
-   /*
-AUTO DELETE INVOICE
-WHEN WORK COMPLETES
-*/
-if(req.body.status === "completed"){
-
- await Invoice.findOneAndDelete({
-
-  requestId:req.params.id
-
- });
-
- /*
- REMOVE COMPLETED SCHEDULE
- */
- await Schedule.findOneAndDelete({
-
-  requestId:req.params.id
-
- });
-
-}
-
-  if(!updatedRequest){
+  /*
+  NOT FOUND
+  */
+  if(!request){
 
    return res.status(404).json({
 
@@ -420,17 +506,55 @@ if(req.body.status === "completed"){
 
   }
 
-  res.json(updatedRequest);
+  /*
+  UPDATE STATUS
+  */
+  request.status =
+   req.body.status;
+
+  await request.save();
+
+  /*
+  CLEANUP AFTER COMPLETION
+  */
+  if(
+
+   req.body.status ===
+   "completed"
+
+  ){
+
+   await Invoice.findOneAndDelete({
+
+    requestId:req.params.id
+
+   });
+
+   await Schedule.findOneAndDelete({
+
+    requestId:req.params.id
+
+   });
+
+  }
+
+  res.json(request);
 
  }
 
  catch(error){
 
-  console.log(error);
+  console.log(
+   "UPDATE REQUEST STATUS ERROR:",
+   error
+  );
 
   res.status(500).json({
 
-   message:error.message
+   message:
+    error.message ||
+
+    "Failed to update request"
 
   });
 
@@ -438,32 +562,29 @@ if(req.body.status === "completed"){
 
 };
 
-
 /*
 ========================
 DELETE REQUEST
 ========================
 */
-exports.deleteRequest = async (
- req,
- res
-) => {
+exports.deleteRequest =
+ async (req,res)=>{
 
- try {
+ try{
 
   const deletedRequest =
    await JobRequest.findByIdAndDelete(
+
     req.params.id
+
    );
 
-  /*
-  ALREADY DELETED
-  */
   if(!deletedRequest){
 
    return res.status(200).json({
 
-    message:"Request already removed"
+    message:
+     "Request already removed"
 
    });
 
@@ -471,7 +592,8 @@ exports.deleteRequest = async (
 
   res.json({
 
-   message:"Request deleted successfully"
+   message:
+    "Request deleted successfully"
 
   });
 
@@ -479,7 +601,10 @@ exports.deleteRequest = async (
 
  catch(error){
 
-  console.log(error);
+  console.log(
+   "DELETE REQUEST ERROR:",
+   error
+  );
 
   res.status(500).json({
 
@@ -496,22 +621,23 @@ exports.deleteRequest = async (
 SEND WORK OTP
 ========================
 */
-exports.sendWorkOTP = async (
- req,
- res
-)=>{
+exports.sendWorkOTP =
+ async (req,res)=>{
 
  try{
 
   const request =
    await JobRequest.findById(
+
     req.params.id
+
    )
 
-   .populate(
-    "userId"
-   );
+   .populate("userId");
 
+  /*
+  NOT FOUND
+  */
   if(!request){
 
    return res.status(404).json({
@@ -523,9 +649,31 @@ exports.sendWorkOTP = async (
   }
 
   /*
-  ========================
+  ALREADY COMPLETED
+  */
+  if(
+   request.status ===
+   "completed"
+  ){
+
+   return res.status(400).json({
+
+    message:
+     "Work already completed"
+
+   });
+
+  }
+
+  /*
+  CLEAR OLD OTP
+  */
+  request.workOTP = null;
+
+  request.workOTPExpiry = null;
+
+  /*
   GENERATE OTP
-  ========================
   */
   const otp = Math.floor(
 
@@ -535,24 +683,23 @@ exports.sendWorkOTP = async (
   ).toString();
 
   /*
-  ========================
   SAVE OTP
-  ========================
   */
   request.workOTP = otp;
 
   request.workOTPExpiry =
+   new Date(
 
-   Date.now() +
+    Date.now() +
 
-   2 * 60 * 1000;
+    5 * 60 * 1000
+
+   );
 
   await request.save();
 
   /*
-  ========================
-  SANSKRIT LINES
-  ========================
+  SANSKRIT QUOTES
   */
   const sanskritLines = [
 
@@ -598,25 +745,22 @@ exports.sendWorkOTP = async (
 
   ];
 
-  /*
-  RANDOM LINE
-  */
   const randomQuote =
 
    sanskritLines[
     Math.floor(
+
      Math.random() *
+
      sanskritLines.length
+
     )
    ];
 
   /*
-  ========================
   EMAIL HTML
-  ========================
   */
   const html = `
-
    <div style="
     background:#f3f6fb;
     padding:40px 20px;
@@ -632,7 +776,6 @@ exports.sendWorkOTP = async (
      box-shadow:0 10px 30px rgba(0,0,0,0.08);
     ">
 
-     <!-- HEADER -->
      <div style="
       background:#2563eb;
       padding:35px;
@@ -644,17 +787,20 @@ exports.sendWorkOTP = async (
        margin:0;
        font-size:38px;
        font-weight:bold;
-       letter-spacing:1px;
       ">
 
-       Shram <span style="color:#bfdbfe;">Setu</span>
+       Shram
+       <span style="color:#bfdbfe;">
+
+        Setu
+
+       </span>
 
       </h1>
 
       <p style="
        color:#dbeafe;
        margin-top:10px;
-       font-size:15px;
       ">
 
        Connecting Skills to Opportunities
@@ -663,40 +809,26 @@ exports.sendWorkOTP = async (
 
      </div>
 
-     <!-- CONTENT -->
      <div style="
       padding:40px 35px;
       color:#1f2937;
      ">
 
-      <h2 style="
-       margin-top:0;
-       font-size:24px;
-       color:#111827;
-      ">
+      <h2>
 
        Work Completion Verification
 
       </h2>
 
       <p style="
-       font-size:15px;
        line-height:1.8;
-       color:#4b5563;
       ">
 
-       Hello,
-       <br/><br/>
-
        Your worker has requested
-       verification for work completion.
-
-       Please use the OTP below
-       to securely confirm the work.
+       work completion verification.
 
       </p>
 
-      <!-- OTP BOX -->
       <div style="
        margin:35px 0;
        text-align:center;
@@ -720,22 +852,18 @@ exports.sendWorkOTP = async (
 
       </div>
 
-      <!-- SANSKRIT QUOTE -->
       <div style="
        margin-top:30px;
        padding:20px;
        background:#f8fafc;
        border-radius:14px;
        text-align:center;
-       border:1px solid #e5e7eb;
       ">
 
        <p style="
-        margin:0;
         font-size:20px;
         font-weight:bold;
         color:#1e3a8a;
-        line-height:1.8;
        ">
 
         ${randomQuote.line}
@@ -743,11 +871,9 @@ exports.sendWorkOTP = async (
        </p>
 
        <p style="
-        margin-top:12px;
         font-size:14px;
         color:#6b7280;
         font-style:italic;
-        line-height:1.7;
        ">
 
         ${randomQuote.meaning}
@@ -756,7 +882,6 @@ exports.sendWorkOTP = async (
 
       </div>
 
-      <!-- SECURITY -->
       <div style="
        background:#f9fafb;
        border-radius:14px;
@@ -765,48 +890,35 @@ exports.sendWorkOTP = async (
       ">
 
        <p style="
-        margin:0;
         color:#374151;
         font-size:14px;
         line-height:1.8;
        ">
 
-        ⚠️ <strong>Security Tips</strong><br/><br/>
+        ⚠️
+        <strong>
+         Security Tips
+        </strong>
 
-        • Never share this OTP with anyone.<br/>
-        • Shram Setu employees will never ask for your OTP.<br/>
-        • This OTP will expire in <strong>2 minutes</strong>.<br/>
-        • Only provide this OTP after the work is completed successfully.
+        <br/><br/>
+
+        • Never share this OTP.<br/>
+        • OTP expires in 5 minutes.<br/>
+        • Verify only after work completion.
 
        </p>
 
       </div>
-
-      <!-- FOOTER -->
-      <p style="
-       margin-top:35px;
-       font-size:14px;
-       color:#6b7280;
-       line-height:1.8;
-      ">
-
-       Thank you for using
-       <strong>Shram Setu</strong> 🚀
-
-      </p>
 
      </div>
 
     </div>
 
    </div>
-
   `;
 
   /*
-  ========================
   SEND EMAIL
-  ========================
   */
   await sendEmail(
 
@@ -820,7 +932,10 @@ exports.sendWorkOTP = async (
 
   res.json({
 
-   message:"OTP sent to customer"
+   message:
+    "OTP sent successfully",
+
+   expiresIn:300
 
   });
 
@@ -828,7 +943,10 @@ exports.sendWorkOTP = async (
 
  catch(error){
 
-  console.log(error);
+  console.log(
+   "SEND OTP ERROR:",
+   error
+  );
 
   res.status(500).json({
 
@@ -839,62 +957,119 @@ exports.sendWorkOTP = async (
  }
 
 };
+
 /*
 ========================
 VERIFY WORK OTP
 ========================
 */
-exports.verifyWorkOTP = async (
- req,
- res
-)=>{
+exports.verifyWorkOTP =
+ async (req,res)=>{
 
  try{
 
-  const {
-   otp
-  } = req.body;
+  const { otp } =
+   req.body;
 
+  /*
+  ========================
+  GET REQUEST + OTP FIELDS
+  ========================
+  */
   const request =
    await JobRequest.findById(
     req.params.id
+   ).select(
+
+    "+workOTP +workOTPExpiry"
+
    );
 
+  /*
+  ========================
+  REQUEST NOT FOUND
+  ========================
+  */
   if(!request){
 
    return res.status(404).json({
 
-    message:"Request not found"
+    message:
+     "Request not found"
 
    });
 
   }
 
   /*
-  INVALID OTP
+  ========================
+  ALREADY COMPLETED
+  ========================
   */
   if(
 
-   request.workOTP !== otp ||
-
-   request.workOTPExpiry < Date.now()
+   request.status ===
+   "completed"
 
   ){
 
    return res.status(400).json({
 
-    message:"Invalid or expired OTP"
+    message:
+     "Work already completed"
 
    });
 
   }
 
   /*
+  ========================
+  OTP EXPIRED
+  ========================
+  */
+  const isExpired =
+
+   !request.workOTPExpiry ||
+
+   new Date() >
+
+   new Date(
+    request.workOTPExpiry
+   );
+
+  /*
+  ========================
+  INVALID OTP
+  ========================
+  */
+  if(
+
+   request.workOTP !== otp ||
+
+   isExpired
+
+  ){
+
+   return res.status(400).json({
+
+    message:
+     "Invalid or expired OTP"
+
+   });
+
+  }
+
+  /*
+  ========================
   COMPLETE WORK
+  ========================
   */
   request.status =
    "completed";
 
+  /*
+  CLEAR OTP
+  */
   request.workOTP =
    null;
 
@@ -904,7 +1079,9 @@ exports.verifyWorkOTP = async (
   await request.save();
 
   /*
+  ========================
   DELETE INVOICE
+  ========================
   */
   await Invoice.findOneAndDelete({
 
@@ -914,7 +1091,9 @@ exports.verifyWorkOTP = async (
   });
 
   /*
-  REMOVE COMPLETED SCHEDULE
+  ========================
+  DELETE SCHEDULE
+  ========================
   */
   await Schedule.findOneAndDelete({
 
@@ -923,6 +1102,11 @@ exports.verifyWorkOTP = async (
 
   });
 
+  /*
+  ========================
+  SUCCESS RESPONSE
+  ========================
+  */
   res.json({
 
    message:
@@ -934,11 +1118,17 @@ exports.verifyWorkOTP = async (
 
  catch(error){
 
-  console.log(error);
+  console.log(
+   "VERIFY OTP ERROR:",
+   error
+  );
 
   res.status(500).json({
 
-   message:error.message
+   message:
+    error.message ||
+
+    "Failed to verify OTP"
 
   });
 
@@ -951,53 +1141,56 @@ exports.verifyWorkOTP = async (
 RATE WORKER
 ========================
 */
-exports.rateWorker = async (
- req,
- res
-)=>{
+exports.rateWorker =
+ async (req,res)=>{
 
  try{
 
-  const {
-   stars
-  } = req.body;
+  const { stars } =
+   req.body;
+
+  if(
+
+   !stars ||
+
+   stars < 1 ||
+
+   stars > 5
+
+  ){
+
+   return res.status(400).json({
+
+    message:
+     "Rating must be between 1 and 5"
+
+   });
+
+  }
 
   const request =
    await JobRequest.findById(
+
     req.params.id
+
    );
 
   if(!request){
 
    return res.status(404).json({
 
-    message:"Request not found"
-
-   });
-
-  }
-
-  /*
-  ONLY COMPLETED WORK
-  */
-  if(request.status !== "completed"){
-
-   return res.status(400).json({
-
     message:
-     "Work not completed yet"
+     "Request not found"
 
    });
 
   }
 
-  /*
-  ONLY REQUEST OWNER
-  CAN RATE
-  */
   if(
-   request.userId.toString()
-   !== req.user.id
+
+   request.userId.toString() !==
+   req.user.id
+
   ){
 
    return res.status(403).json({
@@ -1009,88 +1202,110 @@ exports.rateWorker = async (
 
   }
 
+  if(
+
+   request.status !==
+   "completed"
+
+  ){
+
+   return res.status(400).json({
+
+    message:
+     "Only completed requests can be rated"
+
+   });
+
+  }
+
+  if(request.isRated){
+
+   return res.status(400).json({
+
+    message:
+     "You have already rated this worker"
+
+   });
+
+  }
+
+  const workerId =
+
+   typeof request.workerId ===
+   "object"
+
+    ? request.workerId?._id
+
+    : request.workerId;
+
   const worker =
    await User.findById(
-    request.workerId
+    workerId
    );
 
   if(!worker){
 
    return res.status(404).json({
 
-    message:"Worker not found"
+    message:
+     "Worker not found"
 
    });
 
   }
 
-  /*
-  PREVENT DUPLICATE RATING
-  */
-  const alreadyRated =
-   worker.ratings?.find(
+  const currentTotal =
+   worker.totalRatings || 0;
 
-    (rating)=>
+  const currentAverage =
+   worker.averageRating || 0;
 
-     rating.requestId.toString()
-     === request._id.toString()
+  const updatedAverage =
 
+   (
+
+    (
+     currentAverage *
+     currentTotal
+    ) +
+
+    stars
+
+   ) /
+
+   (
+    currentTotal + 1
    );
 
-  if(alreadyRated){
-
-   return res.status(400).json({
-
-    message:
-     "You already rated this work"
-
-   });
-
-  }
-
-  /*
-  ADD RATING
-  */
-  worker.ratings.push({
-
-   userId:req.user.id,
-
-   requestId:
-    request._id,
-
-   stars
-
-  });
-
-  /*
-  CALCULATE AVERAGE
-  */
-  const total =
-   worker.ratings.reduce(
-
-    (sum,rating)=>
-
-     sum + rating.stars,
-
-    0
-
+  worker.averageRating =
+   Number(
+    updatedAverage.toFixed(1)
    );
 
   worker.totalRatings =
-   worker.ratings.length;
-
-  worker.averageRating =
-
-   total /
-
-   worker.totalRatings;
+   currentTotal + 1;
 
   await worker.save();
 
-  res.json({
+  request.isRated = true;
+
+  request.ratedAt =
+   new Date();
+
+  await request.save();
+
+  res.status(200).json({
 
    message:
-    "Rating submitted successfully"
+    "Rating submitted successfully",
+
+   averageRating:
+    worker.averageRating,
+
+   totalRatings:
+    worker.totalRatings,
+
+   isRated:true
 
   });
 
@@ -1098,11 +1313,17 @@ exports.rateWorker = async (
 
  catch(error){
 
-  console.log(error);
+  console.log(
+   "RATING ERROR:",
+   error
+  );
 
   res.status(500).json({
 
-   message:error.message
+   message:
+    error.message ||
+
+    "Failed to submit rating"
 
   });
 

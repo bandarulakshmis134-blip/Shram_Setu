@@ -1,731 +1,317 @@
 import {
- useEffect,
- useRef,
- useState,
- useCallback
+  memo,
+  useCallback,
+  useMemo,
 } from "react";
 
 import {
- Bell
-} from "lucide-react";
-
-import { Logo } from "./Logo";
-
-import {
- useNavigate,
- NavLink
+  useNavigate,
+  NavLink,
 } from "react-router-dom";
 
-import axios from "axios";
+import { useTranslation } from "react-i18next";
 
-import {
-
- HomeIcon,
- SearchIcon,
- JobsIcon,
- DashboardIcon,
- MessageIcon,
- ProfileIcon
-
-} from "./icons/NavIcons";
+import { Logo } from "./Logo";
 
 import LanguageSwitcher from "./LanguageSwitcher";
 
 import {
- useTranslation
-} from "react-i18next";
+
+  HomeIcon,
+  SearchIcon,
+  JobsIcon,
+  DashboardIcon,
+  MessageIcon,
+  ProfileIcon,
+
+} from "./icons/NavIcons";
 
 const Navbar = () => {
 
- const navigate =
-  useNavigate();
+  const navigate =
+    useNavigate();
 
- const { t } =
-  useTranslation();
+  const { t } =
+    useTranslation();
 
- /*
- ========================
- SAFE USER PARSE
- ========================
- */
- const getUserFromStorage =
-  ()=>{
+  /*
+  =========================
+  SAFE USER PARSE
+  =========================
+  */
+  const user = useMemo(() => {
 
-   try{
+    try {
 
-    const data =
-     sessionStorage.getItem(
-      "user"
-     );
+      const storedUser =
+        sessionStorage.getItem(
+          "user"
+        );
 
-    if(
+      if (
 
-     !data ||
+        !storedUser ||
 
-     data === "undefined"
+        storedUser === "undefined"
 
-    ){
+      ) {
 
-     return null;
+        return null;
 
-    }
+      }
 
-    return JSON.parse(data);
-
-   }
-
-   catch{
-
-    return null;
-
-   }
-
-  };
-
- const user =
-  getUserFromStorage();
-
- /*
- ========================
- STATES
- ========================
- */
- const [
-  notifications,
-  setNotifications
- ] = useState([]);
-
- const [
-  showNotifications,
-  setShowNotifications
- ] = useState(false);
-
- const dropdownRef =
-  useRef(null);
-
- /*
- ========================
- FETCH NOTIFICATIONS
- ========================
- */
- const fetchNotifications =
-  useCallback(
-
-   async ()=>{
-
-    try{
-
-     if(!user?.token){
-
-      return;
-
-     }
-
-     const res =
-      await axios.get(
-
-       `${import.meta.env.VITE_API_URL}/api/notifications/user`,
-
-       {
-
-        headers:{
-
-         Authorization:
-          `Bearer ${user.token}`
-
-        }
-
-       }
-
+      return JSON.parse(
+        storedUser
       );
 
-     setNotifications(
-      res.data || []
-     );
+    }
+
+    catch {
+
+      return null;
 
     }
 
-    catch(error){
-
-     console.log(error);
-
-    }
-
-   },
-
-   [user?.token]
-
-  );
-
- /*
- ========================
- INITIAL LOAD
- ========================
- */
- useEffect(()=>{
-
-  let interval;
-
-  const loadNotifications =
-   async ()=>{
-
-    await fetchNotifications();
-
-    interval =
-     setInterval(
-
-      fetchNotifications,
-
-      10000
-
-     );
-
-   };
-
-  loadNotifications();
-
-  return ()=>{
-
-   if(interval){
-
-    clearInterval(
-     interval
-    );
-
-   }
-
-  };
-
- },[
-    fetchNotifications
- ]);
-
- /*
- ========================
- CLOSE DROPDOWN
- ========================
- */
- useEffect(()=>{
-
-  const handleClickOutside =
-   (event)=>{
-
-    if(
-
-     dropdownRef.current &&
-
-     !dropdownRef.current.contains(
-      event.target
-     )
-
-    ){
-
-     setShowNotifications(
-      false
-     );
-
-    }
-
-   };
-
-  document.addEventListener(
-
-   "mousedown",
-
-   handleClickOutside
-
-  );
-
-  return ()=>{
-
-   document.removeEventListener(
-
-    "mousedown",
-
-    handleClickOutside
-
-   );
-
-  };
-
- },[]);
-
- /*
- ========================
- MARK AS READ
- ========================
- */
- const markNotificationRead =
-  async (notification)=>{
-
-   try{
-
-    await axios.put(
-
-     `${import.meta.env.VITE_API_URL}/api/notifications/${notification._id}/read`,
-
-     {},
-
-     {
-
-      headers:{
-
-       Authorization:
-        `Bearer ${user.token}`
-
-      }
-
-     }
-
-    );
+  }, []);
 
   /*
-REMOVE NOTIFICATION
-AFTER OPENING
-*/
-setNotifications((prev)=>
-
- prev.filter(
-
-  (n)=>
-
-   n._id !==
-   notification._id
-
- )
-
-);
-
-    if(notification.link){
-
-     navigate(
-      notification.link
-     );
-
-    }
-
-   }
-
-   catch(error){
-
-    console.log(error);
-
-   }
-
-  };
-
- /*
- ========================
- UNREAD COUNT
- ========================
- */
- const unreadCount =
-  notifications.filter(
-
-   (n)=>!n.isRead
-
-  ).length;
-
- /*
- ========================
- LOGOUT
- ========================
- */
- const handleLogout =
-  ()=>{
-
-   sessionStorage.removeItem(
-    "user"
-   );
-
-   localStorage.removeItem(
-    "token"
-   );
-
-   navigate("/");
-
-  };
-
- return(
-
-  <nav className="flex items-center justify-between px-8 py-4 bg-white shadow-sm relative">
-
-   {/* LOGO */}
-   <div className="flex items-center gap-2">
-
-    <Logo className="w-8 h-8"/>
-
-    <h1 className="text-2xl font-bold text-gray-800">
-
-     Shram{" "}
-
-     <span className="text-blue-600">
-
-      Setu
-
-     </span>
-
-    </h1>
-
-   </div>
-
-   {/* NAV LINKS */}
-   <div className="flex items-center gap-6 text-gray-700">
-
-    <ul className="flex items-center gap-6">
-
-     <NavLink
-      to="/home"
-      className={({isActive})=>
-
-       `flex items-center gap-2
-       ${
-
-        isActive
-
-         ? "text-blue-600 font-semibold"
-
-         : "text-gray-700 hover:text-blue-600"
-
-       }`
-
-      }
-     >
-
-      <HomeIcon size={18}/>
-
-      {t("home")}
-
-     </NavLink>
-
-     <NavLink
-      to="/find-workers"
-      className={({isActive})=>
-
-       `flex items-center gap-2
-       ${
-
-        isActive
-
-         ? "text-blue-600 font-semibold"
-
-         : "text-gray-700 hover:text-blue-600"
-
-       }`
-
-      }
-     >
-
-      <SearchIcon size={18}/>
-
-      {t("findWorkers")}
-
-     </NavLink>
-
-     <NavLink
-      to="/post-jobs"
-      className={({isActive})=>
-
-       `flex items-center gap-2
-       ${
-
-        isActive
-
-         ? "text-blue-600 font-semibold"
-
-         : "text-gray-700 hover:text-blue-600"
-
-       }`
-
-      }
-     >
-
-      <JobsIcon size={18}/>
-
-      {t("postJob")}
-
-     </NavLink>
-
-     <NavLink
-      to="/dashboard"
-      className={({isActive})=>
-
-       `flex items-center gap-2
-       ${
-
-        isActive
-
-         ? "text-blue-600 font-semibold"
-
-         : "text-gray-700 hover:text-blue-600"
-
-       }`
-
-      }
-     >
-
-      <DashboardIcon size={18}/>
-
-      {t("dashboard")}
-
-     </NavLink>
-
-     <NavLink
-      to="/messages"
-      className={({isActive})=>
-
-       `flex items-center gap-2
-       ${
-
-        isActive
-
-         ? "text-blue-600 font-semibold"
-
-         : "text-gray-700 hover:text-blue-600"
-
-       }`
-
-      }
-     >
-
-      <MessageIcon size={18}/>
-
-      {t("messages")}
-
-     </NavLink>
-
-     <NavLink
-      to="/profile"
-      className={({isActive})=>
-
-       `flex items-center gap-2
-       ${
-
-        isActive
-
-         ? "text-blue-600 font-semibold"
-
-         : "text-gray-700 hover:text-blue-600"
-
-       }`
-
-      }
-     >
-
-      <ProfileIcon size={18}/>
-
-      {t("profile")}
-
-     </NavLink>
-
-     {/* NOTIFICATIONS */}
-     <div
-      className="relative"
-      ref={dropdownRef}
-     >
-
-    <button
-
- onClick={async ()=>{
-
-  /*
-  IF DROPDOWN IS OPEN
-  AND USER CLOSES IT
+  =========================
+  LOGOUT
+  =========================
   */
-  if(
+  const handleLogout =
+    useCallback(() => {
 
-   showNotifications &&
+      sessionStorage.removeItem(
+        "user"
+      );
 
-   notifications.length > 0
+      localStorage.removeItem(
+        "token"
+      );
 
-  ){
+      navigate("/");
 
-   try{
-
-    await axios.delete(
-
-     `${import.meta.env.VITE_API_URL}/api/notifications/clear`,
-
-     {
-
-      headers:{
-
-       Authorization:
-        `Bearer ${user.token}`
-
-      }
-
-     }
-
-    );
-
-    /*
-    CLEAR UI
-    */
-    setNotifications([]);
-
-   }
-
-   catch(error){
-
-    console.log(error);
-
-   }
-
-  }
+    }, [navigate]);
 
   /*
-  TOGGLE DROPDOWN
+  =========================
+  NAV ITEMS
+  =========================
   */
-  setShowNotifications(
+  const navItems = [
 
-   !showNotifications
+    {
+      to: "/home",
+      label: t("home"),
+      Icon: HomeIcon,
+    },
 
-  );
+    {
+      to: "/find-workers",
+      label: t("findWorkers"),
+      Icon: SearchIcon,
+    },
 
- }}
+    {
+      to: "/post-jobs",
+      label: t("postJob"),
+      Icon: JobsIcon,
+    },
 
- className="relative"
->
+    {
+      to: "/dashboard",
+      label: t("dashboard"),
+      Icon: DashboardIcon,
+    },
 
-       <Bell size={22}/>
+    {
+      to: "/messages",
+      label: t("messages"),
+      Icon: MessageIcon,
+    },
 
-       {unreadCount > 0 && (
+    {
+      to: "/profile",
+      label: t("profile"),
+      Icon: ProfileIcon,
+    },
 
-        <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] rounded-full min-w-5 h-5 flex items-center justify-center px-1">
+  ];
 
-         {unreadCount}
+  /*
+  =========================
+  ACTIVE CLASS
+  =========================
+  */
+  const getNavClass =
+    ({ isActive }) =>
 
-        </span>
+      `
+        flex items-center
+        justify-center
+        gap-2
+        min-w-[110px]
+        px-2
+        py-1
+        text-sm
+        font-medium
+        whitespace-nowrap
+        transition-colors duration-200
 
-       )}
+        ${
 
-      </button>
+          isActive
 
-      {/* DROPDOWN */}
-      {showNotifications && (
+            ? "text-blue-600"
 
-       <div className="absolute right-0 mt-3 w-80 bg-white shadow-xl rounded-xl border z-50 max-h-96 overflow-y-auto">
+            : "text-gray-700 hover:text-blue-600"
 
-        <div className="p-4 border-b font-semibold">
+        }
+      `;
 
-         Notifications
+  return (
 
-        </div>
+    <nav className="sticky top-0 z-50 bg-white shadow-sm border-b border-gray-100">
 
-        {notifications.length === 0 ? (
+      <div className="max-w-1600px mx-auto px-4 lg:px-8">
 
-         <p className="p-4 text-sm text-gray-500">
+        <div className="flex items-center justify-between h-20 gap-4">
 
-          No notifications
-
-         </p>
-
-        ) : (
-
-         notifications.map((notification)=>(
-
+          {/* LOGO */}
           <div
-
-           key={notification._id}
-
-           onClick={()=>
-
-            markNotificationRead(
-             notification
-            )
-
-           }
-
-           className={`p-4 border-b cursor-pointer hover:bg-gray-50 transition
-
-           ${
-
-            !notification.isRead
-
-             ? "bg-blue-50"
-
-             : ""
-
-           }`}
-
+            onClick={() =>
+              navigate("/home")
+            }
+            className="flex items-center gap-2 cursor-pointer shrink-0"
           >
 
-           <p className="text-sm">
+            <Logo className="w-8 h-8" />
 
-            {notification.message}
+            <h1 className="text-3xl font-bold text-gray-800 whitespace-nowrap">
 
-           </p>
+              Shram{" "}
 
-           <p className="text-xs text-gray-400 mt-1">
+              <span className="text-blue-600">
 
-            {new Date(
+                Setu
 
-             notification.createdAt
+              </span>
 
-            ).toLocaleString()}
-
-           </p>
+            </h1>
 
           </div>
 
-         ))
+          {/* NAVIGATION */}
+          <ul className="flex items-center justify-center flex-1 gap-1 xl:gap-3 overflow-x-auto scrollbar-hide">
 
-        )}
+            {navItems.map(
+              ({
+                to,
+                label,
+                Icon,
+              }) => (
 
-       </div>
+                <li key={to}>
 
-      )}
+                  <NavLink
+                    to={to}
+                    className={
+                      getNavClass
+                    }
+                  >
 
-     </div>
+                    <Icon size={18} />
 
-     <LanguageSwitcher />
+                    {/* 
+                    FIXED TRANSLATION SHIFT ISSUE
+                    */}
+                    <span className="text-center text-[13px] xl:text-sm leading-none">
 
-    </ul>
+                      {label}
 
-   </div>
+                    </span>
 
-   {/* LOGIN / LOGOUT */}
-   <div>
+                  </NavLink>
 
-    {user ? (
+                </li>
 
-     <button
+              )
+            )}
 
-      onClick={handleLogout}
+          </ul>
 
-      className="border border-red-500 text-red-500 px-4 py-1 rounded-md hover:bg-red-500 hover:text-white"
+          {/* RIGHT SIDE */}
+          <div className="flex items-center gap-3 shrink-0">
 
-     >
+            {/* LANGUAGE */}
+            <LanguageSwitcher />
 
-      Logout
+            {/* AUTH */}
+            {user ? (
 
-     </button>
+              <button
 
-    ) : (
+                onClick={
+                  handleLogout
+                }
 
-     <button
+                className="
+                  border border-red-500
+                  text-red-500
+                  px-4 py-2
+                  rounded-lg
+                  text-sm font-medium
+                  transition-all duration-200
+                  hover:bg-red-500
+                  hover:text-white
+                "
 
-      onClick={()=>
-       navigate("/login")
-      }
+              >
 
-      className="border border-blue-600 text-blue-600 px-4 py-1 rounded-md hover:bg-blue-600 hover:text-white"
+                Logout
 
-     >
+              </button>
 
-      Login
+            ) : (
 
-     </button>
+              <button
 
-    )}
+                onClick={() =>
+                  navigate(
+                    "/login"
+                  )
+                }
 
-   </div>
+                className="
+                  border border-blue-600
+                  text-blue-600
+                  px-4 py-2
+                  rounded-lg
+                  text-sm font-medium
+                  transition-all duration-200
+                  hover:bg-blue-600
+                  hover:text-white
+                "
 
-  </nav>
+              >
 
- );
+                Login
+
+              </button>
+
+            )}
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </nav>
+
+  );
 
 };
 
-export default Navbar;
+export default memo(Navbar);

@@ -3,399 +3,505 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 
 import {
- useNavigate
+  useNavigate,
 } from "react-router-dom";
 
 const CalendarCard = ({
- isWorker,
- showAll = false
+  isWorker,
+  showAll = false,
 }) => {
 
- const [events, setEvents] =
-  useState([]);
+  const [events, setEvents] =
+    useState([]);
+
+  const navigate =
+    useNavigate();
+
+  /*
+  =========================
+  FETCH CALENDAR DATA
+  =========================
+  */
+  useEffect(() => {
+
+    const fetchCalendarData =
+      async () => {
+
+        try {
+
+          const user =
+            JSON.parse(
+              sessionStorage.getItem(
+                "user"
+              ) || "null"
+            );
+
+          if (!user?.token) {
+            setEvents([]);
+            return;
+          }
+
+          /*
+          =========================
+          FETCH SCHEDULES
+          =========================
+          */
+          const scheduleRes =
+            await axios.get(
+
+              isWorker
+                ? `${import.meta.env.VITE_API_URL}/api/schedules/worker`
+                : `${import.meta.env.VITE_API_URL}/api/schedules/admin`,
+
+              {
+                headers: {
+                  Authorization:
+                    `Bearer ${user.token}`,
+                },
+              }
+            );
+
+          /*
+          =========================
+          REMOVE EXPIRED EVENTS
+          =========================
+          */
+          const validSchedules =
+            (scheduleRes.data || [])
+              .filter((event) => {
+
+                const createdTime =
+                  new Date(
+                    event.createdAt
+                  ).getTime();
+
+                const now =
+                  Date.now();
+
+                let duration = 0;
+
+                /*
+                URGENCY DURATION
+                */
+                if (
+                  event?.job?.urgency ===
+                  "urgent"
+                ) {
+
+                  duration =
+                    5 *
+                    60 *
+                    60 *
+                    1000;
+
+                }
+
+                else if (
+                  event?.job?.urgency ===
+                  "24hrs"
+                ) {
+
+                  duration =
+                    24 *
+                    60 *
+                    60 *
+                    1000;
+
+                }
+
+                else {
+
+                  duration =
+                    3 *
+                    24 *
+                    60 *
+                    60 *
+                    1000;
 
- const navigate =
-  useNavigate();
+                }
 
- /*
- =========================
- FETCH SCHEDULES + REQUESTS
- =========================
- */
- useEffect(() => {
+                return (
+                  now -
+                    createdTime <
+                  duration
+                );
 
-  const fetchCalendarData = async () => {
+              })
 
-   try {
+              /*
+              NORMALIZE
+              */
+              .map((event) => ({
 
-    const user = JSON.parse(
-     sessionStorage.getItem("user")
-    );
+                ...event,
 
-    /*
-    =========================
-    EXISTING SCHEDULES
-    =========================
-    */
-    const scheduleRes = await axios.get(
+                /*
+                IMPORTANT
+                dedupe using requestId
+                */
+                uniqueId:
+                  event.requestId ||
+                  event._id,
 
-     isWorker
-      ? `${import.meta.env.VITE_API_URL}/api/schedules/worker`
-      : `${import.meta.env.VITE_API_URL}/api/schedules/admin`,
+                date:
+                  event.date ||
+                  event.createdAt,
 
-     {
-      headers: {
-       Authorization:
-        `Bearer ${user.token}`
-      }
-     }
+                type:
+                  "schedule",
 
-    );
+              }));
 
-    /*
-    AUTO REMOVE EXPIRED WORK
-    */
-    const validSchedules =
-     (scheduleRes.data || []).filter(
-      (event) => {
+          /*
+          =========================
+          FETCH REQUESTS
+          =========================
+          */
+          const requestRes =
+            await axios.get(
 
-       const createdTime =
-        new Date(
-         event.createdAt
-        ).getTime();
+              isWorker
+                ? `${import.meta.env.VITE_API_URL}/api/requests/worker-history`
+                : `${import.meta.env.VITE_API_URL}/api/requests/user`,
 
-       const now = Date.now();
+              {
+                headers: {
+                  Authorization:
+                    `Bearer ${user.token}`,
+                },
+              }
+            );
 
-       let duration = 0;
+          /*
+          =========================
+          FILTER ACTIVE REQUESTS
+          =========================
+          */
+          const requestEvents =
+            (requestRes.data || [])
 
-       /*
-       DURATION BASED ON URGENCY
-       */
-       if (
-        event?.job?.urgency === "urgent"
-       ) {
+              .filter(
 
-        duration =
-         5 * 60 * 60 * 1000;
+                (request) =>
 
-       }
+                  request.status ===
+                    "accepted" ||
 
-       else if (
-        event?.job?.urgency === "24hrs"
-       ) {
+                  request.status ===
+                    "in-progress"
 
-        duration =
-         24 * 60 * 60 * 1000;
+              )
 
-       }
+              .map((request) => ({
 
-       else {
+                _id:
+                  request._id,
 
-        duration =
-         3 * 24 * 60 * 60 * 1000;
+                uniqueId:
+                  request._id,
 
-       }
+                title:
+                  isWorker
 
-       return (
-        now - createdTime <
-        duration
-       );
+                    ? `Work for ${request.userId?.firstName || "User"}`
 
-      }
-     );
+                    : `${request.workerId?.firstName || "Worker"}`,
 
-    /*
-    =========================
-    FETCH REQUESTS
-    =========================
-    */
-    const requestRes = await axios.get(
+                date:
+                  request.createdAt,
 
-     isWorker
-      ? `${import.meta.env.VITE_API_URL}/api/requests/worker-history`
-      : `${import.meta.env.VITE_API_URL}/api/requests/user`,
+                urgency:
+                  request.urgency,
 
-     {
-      headers:{
-       Authorization:
-        `Bearer ${user.token}`
-      }
-     }
+                type:
+                  "request",
 
-    );
+              }));
 
-    /*
-    ONLY ACCEPTED / IN PROGRESS
-    */
-    const requestEvents =
-     (requestRes.data || [])
+          /*
+          =========================
+          MERGE EVENTS
+          =========================
+          */
+          const mergedEvents = [
 
-      .filter(
+            ...validSchedules,
 
-       (request)=>
+            ...requestEvents,
 
-        request.status === "accepted" ||
+          ];
 
-        request.status === "in-progress"
+          /*
+          =========================
+          REMOVE DUPLICATES
+          =========================
+          */
+          const uniqueEvents = [
 
-      )
+            ...new Map(
 
-      .map((request)=>({
+              mergedEvents.map(
+                (event) => [
 
-       _id:request._id,
+                  /*
+                  dedupe by request
+                  */
+                  event.uniqueId,
 
-       title:isWorker
+                  event,
 
-        ? `Work for ${request.userId?.firstName}`
+                ]
+              )
 
-        : `${request.workerId?.firstName}`,
+            ).values(),
 
-       date:request.createdAt,
+          ];
 
-       urgency:request.urgency,
+          /*
+          =========================
+          SORT LATEST FIRST
+          =========================
+          */
+          uniqueEvents.sort(
 
-       type:"request"
+            (a, b) =>
 
-      }));
+              new Date(
+                b.date
+              ) -
 
-   /*
-=========================
-MERGE + REMOVE DUPLICATES
-=========================
-*/
-const mergedEvents = [
+              new Date(
+                a.date
+              )
 
- ...validSchedules,
+          );
 
- ...requestEvents
+          /*
+          =========================
+          SAVE
+          =========================
+          */
+          setEvents(
+            uniqueEvents
+          );
 
-];
+        }
 
-/*
-REMOVE DUPLICATES
-*/
-const uniqueEvents = [
+        catch (error) {
 
- ...new Map(
+          console.log(
+            "CALENDAR ERROR:",
+            error
+          );
 
-  mergedEvents.map((event)=>([
+          setEvents([]);
 
-   event._id,
+        }
 
-   event
+      };
 
-  ]))
+    fetchCalendarData();
 
- ).values()
+  }, [isWorker]);
 
-];
+  /*
+  =========================
+  CARD COLOR
+  =========================
+  */
+  const getColor = (
+    urgency
+  ) => {
 
-/*
-LATEST FIRST
-*/
-uniqueEvents.sort(
+    if (
 
- (a,b)=>
+      urgency === "Urgent" ||
 
-  new Date(b.date) -
+      urgency === "urgent"
 
-  new Date(a.date)
+    ) {
 
-);
+      return "border-red-500 bg-red-50";
 
-setEvents(
- uniqueEvents
-);
+    }
 
-   }
+    if (
 
-   catch (error) {
+      urgency === "24 Hours" ||
 
-    console.log(error);
+      urgency === "24hrs"
 
-    setEvents([]);
+    ) {
 
-   }
+      return "border-orange-500 bg-orange-50";
+
+    }
+
+    return "border-green-500 bg-green-50";
 
   };
 
-  fetchCalendarData();
+  /*
+  =========================
+  TIME LABEL
+  =========================
+  */
+  const getTimeLabel = (
+    urgency
+  ) => {
 
- }, [isWorker]);
+    if (
 
- /*
- =========================
- CARD COLOR
- =========================
- */
- const getColor = (urgency) => {
+      urgency === "Urgent" ||
 
-  if (
-   urgency === "Urgent" ||
-   urgency === "urgent"
-  ) {
+      urgency === "urgent"
 
-   return "border-red-500 bg-red-50";
+    ) {
 
-  }
+      return "5 Hours";
 
-  if (
-   urgency === "24 Hours" ||
-   urgency === "24hrs"
-  ) {
+    }
 
-   return "border-orange-500 bg-orange-50";
+    if (
 
-  }
+      urgency === "24 Hours" ||
 
-  return "border-green-500 bg-green-50";
+      urgency === "24hrs"
 
- };
+    ) {
 
- /*
- =========================
- TIME LABEL
- =========================
- */
- const getTimeLabel = (urgency) => {
+      return "1 Day";
 
-  if (
-   urgency === "Urgent" ||
-   urgency === "urgent"
-  ) {
+    }
 
-   return "5 Hours";
+    return "3 Days";
 
-  }
+  };
 
-  if (
-   urgency === "24 Hours" ||
-   urgency === "24hrs"
-  ) {
+  /*
+  =========================
+  SHOW LIMIT
+  =========================
+  */
+  const displayedEvents =
+    showAll
+      ? events
+      : events.slice(0, 5);
 
-   return "1 Day";
+  return (
 
-  }
+    <div className="bg-white p-5 rounded-xl shadow h-fit">
 
-  return "3 Days";
+      {/* HEADER */}
+      <div className="flex items-center justify-between mb-4">
 
- };
+        <h2 className="font-semibold">
+          Calendar
+        </h2>
 
- /*
- =========================
- SHOW ONLY 5 IN DASHBOARD
- =========================
- */
- const displayedEvents = showAll
-  ? events
-  : events.slice(0,5);
+        {!showAll && (
 
- return (
+          <button
 
-  <div className="bg-white p-5 rounded-xl shadow h-fit">
+            onClick={() =>
 
-   <div className="flex items-center justify-between mb-4">
+              navigate(
+                "/all-calendar",
+                {
+                  state: {
+                    isWorker,
+                  },
+                }
+              )
 
-    <h2 className="font-semibold">
-     Calendar
-    </h2>
+            }
 
-    {!showAll && (
+            className="text-sm text-blue-600 hover:text-blue-700"
 
-     <button
+          >
 
-      onClick={()=>
+            View All
 
-       navigate(
+          </button>
 
-        "/all-calendar",
-
-        {
-         state:{
-          isWorker
-         }
-        }
-
-       )
-
-      }
-
-      className="text-sm text-blue-600 hover:text-blue-700"
-
-     >
-
-      View All
-
-     </button>
-
-    )}
-
-   </div>
-
-   <div className="space-y-3">
-
-    {displayedEvents.length === 0 ? (
-
-     <p className="text-sm text-gray-500">
-      No scheduled work
-     </p>
-
-    ) : (
-
-     displayedEvents.map((event) => (
-
-      <div
-       key={event._id}
-       className={`border-l-4 rounded-lg p-3 ${getColor(
-
-        event?.job?.urgency ||
-
-        event?.urgency
-
-       )}`}
-      >
-
-       <div className="flex items-center justify-between">
-
-        <p className="font-medium text-sm">
-
-         {event?.title}
-
-        </p>
-
-        <span className="text-xs font-medium">
-
-         {getTimeLabel(
-
-          event?.job?.urgency ||
-
-          event?.urgency
-
-         )}
-
-        </span>
-
-       </div>
-
-       <p className="text-xs text-gray-500 mt-1">
-
-        {new Date(
-         event?.date
-        ).toLocaleString()}
-
-       </p>
+        )}
 
       </div>
 
-     ))
+      {/* EVENTS */}
+      <div className="space-y-3">
 
-    )}
+        {displayedEvents.length === 0 ? (
 
-   </div>
+          <p className="text-sm text-gray-500">
 
-  </div>
+            No scheduled work
 
- );
+          </p>
+
+        ) : (
+
+          displayedEvents.map(
+            (event) => (
+
+              <div
+
+                key={
+                  event.uniqueId
+                }
+
+                className={`border-l-4 rounded-lg p-3 ${getColor(
+
+                  event?.job?.urgency ||
+
+                  event?.urgency
+
+                )}`}
+
+              >
+
+                <div className="flex items-center justify-between">
+
+                  <p className="font-medium text-sm">
+
+                    {event.title}
+
+                  </p>
+
+                  <span className="text-xs font-medium">
+
+                    {getTimeLabel(
+
+                      event?.job?.urgency ||
+
+                      event?.urgency
+
+                    )}
+
+                  </span>
+
+                </div>
+
+                <p className="text-xs text-gray-500 mt-1">
+
+                  {new Date(
+                    event.date
+                  ).toLocaleString()}
+
+                </p>
+
+              </div>
+
+            )
+          )
+
+        )}
+
+      </div>
+
+    </div>
+
+  );
 
 };
 

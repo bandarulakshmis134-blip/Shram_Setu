@@ -4,9 +4,6 @@ const Message =
 const User =
  require("../models/User");
 
-const Notification =
- require("../models/Notification");
-
 const Worker =
  require("../models/Worker");
 
@@ -26,7 +23,31 @@ exports.getMessages =
   } = req.query;
 
   /*
-  NORMALIZE
+  =========================
+  VALIDATION
+  =========================
+  */
+  if(
+
+   !userId ||
+
+   !receiverId
+
+  ){
+
+   return res.status(400).json({
+
+    message:
+     "Missing user ids"
+
+   });
+
+  }
+
+  /*
+  =========================
+  NORMALIZE IDS
+  =========================
   */
   userId =
    userId.toString();
@@ -34,6 +55,11 @@ exports.getMessages =
   receiverId =
    receiverId.toString();
 
+  /*
+  =========================
+  FETCH MESSAGES
+  =========================
+  */
   const messages =
    await Message.find({
 
@@ -65,17 +91,28 @@ exports.getMessages =
 
    });
 
-  res.json(
-   messages
-  );
+  /*
+  =========================
+  RESPONSE
+  =========================
+  */
+  res.json(messages);
 
  }
 
  catch(error){
 
+  console.log(
+   "GET MESSAGES ERROR:",
+   error
+  );
+
   res.status(500).json({
 
-   message:error.message
+   message:
+    error.message ||
+
+    "Failed to fetch messages"
 
   });
 
@@ -98,9 +135,25 @@ exports.getConversations =
   } = req.query;
 
   /*
-  =====================
+  =========================
+  VALIDATION
+  =========================
+  */
+  if(!userId){
+
+   return res.status(400).json({
+
+    message:
+     "User id is required"
+
+   });
+
+  }
+
+  /*
+  =========================
   GET ALL USER MESSAGES
-  =====================
+  =========================
   */
   const messages =
    await Message.find({
@@ -126,51 +179,37 @@ exports.getConversations =
    });
 
   /*
-  =====================
+  =========================
   UNIQUE USER IDS
-  =====================
+  =========================
   */
   const uniqueUserIds =
    new Set();
 
-  messages.forEach(msg=>{
+  messages.forEach((msg)=>{
 
-   if(
+   /*
+   OTHER USER
+   */
+   const otherUserId =
 
-    msg.senderId.toString() !==
+    msg.senderId.toString() ===
     userId
 
-   ){
+     ? msg.receiverId.toString()
 
-    uniqueUserIds.add(
+     : msg.senderId.toString();
 
-     msg.senderId.toString()
-
-    );
-
-   }
-
-   if(
-
-    msg.receiverId.toString() !==
-    userId
-
-   ){
-
-    uniqueUserIds.add(
-
-     msg.receiverId.toString()
-
-    );
-
-   }
+   uniqueUserIds.add(
+    otherUserId
+   );
 
   });
 
   /*
-  =====================
+  =========================
   FETCH USERS
-  =====================
+  =========================
   */
   const users =
    await User.find({
@@ -192,9 +231,9 @@ exports.getConversations =
    );
 
   /*
-  =====================================
+  =========================
   FORMAT CONVERSATIONS
-  =====================================
+  =========================
   */
   const formatted =
    await Promise.all(
@@ -202,9 +241,9 @@ exports.getConversations =
     users.map(async (u)=>{
 
      /*
-     =====================
-     CHECK WORKER PROFILE
-     =====================
+     =========================
+     WORKER PROFILE
+     =========================
      */
      const workerProfile =
       await Worker.findOne({
@@ -214,9 +253,9 @@ exports.getConversations =
       });
 
      /*
-     =====================
+     =========================
      LAST MESSAGE
-     =====================
+     =========================
      */
      const lastMessage =
       await Message.findOne({
@@ -250,9 +289,9 @@ exports.getConversations =
       });
 
      /*
-     =====================
+     =========================
      UNREAD COUNT
-     =====================
+     =========================
      */
      const unreadCount =
       await Message.countDocuments({
@@ -266,9 +305,9 @@ exports.getConversations =
       });
 
      /*
-     =====================
+     =========================
      RETURN FORMATTED USER
-     =====================
+     =========================
      */
      return{
 
@@ -276,20 +315,21 @@ exports.getConversations =
 
       name:`${
 
-        u.firstName || ""
+       u.firstName || ""
 
-       } ${
+      } ${
 
-        u.lastName || ""
+       u.lastName || ""
 
-       }`.trim(),
+      }`.trim(),
 
-      email:u.email,
+      email:
+       u.email || "",
 
       /*
-      =====================
+      =========================
       WORKER STATUS
-      =====================
+      =========================
       */
       isWorker:
        !!workerProfile,
@@ -298,9 +338,9 @@ exports.getConversations =
        workerProfile?._id || null,
 
       /*
-      =====================
+      =========================
       CHAT DATA
-      =====================
+      =========================
       */
       unreadCount,
 
@@ -317,23 +357,50 @@ exports.getConversations =
    );
 
   /*
-  =====================
-  SEND RESPONSE
-  =====================
+  =========================
+  SORT LATEST FIRST
+  =========================
   */
-  res.json(
-   formatted
+  formatted.sort(
+
+   (a,b)=>
+
+    new Date(
+
+     b.lastMessageTime || 0
+
+    ) -
+
+    new Date(
+
+     a.lastMessageTime || 0
+
+    )
+
   );
+
+  /*
+  =========================
+  RESPONSE
+  =========================
+  */
+  res.json(formatted);
 
  }
 
  catch(error){
 
-  console.log(error);
+  console.log(
+   "GET CONVERSATIONS ERROR:",
+   error
+  );
 
   res.status(500).json({
 
-   message:error.message
+   message:
+    error.message ||
+
+    "Failed to fetch conversations"
 
   });
 
@@ -361,6 +428,42 @@ exports.sendMessage =
 
   /*
   =========================
+  VALIDATION
+  =========================
+  */
+  if(
+
+   !senderId ||
+
+   !receiverId
+
+  ){
+
+   return res.status(400).json({
+
+    message:
+     "Missing sender or receiver"
+
+   });
+
+  }
+
+  /*
+  EMPTY MESSAGE
+  */
+  if(!text?.trim()){
+
+   return res.status(400).json({
+
+    message:
+     "Message cannot be empty"
+
+   });
+
+  }
+
+  /*
+  =========================
   CREATE MESSAGE
   =========================
   */
@@ -368,30 +471,14 @@ exports.sendMessage =
    new Message({
 
     senderId,
+
     receiverId,
-    text
+
+    text:text.trim()
 
    });
 
   await newMessage.save();
-
-  /*
-  =========================
-  CREATE NOTIFICATION
-  =========================
-  */
-  await Notification.create({
-
-   userId:receiverId,
-
-   message:
-    "You received a new message",
-
-   type:"message",
-
-   link:"/messages"
-
-  });
 
   /*
   =========================
@@ -411,11 +498,17 @@ exports.sendMessage =
 
  catch(error){
 
-  console.log(error);
+  console.log(
+   "SEND MESSAGE ERROR:",
+   error
+  );
 
   res.status(500).json({
 
-   message:error.message
+   message:
+    error.message ||
+
+    "Failed to send message"
 
   });
 
@@ -439,6 +532,28 @@ exports.markMessagesAsSeen =
    receiverId
 
   } = req.body;
+
+  /*
+  =========================
+  VALIDATION
+  =========================
+  */
+  if(
+
+   !senderId ||
+
+   !receiverId
+
+  ){
+
+   return res.status(400).json({
+
+    message:
+     "Missing sender or receiver"
+
+   });
+
+  }
 
   /*
   =========================
@@ -485,11 +600,17 @@ exports.markMessagesAsSeen =
 
  catch(error){
 
-  console.log(error);
+  console.log(
+   "MARK SEEN ERROR:",
+   error
+  );
 
   res.status(500).json({
 
-   message:error.message
+   message:
+    error.message ||
+
+    "Failed to update messages"
 
   });
 

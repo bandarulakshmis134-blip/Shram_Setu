@@ -294,173 +294,268 @@ const UpcomingWork = ({
  SEND OTP
  =========================
  */
- const sendOTP = async (
-  requestId
- )=>{
+const sendOTP = async (
+ requestId
+)=>{
 
-  try{
+ try{
 
-   setLoadingId(requestId);
+  setLoadingId(requestId);
 
-   const user = JSON.parse(
+  const user = JSON.parse(
 
-    sessionStorage.getItem(
-     "user"
-    )
+   sessionStorage.getItem(
+    "user"
+   )
 
-   );
+  );
 
-   const res = await axios.post(
+  const res = await axios.post(
 
-    `${import.meta.env.VITE_API_URL}/api/requests/${requestId}/send-work-otp`,
+   `${import.meta.env.VITE_API_URL}/api/requests/${requestId}/send-work-otp`,
 
-    {},
+   {},
 
-    {
-     headers:{
-      Authorization:
-       `Bearer ${user.token}`
-     }
+   {
+    headers:{
+     Authorization:
+      `Bearer ${user.token}`
     }
+   }
 
-   );
+  );
 
-   alert(
-    res.data.message
-   );
+  alert(
+   res.data.message
+  );
 
-   /*
-   OTP FLOW
-   */
-   setOtpSent(prev=>({
+  /*
+  OTP SENT
+  */
+  setOtpSent(prev=>({
 
-    ...prev,
+   ...prev,
 
-    [requestId]:true
+   [requestId]:true
 
-   }));
+  }));
 
-   /*
-   START TIMER
-   */
-   setTimers(prev=>({
+  /*
+  CLEAR OLD OTP
+  */
+  setOtpInputs(prev=>({
 
-    ...prev,
+   ...prev,
 
-    [requestId]:120
+   [requestId]:""
 
-   }));
+  }));
 
-   setCanResend(prev=>({
+  /*
+  RESET TIMER
+  */
+  setTimers(prev=>({
 
-    ...prev,
+   ...prev,
 
-    [requestId]:false
+   [requestId]:
 
-   }));
+    res.data.expiresIn || 300
 
-  }
+  }));
 
-  catch(error){
+  /*
+  DISABLE RESEND
+  */
+  setCanResend(prev=>({
 
-   console.log(error);
+   ...prev,
 
-   alert(
-    "Failed to send OTP"
-   );
+   [requestId]:false
 
-  }
+  }));
 
-  finally{
+ }
 
-   setLoadingId(null);
+ catch(error){
 
-  }
+  console.log(error);
 
- };
+  alert(
+
+   error.response?.data?.message ||
+
+   "Failed to send OTP"
+
+  );
+
+ }
+
+ finally{
+
+  setLoadingId(null);
+
+ }
+
+};
 
  /*
  =========================
  VERIFY OTP
  =========================
  */
- const verifyOTP = async (
-  requestId
- )=>{
+const verifyOTP = async (
+ requestId
+)=>{
 
-  try{
+ try{
 
-   setLoadingId(requestId);
+  setLoadingId(requestId);
 
-   const user = JSON.parse(
+  const user = JSON.parse(
 
-    sessionStorage.getItem(
-     "user"
-    )
+   sessionStorage.getItem(
+    "user"
+   )
 
+  );
+
+  /*
+  CLEAN OTP
+  */
+  const cleanedOTP =
+
+   String(
+
+    otpInputs[
+     requestId
+    ] || ""
+
+   ).trim();
+
+  /*
+  VALIDATION
+  */
+  if(
+
+   cleanedOTP.length !== 6
+
+  ){
+
+   alert(
+    "Enter valid 6-digit OTP"
    );
 
-   const res = await axios.post(
+   return;
 
-    `${import.meta.env.VITE_API_URL}/api/requests/${requestId}/verify-work-otp`,
+  }
 
-    {
+  const res = await axios.post(
 
-     otp:
-      otpInputs[requestId]
+   `${import.meta.env.VITE_API_URL}/api/requests/${requestId}/verify-work-otp`,
 
-    },
+   {
 
-    {
-     headers:{
-      Authorization:
-       `Bearer ${user.token}`
-     }
+    otp:cleanedOTP
+
+   },
+
+   {
+    headers:{
+     Authorization:
+      `Bearer ${user.token}`
     }
+   }
 
-   );
+  );
 
-   alert(
-    res.data.message
-   );
+  alert(
+   res.data.message
+  );
 
-   /*
-   REMOVE COMPLETED
-   */
-   setJobs(prev =>
+  /*
+  REMOVE COMPLETED
+  */
+  setJobs(prev =>
 
-    prev.filter(
+   prev.filter(
 
-     job =>
-      job.requestId !== requestId
+    job =>
+     job.requestId !==
+     requestId
 
-    )
+   )
 
-   );
+  );
 
-  }
+  /*
+  CLEAN STATES
+  */
+  setOtpInputs(prev=>{
 
-  catch(error){
+   const updated = {
+    ...prev
+   };
 
-   console.log(error);
+   delete updated[
+    requestId
+   ];
 
-   alert(
+   return updated;
 
-    error.response?.data?.message ||
+  });
 
-    "Invalid OTP"
+  setOtpSent(prev=>{
 
-   );
+   const updated = {
+    ...prev
+   };
 
-  }
+   delete updated[
+    requestId
+   ];
 
-  finally{
+   return updated;
 
-   setLoadingId(null);
+  });
 
-  }
+  setTimers(prev=>{
 
- };
+   const updated = {
+    ...prev
+   };
+
+   delete updated[
+    requestId
+   ];
+
+   return updated;
+
+  });
+
+ }
+
+ catch(error){
+
+  console.log(error);
+
+  alert(
+
+   error.response?.data?.message ||
+
+   "Invalid OTP"
+
+  );
+
+ }
+
+ finally{
+
+  setLoadingId(null);
+
+ }
+
+};
 
  /*
  =========================
@@ -699,18 +794,24 @@ const UpcomingWork = ({
            ] || ""
           }
 
-          onChange={(e)=>
+       onChange={(e)=>{
 
-           setOtpInputs({
+ const value =
 
-            ...otpInputs,
+  e.target.value
+  .replace(/\D/g,"")
+  .slice(0,6);
 
-            [job.requestId]:
-             e.target.value
+ setOtpInputs({
 
-           })
+  ...otpInputs,
 
-          }
+  [job.requestId]:
+   value
+
+ });
+
+}}
 
           className="w-full border rounded px-3 py-2 mt-3 outline-none"
 

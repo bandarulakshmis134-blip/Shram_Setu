@@ -1,12 +1,15 @@
-const Application = require("../models/Application");
+const Application =
+ require("../models/Application");
 
-const Job = require("../models/Job");
+const Job =
+ require("../models/Job");
 
-const Schedule = require("../models/Schedule");
+const Schedule =
+ require("../models/Schedule");
 
-const JobRequest = require("../models/JobRequest");
+const JobRequest =
+ require("../models/JobRequest");
 
-const Notification = require("../models/Notification");
 /*
 ========================
 APPLY FOR JOB
@@ -17,13 +20,29 @@ exports.applyJob = async (
  res
 ) => {
 
- try {
+ try{
 
   const { jobId } =
    req.body;
 
   const userId =
    req.user.id;
+
+  /*
+  ========================
+  VALIDATION
+  ========================
+  */
+  if(!jobId){
+
+   return res.status(400).json({
+
+    message:
+     "Job id is required"
+
+   });
+
+  }
 
   /*
   ========================
@@ -35,12 +54,50 @@ exports.applyJob = async (
     jobId
    );
 
+  /*
+  JOB NOT FOUND
+  */
   if(!job){
 
    return res.status(404).json({
 
     message:
      "Job not found"
+
+   });
+
+  }
+
+  /*
+  CANNOT APPLY OWN JOB
+  */
+  if(
+
+   job.postedBy.toString() ===
+   userId
+
+  ){
+
+   return res.status(400).json({
+
+    message:
+     "You cannot apply to your own job"
+
+   });
+
+  }
+
+  /*
+  JOB ALREADY ASSIGNED
+  */
+  if(
+   job.status === "accepted"
+  ){
+
+   return res.status(400).json({
+
+    message:
+     "Job already assigned"
 
    });
 
@@ -87,29 +144,12 @@ exports.applyJob = async (
 
   await application.save();
 
-  /*
-  ========================
-  NOTIFICATION
-  ========================
-  */
-  await Notification.create({
-
-   userId:
-    job.postedBy,
-
-   message:
-    "You received a new job application",
-
-   type:"application",
-
-   link:"/dashboard"
-
-  });
-
   res.status(201).json({
 
    message:
-    "Applied successfully"
+    "Application submitted",
+
+   application
 
   });
 
@@ -118,20 +158,22 @@ exports.applyJob = async (
  catch(error){
 
   console.log(
-   "APPLY ERROR:",
+   "APPLY JOB ERROR:",
    error
   );
 
   res.status(500).json({
 
-   message:error.message
+   message:
+    error.message ||
+
+    "Failed to apply"
 
   });
 
  }
 
 };
-
 
 /*
 ========================
@@ -145,11 +187,16 @@ exports.getJobApplications =
   res
  ) => {
 
- try {
+ try{
 
   const userId =
    req.user.id;
 
+  /*
+  ========================
+  GET USER JOBS
+  ========================
+  */
   const jobs =
    await Job.find({
 
@@ -162,6 +209,11 @@ exports.getJobApplications =
     (j)=>j._id
    );
 
+  /*
+  ========================
+  GET APPLICATIONS
+  ========================
+  */
   const applications =
 
    await Application.find({
@@ -184,22 +236,28 @@ exports.getJobApplications =
     age
     gender
     about
-    rating
-    reviews
+    averageRating
+    totalRatings
     `
 
    )
 
    .populate(
     "job",
-    "title"
-   );
+    "title status"
+   )
+
+   .sort({
+
+    createdAt:-1
+
+   });
 
   res.json(applications);
 
  }
 
- catch (error) {
+ catch(error){
 
   console.log(
    "GET ADMIN APPS ERROR:",
@@ -208,15 +266,16 @@ exports.getJobApplications =
 
   res.status(500).json({
 
-   message:error.message
+   message:
+    error.message ||
+
+    "Failed to fetch applications"
 
   });
 
  }
 
 };
-
-
 
 /*
 ========================
@@ -229,7 +288,7 @@ exports.getMyApplications =
   res
  ) => {
 
- try {
+ try{
 
   const userId =
    req.user.id;
@@ -242,15 +301,25 @@ exports.getMyApplications =
 
    })
 
-   .populate("job");
+   .populate("job")
+
+   .sort({
+
+    createdAt:-1
+
+   });
 
   /*
+  ========================
   REMOVE INVALID JOBS
+  ========================
   */
   const validApplications =
    [];
 
-  for (const app of applications){
+  for(
+   const app of applications
+  ){
 
    /*
    INVALID JOB
@@ -277,7 +346,7 @@ exports.getMyApplications =
 
  }
 
- catch (error) {
+ catch(error){
 
   console.log(
    "GET APPLICATIONS ERROR:",
@@ -286,15 +355,16 @@ exports.getMyApplications =
 
   res.status(500).json({
 
-   message:error.message
+   message:
+    error.message ||
+
+    "Failed to fetch applications"
 
   });
 
  }
 
 };
-
-
 
 /*
 ========================
@@ -307,13 +377,15 @@ exports.updateApplicationStatus =
   res
  ) => {
 
- try {
+ try{
 
   const { status } =
    req.body;
 
   /*
+  ========================
   VALIDATION
+  ========================
   */
   if(
 
@@ -334,22 +406,14 @@ exports.updateApplicationStatus =
   }
 
   /*
-  UPDATE APPLICATION
+  ========================
+  GET APPLICATION
+  ========================
   */
   const application =
 
-   await Application.findByIdAndUpdate(
-
-    req.params.id,
-
-    {
-     status
-    },
-
-    {
-     returnDocument:"after"
-    }
-
+   await Application.findById(
+    req.params.id
    )
 
    .populate({
@@ -376,7 +440,41 @@ exports.updateApplicationStatus =
   }
 
   /*
-  ACCEPTED
+  ========================
+  ONLY OWNER
+  ========================
+  */
+  if(
+
+   application.job?.postedBy?._id
+    .toString() !==
+   req.user.id
+
+  ){
+
+   return res.status(403).json({
+
+    message:
+     "Unauthorized"
+
+   });
+
+  }
+
+  /*
+  ========================
+  UPDATE STATUS
+  ========================
+  */
+  application.status =
+   status;
+
+  await application.save();
+
+  /*
+  ========================
+  ACCEPT APPLICATION
+  ========================
   */
   if(status === "accepted"){
 
@@ -394,37 +492,63 @@ exports.updateApplicationStatus =
    );
 
    /*
-   CHECK EXISTING SCHEDULE
+   AUTO REJECT OTHERS
    */
-   const existingSchedule =
+   await Application.updateMany(
 
-    await Schedule.findOne({
+    {
 
      job:
       application.job?._id,
 
-     worker:
+     _id:{
+      $ne:application._id
+     }
+
+    },
+
+    {
+
+     status:"rejected"
+
+    }
+
+   );
+
+   /*
+   CHECK EXISTING REQUEST
+   */
+   const existingRequest =
+
+    await JobRequest.findOne({
+
+     jobId:
+      application.job?._id,
+
+     workerId:
       application.worker?._id
 
     });
 
    /*
-   AVOID DUPLICATES
+   PREVENT DUPLICATE
    */
-   if(!existingSchedule){
+   if(!existingRequest){
 
     /*
     CREATE EXPIRY
     */
-    let expiryTime =
+    const expiryTime =
      new Date();
 
     expiryTime.setDate(
+
      expiryTime.getDate() + 3
+
     );
 
     /*
-    CREATE REAL REQUEST
+    CREATE REQUEST
     */
     const createdRequest =
      await JobRequest.create({
@@ -511,7 +635,7 @@ exports.updateApplicationStatus =
 
  }
 
- catch (error) {
+ catch(error){
 
   console.log(
    "UPDATE STATUS ERROR:",
@@ -520,15 +644,16 @@ exports.updateApplicationStatus =
 
   res.status(500).json({
 
-   message:error.message
+   message:
+    error.message ||
+
+    "Failed to update application"
 
   });
 
  }
 
 };
-
-
 
 /*
 ========================
@@ -541,10 +666,9 @@ exports.deleteApplication =
   res
  ) => {
 
- try {
+ try{
 
   const application =
-
    await Application.findById(
     req.params.id
    );
@@ -558,6 +682,25 @@ exports.deleteApplication =
 
     message:
      "Application not found"
+
+   });
+
+  }
+
+  /*
+  ONLY OWNER
+  */
+  if(
+
+   application.worker.toString() !==
+   req.user.id
+
+  ){
+
+   return res.status(403).json({
+
+    message:
+     "Unauthorized"
 
    });
 
@@ -579,7 +722,7 @@ exports.deleteApplication =
 
  }
 
- catch (error) {
+ catch(error){
 
   console.log(
    "DELETE APPLICATION ERROR:",
@@ -588,7 +731,10 @@ exports.deleteApplication =
 
   res.status(500).json({
 
-   message:error.message
+   message:
+    error.message ||
+
+    "Failed to delete application"
 
   });
 

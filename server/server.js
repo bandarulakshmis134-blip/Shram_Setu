@@ -21,12 +21,8 @@ const Worker = require("./models/Worker"); // 🔥 important
 const invoiceRoutes = require("./routes/invoiceRoutes");
 const aiRoutes = require("./routes/aiRoutes");
 const forgotPasswordRoutes = require("./routes/forgotPasswordRoutes");
-const notificationRoutes = require("./routes/notificationRoutes");
-/*
-========================
-APP INIT
-========================
-*/
+
+
 const app = express();
 
 /*
@@ -94,7 +90,7 @@ app.use("/api/schedules",scheduleRoutes);
 app.use("/api/invoices",invoiceRoutes);
 app.use("/api/ai",aiRoutes);
 app.use("/api/forgot-password",forgotPasswordRoutes);
-app.use("/api/notifications",notificationRoutes);
+
 /*
 ========================
 TEST ROUTE

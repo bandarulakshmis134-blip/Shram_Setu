@@ -1,90 +1,324 @@
-const mongoose = require("mongoose");
+const mongoose =
+ require("mongoose");
 
-const jobRequestSchema = new mongoose.Schema({
+const jobRequestSchema =
+ new mongoose.Schema(
 
- jobId:{
-  type:mongoose.Schema.Types.ObjectId,
-  ref:"Job",
-  default:null
+  {
+
+   /*
+   =========================
+   LINKED JOB (OPTIONAL)
+   =========================
+   */
+   jobId:{
+
+    type:
+     mongoose.Schema.Types.ObjectId,
+
+    ref:"Job",
+
+    default:null,
+
+    index:true
+
+   },
+
+   /*
+   =========================
+   CLIENT / USER
+   =========================
+   */
+   userId:{
+
+    type:
+     mongoose.Schema.Types.ObjectId,
+
+    ref:"User",
+
+    required:true,
+
+    index:true
+
+   },
+
+   /*
+   =========================
+   WORKER
+   =========================
+   */
+   workerId:{
+
+    type:
+     mongoose.Schema.Types.ObjectId,
+
+    ref:"User",
+
+    required:true,
+
+    index:true
+
+   },
+
+   /*
+   =========================
+   DESCRIPTION
+   =========================
+   */
+   description:{
+
+    type:String,
+
+    required:true,
+
+    trim:true,
+
+    maxlength:1000
+
+   },
+
+   /*
+   =========================
+   LOCATION
+   =========================
+   */
+   location:{
+
+    type:String,
+
+    required:true,
+
+    trim:true,
+
+    maxlength:300
+
+   },
+
+   /*
+   =========================
+   BUDGET
+   =========================
+   */
+   budget:{
+
+    type:Number,
+
+    required:true,
+
+    min:1
+
+   },
+
+   /*
+   =========================
+   URGENCY
+   =========================
+   */
+   urgency:{
+
+    type:String,
+
+    enum:[
+
+     "Flexible",
+
+     "24 Hours",
+
+     "Urgent"
+
+    ],
+
+    default:"Flexible",
+
+    index:true
+
+   },
+
+   /*
+   =========================
+   STATUS
+   =========================
+   */
+   status:{
+
+    type:String,
+
+    enum:[
+
+     "pending",
+
+     "accepted",
+
+     "rejected",
+
+     "in-progress",
+
+     "completed"
+
+    ],
+
+    default:"pending",
+
+    index:true
+
+   },
+
+   /*
+   =========================
+   OTP
+   =========================
+   */
+   workOTP:{
+
+    type:String,
+
+    default:null,
+
+    select:false
+
+   },
+
+   /*
+   =========================
+   OTP EXPIRY
+   =========================
+   */
+   workOTPExpiry:{
+
+    type:Date,
+
+    default:null,
+
+    select:false
+
+   },
+
+   /*
+   =========================
+   RATING
+   =========================
+   */
+   isRated:{
+
+    type:Boolean,
+
+    default:false,
+
+    index:true
+
+   },
+
+   ratedAt:{
+
+    type:Date,
+
+    default:null
+
+   },
+
+   /*
+   =========================
+   AUTO DELETE
+   =========================
+   */
+   expiresAt:{
+
+    type:Date,
+
+    required:true,
+
+    index:true
+
+   }
+
+  },
+
+  {
+
+   timestamps:true
+
+  }
+
+);
+
+/*
+=========================
+TTL INDEX
+=========================
+*/
+jobRequestSchema.index(
+
+ {
+
+  expiresAt:1
+
  },
 
- userId:{
-  type:mongoose.Schema.Types.ObjectId,
-  ref:"User",
-  required:true
- },
+ {
 
- workerId:{
-  type:mongoose.Schema.Types.ObjectId,
-  ref:"User",
-  required:true
- },
+  expireAfterSeconds:0
 
- description:{
-  type:String,
-  required:true
- },
-
- location:{
-  type:String,
-  required:true
- },
-
- budget:{
-  type:Number,
-  required:true
- },
-
- urgency:{
-  type:String,
-  enum:["Flexible","24 Hours","Urgent"],
-  default:"Flexible"
- },
-
- status:{
-  type:String,
-  enum:[
-   "pending",
-   "accepted",
-   "rejected",
-   "in-progress",
-   "completed"
-  ],
-  default:"pending"
- },
-
- workOTP:{
-  type:String,
-  default:null
- },
-
- workOTPExpiry:{
-  type:Date,
-  default:null
- },
-
- /*
- AUTO DELETE FIELD
- */
- expiresAt:{
-  type:Date,
-  required:true
  }
 
-},
-{
- timestamps:true
+);
+
+/*
+=========================
+FAST QUERIES
+=========================
+*/
+jobRequestSchema.index({
+
+ userId:1,
+
+ status:1
+
+});
+
+jobRequestSchema.index({
+
+ workerId:1,
+
+ status:1
+
+});
+
+jobRequestSchema.index({
+
+ createdAt:-1
+
 });
 
 /*
-TTL INDEX
+=========================
+HIDE OTP
+=========================
 */
-jobRequestSchema.index(
- { expiresAt:1 },
- { expireAfterSeconds:0 }
+jobRequestSchema.set(
+
+ "toJSON",
+
+ {
+
+  transform:(doc,ret)=>{
+
+   delete ret.workOTP;
+
+   delete ret.workOTPExpiry;
+
+   return ret;
+
+  }
+
+ }
+
 );
 
-module.exports = mongoose.model(
- "JobRequest",
- jobRequestSchema
-);
+module.exports =
+ mongoose.model(
+
+  "JobRequest",
+
+  jobRequestSchema
+
+ );

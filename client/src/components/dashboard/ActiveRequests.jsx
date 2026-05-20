@@ -1,7 +1,8 @@
 import {
- useEffect,
- useState,
- useCallback
+  useEffect,
+  useState,
+  useCallback,
+  useMemo,
 } from "react";
 
 import axios from "axios";
@@ -9,752 +10,627 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 import InvoiceModal from "./InvoiceModal";
-
 import RatingModal from "./RatingModal";
-
 import RequestModal from "../findWorkers/RequestModal";
 
 const ActiveRequests = ({
- showAll = false
+  showAll = false,
 }) => {
+  const [requests, setRequests] =
+    useState([]);
 
- const [requests,setRequests] =
-  useState([]);
+  const [
+    selectedInvoice,
+    setSelectedInvoice,
+  ] = useState(null);
 
- const [
-  selectedInvoice,
-  setSelectedInvoice
- ] = useState(null);
+  const [
+    showRebookModal,
+    setShowRebookModal,
+  ] = useState(false);
 
- const [
- showRebookModal,
- setShowRebookModal
-] = useState(false);
+  const [
+    showRating,
+    setShowRating,
+  ] = useState(false);
 
- const [
- showRating,
- setShowRating
-] = useState(false);
+  const [
+    selectedRequest,
+    setSelectedRequest,
+  ] = useState(null);
 
-const [
- selectedRequest,
- setSelectedRequest
-] = useState(null);
+  const navigate = useNavigate();
 
- const navigate = useNavigate();
-
- /*
- =========================
- GET LOGGED USER
- =========================
- */
- const getUser = ()=>{
-
-  return JSON.parse(
-   sessionStorage.getItem("user")
-  );
-
- };
-
- /*
- =========================
- FETCH REQUESTS
- =========================
- */
- const fetchRequests =
-  useCallback(async ()=>{
-
-  try{
-
-   const user = getUser();
-
-   /*
-   NORMAL REQUESTS
-   */
-   const requestRes =
-    await axios.get(
-
-     `${import.meta.env.VITE_API_URL}/api/requests/user`,
-
-     {
-      headers:{
-       Authorization:
-        `Bearer ${user.token}`
-      }
-     }
-
+  /*
+  =========================
+  GET USER
+  =========================
+  */
+  const getUser = useCallback(() => {
+    return JSON.parse(
+      sessionStorage.getItem("user") ||
+        "null"
     );
+  }, []);
 
-   /*
-   ADMIN SCHEDULES
-   */
-   const scheduleRes =
-    await axios.get(
+  /*
+  =========================
+  FETCH REQUESTS
+  =========================
+  */
+  const fetchRequests =
+    useCallback(async () => {
+      try {
+        const user = getUser();
 
-     `${import.meta.env.VITE_API_URL}/api/schedules/admin`,
+        if (!user?.token) return;
 
-     {
-      headers:{
-       Authorization:
-        `Bearer ${user.token}`
+        /*
+        NORMAL REQUESTS
+        */
+        const requestRes =
+          await axios.get(
+            `${import.meta.env.VITE_API_URL}/api/requests/user`,
+            {
+              headers: {
+                Authorization: `Bearer ${user.token}`,
+              },
+            }
+          );
+
+        /*
+        ADMIN SCHEDULES
+        */
+        const scheduleRes =
+          await axios.get(
+            `${import.meta.env.VITE_API_URL}/api/schedules/admin`,
+            {
+              headers: {
+                Authorization: `Bearer ${user.token}`,
+              },
+            }
+          );
+
+        const normalRequests =
+          requestRes.data || [];
+
+        const schedules =
+          scheduleRes.data || [];
+
+        /*
+        MERGE SCHEDULES
+        */
+        const mergedScheduleRequests =
+          schedules.map((schedule) => {
+            const matchedRequest =
+              normalRequests.find(
+                (request) =>
+                  request._id ===
+                  schedule.requestId
+              );
+
+            if (matchedRequest) {
+              return matchedRequest;
+            }
+
+            return {
+              _id: schedule._id,
+
+              workerId: {
+                firstName: "Worker",
+                skills: [],
+              },
+
+              service:
+                schedule?.job?.title ||
+                schedule?.job
+                  ?.category ||
+                "Service",
+
+              createdAt:
+                schedule.createdAt,
+
+              status: "accepted",
+
+              budget:
+                schedule?.job?.budget ||
+                0,
+
+              /*
+              IMPORTANT
+              */
+              isRated: false,
+            };
+          });
+
+        /*
+        REMOVE DUPLICATES
+        */
+        const uniqueRequests = [
+          ...normalRequests,
+          ...mergedScheduleRequests,
+        ].filter(
+          (
+            request,
+            index,
+            self
+          ) =>
+            index ===
+            self.findIndex(
+              (r) =>
+                r._id === request._id
+            )
+        );
+
+        /*
+        ENSURE RATING STATUS
+        */
+        const formattedRequests =
+          uniqueRequests.map(
+            (request) => ({
+              ...request,
+
+              isRated:
+                request.isRated ||
+                Boolean(
+                  request.ratedAt
+                ),
+            })
+          );
+
+        setRequests(
+          formattedRequests
+        );
+      } catch (error) {
+        console.error(
+          "REQUEST FETCH ERROR:",
+          error
+        );
       }
-     }
+    }, [getUser]);
 
-    );
+  /*
+  =========================
+  INITIAL LOAD
+  =========================
+  */
+  useEffect(() => {
+    fetchRequests();
+  }, [fetchRequests]);
 
-   const normalRequests =
-    requestRes.data || [];
+  /*
+  =========================
+  CREATE INVOICE
+  =========================
+  */
+  const handleBill =
+    async (request) => {
+      try {
+        const user = getUser();
 
-   const schedules =
-    scheduleRes.data || [];
+        const res =
+          await axios.post(
+            `${import.meta.env.VITE_API_URL}/api/invoices/create`,
+            {
+              requestId:
+                request._id,
 
-   /*
-   MERGE ACCEPTED JOB WORKS
-   */
-   const mergedScheduleRequests =
+              amount:
+                request.budget ||
+                1000,
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${user.token}`,
+              },
+            }
+          );
 
-    schedules.map((schedule)=>{
+        setSelectedInvoice(
+          res.data
+        );
+      } catch (error) {
+        console.error(
+          "INVOICE ERROR:",
+          error
+        );
+      }
+    };
 
-     const matchedRequest =
+  /*
+  =========================
+  STATUS COLORS
+  =========================
+  */
+  const getStatusStyle = (
+    status
+  ) => {
+    switch (status) {
+      case "completed":
+        return "bg-green-100 text-green-600";
 
-      normalRequests.find(
+      case "rejected":
+        return "bg-red-100 text-red-600";
 
-       (request)=>
+      case "accepted":
+      case "in-progress":
+        return "bg-blue-100 text-blue-600";
 
-        request._id ===
-        schedule.requestId
-
-      );
-
-     /*
-     USE REAL REQUEST
-     */
-     if(matchedRequest){
-
-      return matchedRequest;
-
-     }
-
-     /*
-     FALLBACK
-     */
-     return {
-
-      _id:
-       schedule._id,
-
-      workerId:{
-       firstName:"Worker",
-       skills:[]
-      },
-
-      /*
-      SERVICE FROM
-      POST JOB FORM
-      */
-      service:
-
-       schedule?.job?.title ||
-
-       schedule?.job?.category ||
-
-       "Service",
-
-      createdAt:
-       schedule.createdAt,
-
-      status:"accepted",
-
-      budget:
-       schedule?.job?.budget ||
-
-       0
-
-     };
-
-    });
-
-   /*
-   REMOVE DUPLICATES
-   */
-   const uniqueRequests = [
-
-    ...normalRequests,
-
-    ...mergedScheduleRequests
-
-   ].filter(
-
-    (request,index,self)=>
-
-     index ===
-
-     self.findIndex(
-
-      (r)=>
-
-       r._id === request._id
-
-     )
-
-   );
-
-   setRequests(
-    uniqueRequests
-   );
-
-  }
-
-  catch(error){
-
-   console.log(
-    "REQUEST FETCH ERROR:",
-    error
-   );
-
-  }
-
- },[]);
-
- /*
- =========================
- INITIAL LOAD
- =========================
- */
- useEffect(()=>{
-
-  const loadRequests = async ()=>{
-
-   await fetchRequests();
-
+      default:
+        return "bg-yellow-100 text-yellow-600";
+    }
   };
 
-  loadRequests();
-
- },[fetchRequests]);
-
- /*
- =========================
- OPEN BILL / INVOICE
- =========================
- */
- const handleBill = async (
-  request
- )=>{
-
-  try{
-
-   const user = getUser();
-
-   const res = await axios.post(
-
-    `${import.meta.env.VITE_API_URL}/api/invoices/create`,
-
-    {
-     requestId:request._id,
-
-     amount:
-      request.budget || 1000
-    },
-
-    {
-     headers:{
-      Authorization:
-       `Bearer ${user.token}`
-     }
-    }
-
-   );
-
-   setSelectedInvoice(
-    res.data
-   );
-
-  }
-
-  catch(error){
-
-   console.log(
-    "INVOICE ERROR:",
-    error
-   );
-
-  }
-
- };
-
- /*
- =========================
- STATUS COLORS
- =========================
- */
- const getStatusStyle = (
-  status
- )=>{
-
-  switch(status){
-
-   case "completed":
-    return "bg-green-100 text-green-600";
-
-   case "rejected":
-    return "bg-red-100 text-red-600";
-
-   case "accepted":
-   case "in-progress":
-    return "bg-blue-100 text-blue-600";
-
-   default:
-    return "bg-yellow-100 text-yellow-600";
-
-  }
-
- };
-
- /*
- =========================
- ACTION BUTTON
- =========================
- */
-const getAction = (
- request
-)=>{
-
- /*
- =========================
- ALREADY RATED
- =========================
- */
- if(
-
-  request.status === "completed" &&
-
-  request.isRated
-
- ){
-
-  return "Rebook";
-
- }
-
- switch(request.status){
-
-  case "completed":
-   return "Rating";
-
-  case "accepted":
-  case "in-progress":
-   return "Bill";
-
-  default:
-   return "Message";
-
- }
-
-};
- /*
- =========================
- BUTTON CLICK
- =========================
- */
- const handleAction = (
-  request
- )=>{
-
-  const action =
-   getAction(request);
-
   /*
-  MESSAGE
+  =========================
+  GET ACTION
+  =========================
   */
-  if(action === "Message"){
-
-   navigate("/messages",{
-
-    state:{
-
-     user:{
-
-      _id:
-       request.workerId?._id,
-
-      name:
-       request.workerId?.firstName
-
-     }
-
+  const getAction = (
+    request
+  ) => {
+    /*
+    COMPLETED + RATED
+    */
+    if (
+      request.status ===
+        "completed" &&
+      request.isRated
+    ) {
+      return "Rebook";
     }
 
-   });
+    /*
+    COMPLETED + NOT RATED
+    */
+    if (
+      request.status ===
+      "completed"
+    ) {
+      return "Rating";
+    }
 
-  }
+    /*
+    ACTIVE
+    */
+    if (
+      request.status ===
+        "accepted" ||
+      request.status ===
+        "in-progress"
+    ) {
+      return "Bill";
+    }
+
+    return "Message";
+  };
 
   /*
-  BILL
+  =========================
+  ACTION HANDLER
+  =========================
   */
-  else if(action === "Bill"){
+  const handleAction = (
+    request
+  ) => {
+    const action =
+      getAction(request);
 
-   handleBill(request);
+    /*
+    MESSAGE
+    */
+    if (action === "Message") {
+      navigate("/messages", {
+        state: {
+          user: {
+            _id:
+              request.workerId
+                ?._id,
 
-  }
+            name:
+              request.workerId
+                ?.firstName,
+          },
+        },
+      });
 
-/*
-=========================
-RATING
-=========================
-*/
-else if(action === "Rating"){
-
- setSelectedRequest(
-  request
- );
-
- setShowRating(true);
-
-}
-
-/*
-=========================
-REBOOK
-=========================
-*/
-else if(action === "Rebook"){
-
- setSelectedRequest(
-  request
- );
-
- setShowRebookModal(
-  true
- );
-
-}
-
- };
-
- /*
-=========================
-SUBMIT RATING
-=========================
-*/
-/*
-=========================
-SUBMIT RATING
-=========================
-*/
-const handleRatingSubmit = async (
- rating
-)=>{
-
- try{
-
-  const user = JSON.parse(
-
-   sessionStorage.getItem(
-    "user"
-   )
-
-  );
-
-  await axios.post(
-
-   `${import.meta.env.VITE_API_URL}/api/requests/${selectedRequest._id}/rate`,
-
-   {
-    stars:rating
-   },
-
-   {
-    headers:{
-     Authorization:
-      `Bearer ${user.token}`
+      return;
     }
-   }
 
-  );
+    /*
+    BILL
+    */
+    if (action === "Bill") {
+      handleBill(request);
+      return;
+    }
 
-  alert(
-   "Rating submitted successfully"
-  );
+    /*
+    RATING
+    */
+    if (
+      action === "Rating"
+    ) {
+      setSelectedRequest(
+        request
+      );
+
+      setShowRating(true);
+
+      return;
+    }
+
+    /*
+    REBOOK
+    */
+    if (
+      action === "Rebook"
+    ) {
+      setSelectedRequest(
+        request
+      );
+
+      setShowRebookModal(
+        true
+      );
+    }
+  };
 
   /*
-UPDATE UI
-*/
-setRequests((prev)=>
+  =========================
+  SUBMIT RATING
+  =========================
+  */
+  const handleRatingSubmit =
+    async (rating) => {
+      try {
+        const user =
+          getUser();
 
- prev.map((request)=>
+        await axios.post(
+          `${import.meta.env.VITE_API_URL}/api/requests/${selectedRequest._id}/rate`,
+          {
+            stars: rating,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${user.token}`,
+            },
+          }
+        );
 
-  request._id ===
-  selectedRequest._id
+        /*
+        UPDATE UI
+        */
+        setRequests((prev) =>
+          prev.map((request) =>
+            request._id ===
+            selectedRequest._id
+              ? {
+                  ...request,
 
-   ? {
+                  isRated: true,
 
-      ...request,
+                  ratedAt:
+                    new Date(),
+                }
+              : request
+          )
+        );
 
-      isRated:true
+        alert(
+          "Rating submitted successfully"
+        );
 
-     }
+        setShowRating(false);
 
-   : request
+        setSelectedRequest(
+          null
+        );
+      } catch (error) {
+        console.error(error);
 
- )
+        alert(
+          error.response?.data
+            ?.message ||
+            "Failed to submit rating"
+        );
+      }
+    };
 
-);
+  /*
+  =========================
+  DISPLAY REQUESTS
+  =========================
+  */
+  const displayedRequests =
+    useMemo(() => {
+      return showAll
+        ? requests
+        : requests.slice(0, 2);
+    }, [requests, showAll]);
 
-setShowRating(false);
+  return (
+    <>
+      <div className="bg-white p-5 rounded-xl shadow mt-6">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="font-semibold">
+            Active Requests
+          </h2>
 
-setSelectedRequest(null);
+          {!showAll && (
+            <button
+              onClick={() =>
+                navigate(
+                  "/all-requests"
+                )
+              }
+              className="text-blue-600 text-sm hover:underline"
+            >
+              View All
+            </button>
+          )}
+        </div>
 
- }
+        {displayedRequests.length ===
+        0 ? (
+          <p className="text-sm text-gray-500">
+            No requests found
+          </p>
+        ) : (
+          <table className="w-full text-sm">
+            <thead className="text-gray-500">
+              <tr>
+                <th className="text-left">
+                  Worker
+                </th>
 
- catch(error){
+                <th className="text-left">
+                  Service
+                </th>
 
-  console.log(error);
+                <th className="text-left">
+                  Date
+                </th>
 
-  alert(
+                <th className="text-left">
+                  Status
+                </th>
 
-   error.response?.data?.message ||
+                <th className="text-left">
+                  Action
+                </th>
+              </tr>
+            </thead>
 
-   "Failed to submit rating"
+            <tbody>
+              {displayedRequests.map(
+                (request) => (
+                  <tr
+                    key={
+                      request._id
+                    }
+                    className="border-t"
+                  >
+                    <td className="py-3">
+                      {
+                        request
+                          .workerId
+                          ?.firstName
+                      }
+                    </td>
 
+                    <td>
+                      {request.service ||
+                        request
+                          .workerId
+                          ?.skills?.[0] ||
+                        "Service"}
+                    </td>
+
+                    <td>
+                      {new Date(
+                        request.createdAt
+                      ).toLocaleDateString()}
+                    </td>
+
+                    <td>
+                      <span
+                        className={`px-2 py-1 rounded text-xs capitalize ${getStatusStyle(
+                          request.status
+                        )}`}
+                      >
+                        {request.status ===
+                        "accepted"
+                          ? "In Progress"
+                          : request.status}
+                      </span>
+                    </td>
+
+                    <td>
+                      <button
+                        onClick={() =>
+                          handleAction(
+                            request
+                          )
+                        }
+                        className="text-blue-600 hover:underline"
+                      >
+                        {getAction(
+                          request
+                        )}
+                      </button>
+                    </td>
+                  </tr>
+                )
+              )}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      {/* RATING MODAL */}
+      <RatingModal
+        isOpen={showRating}
+        onClose={() => {
+          setShowRating(false);
+
+          setSelectedRequest(
+            null
+          );
+        }}
+        onSubmit={
+          handleRatingSubmit
+        }
+      />
+
+      {/* REBOOK MODAL */}
+      {showRebookModal &&
+        selectedRequest && (
+          <RequestModal
+            worker={{
+              _id:
+                selectedRequest
+                  .workerId
+                  ?._id,
+
+              firstName:
+                selectedRequest
+                  .workerId
+                  ?.firstName,
+
+              skills:
+                selectedRequest
+                  .workerId
+                  ?.skills,
+            }}
+            onClose={() => {
+              setShowRebookModal(
+                false
+              );
+
+              setSelectedRequest(
+                null
+              );
+            }}
+          />
+        )}
+
+      {/* INVOICE */}
+      {selectedInvoice && (
+        <InvoiceModal
+          invoice={
+            selectedInvoice
+          }
+          onClose={() =>
+            setSelectedInvoice(
+              null
+            )
+          }
+        />
+      )}
+    </>
   );
-
- }
-
-};
-
- /*
- =========================
- SHOW ONLY 2 IN DASHBOARD
- =========================
- */
- const displayedRequests =
-  showAll
-   ? requests
-   : requests.slice(0,2);
-
- return (
-
-  <>
-
-   <div className="bg-white p-5 rounded-xl shadow mt-6">
-
-    <div className="flex justify-between items-center mb-4">
-
-     <h2 className="font-semibold">
-      Active Requests
-     </h2>
-
-     {!showAll && (
-
-      <button
-       onClick={()=>
-        navigate("/all-requests")
-       }
-       className="text-blue-600 text-sm"
-      >
-
-       View All
-
-      </button>
-
-     )}
-
-    </div>
-
-    {displayedRequests.length === 0 ? (
-
-     <p className="text-sm text-gray-500">
-      No requests found
-     </p>
-
-    ) : (
-
-     <table className="w-full text-sm">
-
-      <thead className="text-gray-500">
-
-       <tr>
-
-        <th className="text-left">
-         Worker
-        </th>
-
-        <th className="text-left">
-         Service
-        </th>
-
-        <th className="text-left">
-         Date
-        </th>
-
-        <th className="text-left">
-         Status
-        </th>
-
-        <th className="text-left">
-         Action
-        </th>
-
-       </tr>
-
-      </thead>
-
-      <tbody>
-
-       {displayedRequests.map((r) => (
-
-        <tr
-         key={r._id}
-         className="border-t"
-        >
-
-         <td className="py-3">
-
-          {r.workerId?.firstName}
-
-         </td>
-
-         <td>
-
-          {r.service ||
-
-           r.workerId?.skills?.[0] ||
-
-           "Service"}
-
-         </td>
-
-         <td>
-
-          {new Date(
-           r.createdAt
-          ).toLocaleDateString()}
-
-         </td>
-
-         <td>
-
-          <span
-           className={`px-2 py-1 rounded text-xs capitalize ${getStatusStyle(r.status)}`}
-          >
-
-           {r.status === "accepted"
-            ? "In Progress"
-            : r.status
-           }
-
-          </span>
-
-         </td>
-
-         <td>
-
-          <button
-
-           onClick={()=>
-            handleAction(r)
-           }
-
-           className="text-blue-600"
-
-          >
-
-           {getAction(r)}
-
-          </button>
-
-         </td>
-
-        </tr>
-
-       ))}
-
-      </tbody>
-
-     </table>
-
-    )}
-
-   </div>
-
-   {/* RATING MODAL */}
-<RatingModal
-
- isOpen={showRating}
-
- onClose={()=>{
-
-  setShowRating(false);
-
-  setSelectedRequest(null);
-
- }}
-
- onSubmit={
-  handleRatingSubmit
- }
-
-/>
-
-{/*
-=========================
-REBOOK MODAL
-=========================
-*/}
-{showRebookModal &&
- selectedRequest && (
-
- <RequestModal
-
-  worker={{
-
-   _id:
-    selectedRequest.workerId?._id,
-
-   firstName:
-    selectedRequest.workerId?.firstName,
-
-   skills:
-    selectedRequest.workerId?.skills
-
-  }}
-
-  onClose={()=>{
-
-   setShowRebookModal(
-    false
-   );
-
-   setSelectedRequest(
-    null
-   );
-
-  }}
-
- />
-
-)}
-
-   {/* INVOICE MODAL */}
-   {selectedInvoice && (
-
-    <InvoiceModal
-
-     invoice={selectedInvoice}
-
-     onClose={()=>
-      setSelectedInvoice(null)
-     }
-
-    />
-
-   )}
-
-  </>
-
- );
-
 };
 
 export default ActiveRequests;
