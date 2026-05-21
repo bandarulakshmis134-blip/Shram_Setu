@@ -263,7 +263,11 @@ const PostJobs = ()=>{
  */
  useEffect(()=>{
 
-  fetchJobs();
+  const loadJobs = async () => {
+   await fetchJobs();
+  };
+
+  void loadJobs();
 
  },[
     fetchJobs

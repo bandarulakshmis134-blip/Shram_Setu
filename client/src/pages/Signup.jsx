@@ -130,7 +130,7 @@ const Signup = () => {
    save user session
    */
 
-   sessionStorage.setItem(
+   localStorage.setItem(
 
     "user",
 
@@ -148,7 +148,7 @@ const Signup = () => {
    NOT landing page
    */
 
-   navigate("/home",{ replace:true });
+   navigate("/login",{ replace:true });
 
   }
 

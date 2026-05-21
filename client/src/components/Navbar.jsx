@@ -86,9 +86,7 @@ const Navbar = () => {
         "user"
       );
 
-      localStorage.removeItem(
-        "token"
-      );
+     localStorage.removeItem("token"); 
 
       navigate("/");
 
@@ -206,29 +204,25 @@ const Navbar = () => {
           <ul className="flex items-center justify-center flex-1 gap-1 xl:gap-3 overflow-x-auto scrollbar-hide">
 
             {navItems.map(
-              ({
-                to,
-                label,
-                Icon,
-              }) => (
+              (item) => (
 
-                <li key={to}>
+                <li key={item.to}>
 
                   <NavLink
-                    to={to}
+                    to={item.to}
                     className={
                       getNavClass
                     }
                   >
 
-                    <Icon size={18} />
+                    <item.Icon size={18} />
 
                     {/* 
                     FIXED TRANSLATION SHIFT ISSUE
                     */}
                     <span className="text-center text-[13px] xl:text-sm leading-none">
 
-                      {label}
+                      {item.label}
 
                     </span>
 

@@ -356,7 +356,7 @@ const WorkerRegister = () => {
 
     <h2 className="text-2xl font-bold text-green-600">
 
-     You are already registered as a worker ✅
+     You are already registered as a worker 
 
     </h2>
 
@@ -451,13 +451,68 @@ const WorkerRegister = () => {
 
       <>
 
-       <input name="firstName" placeholder="Full Name" onChange={handleChange} required className="border p-2 rounded"/>
+      <input
+  type="text"
+  name="firstName"
+  placeholder="Full Name"
+  onChange={(e) => {
+    const value = e.target.value;
+
+    // Allow only alphabets, spaces, dots, hyphens, apostrophes
+    if (/^[A-Za-z\s.'-]*$/.test(value)) {
+      handleChange(e);
+    }
+  }}
+  required
+  className="border p-2 rounded"
+/>
 
        <input name="mobile" placeholder="Mobile Number" onChange={handleChange} required className="border p-2 rounded"/>
 
-       <input name="aadhaar" placeholder="Aadhaar Number" onChange={handleChange} required className="border p-2 rounded"/>
+      <input
+  type="text"
+  name="aadhaar"
+  placeholder="Aadhaar Number"
+  maxLength={12}
+  pattern="\d{12}"
+  title="Aadhaar number must be exactly 12 digits"
+  onChange={(e) => {
+    const value = e.target.value;
 
-       <input name="age" placeholder="Age" onChange={handleChange} required className="border p-2 rounded"/>
+    // Allow only numbers and restrict to 12 digits
+    if (/^\d{0,12}$/.test(value)) {
+      handleChange(e);
+    }
+  }}
+  required
+  className="border p-2 rounded"
+/>
+
+     <input
+  type="number"
+  name="age"
+  placeholder="Age"
+  min="18"
+  max="60"
+  onChange={(e) => {
+    const value = e.target.value;
+
+    // Allow empty input
+    if (value === "") {
+      handleChange(e);
+      return;
+    }
+
+    const num = Number(value);
+
+    // Restrict age between 18 and 60
+    if (num >= 18 && num <= 60) {
+      handleChange(e);
+    }
+  }}
+  required
+  className="border p-2 rounded"
+/>
 
        <input name="location" placeholder="Location" onChange={handleChange} required className="border p-2 rounded col-span-2"/>
 
@@ -526,7 +581,21 @@ const WorkerRegister = () => {
 
       <>
 
-       <input name="groupName" placeholder="Group Name" onChange={handleChange} required className="border p-2 rounded"/>
+      <input
+  type="text"
+  name="groupName"
+  placeholder="Group Name"
+  onChange={(e) => {
+    const value = e.target.value;
+
+    // Allow only alphabets, spaces, dots, hyphens, apostrophes
+    if (/^[A-Za-z\s.'-]*$/.test(value)) {
+      handleChange(e);
+    }
+  }}
+  required
+  className="border p-2 rounded"
+/>
 
        <input name="mobile" placeholder="Mobile Number" onChange={handleChange} required className="border p-2 rounded"/>
 
@@ -598,7 +667,29 @@ const WorkerRegister = () => {
 
           <input placeholder="Name" onChange={(e)=>handleMemberChange(index,"name",e.target.value)} className="border p-2 rounded"/>
 
-          <input placeholder="Age" onChange={(e)=>handleMemberChange(index,"age",e.target.value)} className="border p-2 rounded"/>
+          <input
+  type="number"
+  placeholder="Age"
+  min="18"
+  max="60"
+  onChange={(e) => {
+    const value = e.target.value;
+
+    // Allow empty input
+    if (value === "") {
+      handleMemberChange(index, "age", value);
+      return;
+    }
+
+    const num = Number(value);
+
+    // Restrict between 18 and 60
+    if (num >= 18 && num <= 60) {
+      handleMemberChange(index, "age", value);
+    }
+  }}
+  className="border p-2 rounded"
+/>
 
           <select onChange={(e)=>handleMemberChange(index,"gender",e.target.value)} className="border p-2 rounded">
 
@@ -608,8 +699,22 @@ const WorkerRegister = () => {
 
           </select>
 
-          <input placeholder="Aadhaar" onChange={(e)=>handleMemberChange(index,"aadhaar",e.target.value)} className="border p-2 rounded"/>
+   <input
+  type="text"
+  placeholder="Aadhaar"
+  maxLength={12}
+  pattern="\d{12}"
+  title="Aadhaar number must be exactly 12 digits"
+  onChange={(e) => {
+    const value = e.target.value;
 
+    // Allow only numbers and restrict to 12 digits
+    if (/^\d{0,12}$/.test(value)) {
+      handleMemberChange(index, "aadhaar", value);
+    }
+  }}
+  className="border p-2 rounded"
+/>
           <input placeholder="Skill" onChange={(e)=>handleMemberChange(index,"skill",e.target.value)} className="border p-2 rounded"/>
 
          </div>

@@ -47,9 +47,18 @@ LAYOUT WITH NAVBAR
 */
 function MainLayout() {
 
- const user = JSON.parse(
-  sessionStorage.getItem("user") || "null"
- );
+ /*
+ SAFE USER PARSE
+ */
+ const user = (() => {
+  try {
+   const data = localStorage.getItem("user");
+   if (!data || data === "undefined") return null;
+   return JSON.parse(data);
+  } catch {
+   return null;
+  }
+ })();
 
  /*
  ========================
