@@ -105,7 +105,7 @@ const ProfileCard = ({
 
    )}
 
-  {user?.skillSet?.length > 0 && (
+  {user?.skills?.length > 0 && (
   <>
     {/* RATING */}
     <div className="flex items-center gap-1 mt-2 text-yellow-400">

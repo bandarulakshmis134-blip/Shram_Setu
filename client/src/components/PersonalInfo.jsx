@@ -136,7 +136,7 @@ const PersonalInfo = ({
     </div>
 
     {/* DESCRIPTION */}
-  {user?.skillSet?.length > 0 && (
+  {user?.skills?.length > 0 && (
   <div className="col-span-2">
 
     <p className="text-gray-500 text-sm mb-1">
