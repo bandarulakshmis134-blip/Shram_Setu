@@ -105,45 +105,47 @@ const ProfileCard = ({
 
    )}
 
-   {/* RATING */}
-   <div className="flex items-center gap-1 mt-2 text-yellow-400">
+  {user?.skillSet?.length > 0 && (
+  <>
+    {/* RATING */}
+    <div className="flex items-center gap-1 mt-2 text-yellow-400">
 
-    {[...Array(5)].map((_,i)=>(
+      {[...Array(5)].map((_,i)=>(
 
-     <FaStar
+        <FaStar
 
-      key={i}
+          key={i}
 
-      className={
-       i < Math.round(avgRating)
+          className={
+            i < Math.round(avgRating)
+              ? "text-yellow-400"
+              : "text-gray-300"
+          }
 
-        ? "text-yellow-400"
+        />
 
-        : "text-gray-300"
-      }
+      ))}
 
-     />
+      <span className="ml-2 text-sm text-gray-600 font-medium">
 
-    ))}
+        {avgRating.toFixed(1)}
 
-    <span className="ml-2 text-sm text-gray-600 font-medium">
+      </span>
 
-     {avgRating.toFixed(1)}
+    </div>
 
-    </span>
+    {/* TOTAL RATINGS */}
+    {user?.totalRatings > 0 && (
 
-   </div>
+      <p className="text-xs text-gray-500 mt-1">
 
-   {/* TOTAL RATINGS */}
-   {user?.totalRatings > 0 && (
+        {user.totalRatings} ratings
 
-    <p className="text-xs text-gray-500 mt-1">
+      </p>
 
-     {user.totalRatings} ratings
-
-    </p>
-
-   )}
+    )}
+  </>
+)}
 
    <button
 

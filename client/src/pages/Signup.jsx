@@ -87,6 +87,13 @@ const Signup = () => {
 
    }
 
+   const passwordPattern = /^(?=.*[a-zA-Z])(?=.*[0-9]).{8,}$/;
+
+if (!passwordPattern.test(password)) {
+  alert("Password must be at least 8 characters with both letters and numbers");
+  return;
+}
+
 
    if(password !== confirmPassword){
 
@@ -295,15 +302,16 @@ const Signup = () => {
        </label>
 
 
-       <input
-
-        value={firstName}
-
-        onChange={(e)=>setFirstName(e.target.value)}
-
-        className="w-full border px-3 py-2 rounded mt-1"
-
-       />
+      <input
+  value={firstName}
+  onChange={(e) => {
+    const val = e.target.value;
+    if (/^[a-zA-Z\s]*$/.test(val) && val.replace(/\s/g, "").length <= 20) {
+      setFirstName(val);
+    }
+  }}
+  className="w-full border px-3 py-2 rounded mt-1"
+/>
 
       </div>
 
@@ -318,15 +326,16 @@ const Signup = () => {
        </label>
 
 
-       <input
-
-        value={lastName}
-
-        onChange={(e)=>setLastName(e.target.value)}
-
-        className="w-full border px-3 py-2 rounded mt-1"
-
-       />
+     <input
+  value={lastName}
+  onChange={(e) => {
+    const val = e.target.value;
+    if (/^[a-zA-Z\s]*$/.test(val) && val.replace(/\s/g, "").length <= 20) {
+      setLastName(val);
+    }
+  }}
+  className="w-full border px-3 py-2 rounded mt-1"
+/>
 
       </div>
 
@@ -501,44 +510,44 @@ const Signup = () => {
      </div>
 
 
+{/* password */}
+<div>
 
-     {/* password */}
+  <label className="text-sm font-medium">
+    Password
+  </label>
 
-     <div className="relative">
+  {/* input + eye icon wrapper */}
+  <div className="relative">
 
-      <label className="text-sm font-medium">
+    <input
+      type={showPassword ? "text" : "password"}
+      value={password}
+      onChange={(e) => setPassword(e.target.value)}
+      className={`w-full border px-3 py-2 rounded mt-1 ${
+        password && (password.length < 8 || !/[a-zA-Z]/.test(password) || !/[0-9]/.test(password))
+          ? "border-red-500"
+          : ""
+      }`}
+    />
 
-       Password
+    <span
+      onClick={() => setShowPassword(!showPassword)}
+      className="absolute right-3 top-3 cursor-pointer"
+    >
+      {showPassword ? <FaEyeSlash /> : <FaEye />}
+    </span>
 
-      </label>
+  </div>
 
+  {/* validation message OUTSIDE the relative div */}
+  {password && (password.length < 8 || !/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) && (
+    <p className="text-red-500 text-xs mt-1">
+      Password must be at least 8 characters with both letters and numbers
+    </p>
+  )}
 
-      <input
-
-       type={showPassword ? "text":"password"}
-
-       value={password}
-
-       onChange={(e)=>setPassword(e.target.value)}
-
-       className="w-full border px-3 py-2 rounded mt-1"
-
-      />
-
-
-      <span
-
-       onClick={()=>setShowPassword(!showPassword)}
-
-       className="absolute right-3 top-9 cursor-pointer"
-
-      >
-
-       {showPassword ? <FaEyeSlash/> : <FaEye/>}
-
-      </span>
-
-     </div>
+</div>
 
 
 

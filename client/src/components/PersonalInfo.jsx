@@ -136,40 +136,41 @@ const PersonalInfo = ({
     </div>
 
     {/* DESCRIPTION */}
-    <div className="col-span-2">
+  {user?.skillSet?.length > 0 && (
+  <div className="col-span-2">
 
-      <p className="text-gray-500 text-sm mb-1">
-        Description
+    <p className="text-gray-500 text-sm mb-1">
+      Description
+    </p>
+
+    {isEditing ? (
+
+      <textarea
+
+        name="description"
+
+        value={user.description || ""}
+
+        onChange={handleChange}
+
+        rows={4}
+
+        className="border p-2 w-full rounded"
+
+      />
+
+    ) : (
+
+      <p className="font-medium whitespace-pre-line">
+
+        {user.description || "No description added"}
+
       </p>
 
-      {isEditing ? (
+    )}
 
-        <textarea
-
-          name="description"
-
-          value={user.description || ""}
-
-          onChange={handleChange}
-
-          rows={4}
-
-          className="border p-2 w-full rounded"
-
-        />
-
-      ) : (
-
-        <p className="font-medium whitespace-pre-line">
-
-          {user.description || "No description added"}
-
-        </p>
-
-      )}
-
-    </div>
-
+  </div>
+)}
     {/* SKILLS */}
     {Array.isArray(user.skills) &&
     user.skills.length > 0 && (
