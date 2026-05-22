@@ -12,7 +12,6 @@ const FilterSidebar = ({ onApply }) => {
 
  });
 
-
  /*
  =====================
  HANDLE INPUT CHANGE
@@ -29,7 +28,6 @@ const FilterSidebar = ({ onApply }) => {
   });
 
  };
-
 
  /*
  =====================
@@ -48,7 +46,6 @@ const FilterSidebar = ({ onApply }) => {
 
  };
 
-
  /*
  =====================
  APPLY FILTERS
@@ -61,7 +58,6 @@ const FilterSidebar = ({ onApply }) => {
 
  };
 
-
  /*
  =====================
  UI
@@ -70,16 +66,29 @@ const FilterSidebar = ({ onApply }) => {
 
  return(
 
-  <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-
+  <div
+   className="
+    bg-white
+    p-4 sm:p-5 lg:p-6
+    rounded-xl
+    shadow-sm
+    border border-gray-200
+    w-full
+   "
+  >
 
    {/* HEADER */}
 
-   <div className="flex items-center gap-2 mb-6">
+   <div className="flex items-center gap-2 mb-5 sm:mb-6">
 
-    <FaFilter className="text-gray-600"/>
+    <FaFilter className="text-gray-600 text-sm sm:text-base"/>
 
-    <h2 className="font-semibold text-lg">
+    <h2
+     className="
+      font-semibold
+      text-base sm:text-lg
+     "
+    >
 
      Filters
 
@@ -87,18 +96,20 @@ const FilterSidebar = ({ onApply }) => {
 
    </div>
 
-
-
    {/* CATEGORY */}
 
-   <div className="mb-5">
+   <div className="mb-4 sm:mb-5">
 
-    <label className="text-sm text-gray-600">
+    <label
+     className="
+      text-sm
+      text-gray-600
+     "
+    >
 
      Category
 
     </label>
-
 
     <select
 
@@ -108,7 +119,17 @@ const FilterSidebar = ({ onApply }) => {
 
      onChange={handleChange}
 
-     className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2"
+     className="
+      w-full
+      mt-1
+      border border-gray-300
+      rounded-lg
+      px-3 py-2
+      text-sm sm:text-base
+      outline-none
+      focus:ring-2
+      focus:ring-blue-200
+     "
 
     >
 
@@ -117,7 +138,6 @@ const FilterSidebar = ({ onApply }) => {
       All Categories
 
      </option>
-
 
      {skillsList.map(skill=>(
 
@@ -129,23 +149,24 @@ const FilterSidebar = ({ onApply }) => {
 
      ))}
 
-
     </select>
 
    </div>
 
-
-
    {/* LOCATION */}
 
-   <div className="mb-5">
+   <div className="mb-4 sm:mb-5">
 
-    <label className="text-sm text-gray-600">
+    <label
+     className="
+      text-sm
+      text-gray-600
+     "
+    >
 
      Location
 
     </label>
-
 
     <input
 
@@ -159,24 +180,36 @@ const FilterSidebar = ({ onApply }) => {
 
      onChange={handleChange}
 
-     className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2"
+     className="
+      w-full
+      mt-1
+      border border-gray-300
+      rounded-lg
+      px-3 py-2
+      text-sm sm:text-base
+      outline-none
+      focus:ring-2
+      focus:ring-blue-200
+     "
 
     />
 
    </div>
 
-
-
    {/* RATING */}
 
-   <div className="mb-6">
+   <div className="mb-5 sm:mb-6">
 
-    <p className="text-sm text-gray-600">
+    <p
+     className="
+      text-sm
+      text-gray-600
+     "
+    >
 
      Rating: {filters.rating}+ Stars
 
     </p>
-
 
     <input
 
@@ -192,12 +225,23 @@ const FilterSidebar = ({ onApply }) => {
 
      onChange={handleRatingChange}
 
-     className="w-full mt-3 accent-blue-600 cursor-pointer"
+     className="
+      w-full
+      mt-3
+      accent-blue-600
+      cursor-pointer
+     "
 
     />
 
-
-    <div className="flex justify-between text-xs text-gray-400 mt-1">
+    <div
+     className="
+      flex justify-between
+      text-xs
+      text-gray-400
+      mt-1
+     "
+    >
 
      <span>0</span>
 
@@ -207,22 +251,28 @@ const FilterSidebar = ({ onApply }) => {
 
    </div>
 
-
-
    {/* APPLY BUTTON */}
 
    <button
 
     onClick={applyFilters}
 
-    className="w-full bg-gray-800 text-white py-2 rounded-lg hover:bg-gray-900 transition"
+    className="
+      w-full
+      bg-gray-800
+      text-white
+      py-2.5
+      rounded-lg
+      text-sm sm:text-base
+      hover:bg-gray-900
+      transition
+    "
 
    >
 
     Apply Filters
 
    </button>
-
 
   </div>
 

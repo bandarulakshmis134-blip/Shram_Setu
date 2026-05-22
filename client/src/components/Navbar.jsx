@@ -39,6 +39,7 @@ const Navbar = () => {
   SAFE USER PARSE
   =========================
   */
+
   const user = useMemo(() => {
 
     try {
@@ -79,6 +80,7 @@ const Navbar = () => {
   LOGOUT
   =========================
   */
+
   const handleLogout =
     useCallback(() => {
 
@@ -86,7 +88,9 @@ const Navbar = () => {
         "user"
       );
 
-     localStorage.removeItem("token"); 
+      localStorage.removeItem(
+        "token"
+      );
 
       navigate("/");
 
@@ -97,6 +101,7 @@ const Navbar = () => {
   NAV ITEMS
   =========================
   */
+
   const navItems = [
 
     {
@@ -142,6 +147,7 @@ const Navbar = () => {
   ACTIVE CLASS
   =========================
   */
+
   const getNavClass =
     ({ isActive }) =>
 
@@ -149,7 +155,8 @@ const Navbar = () => {
         flex items-center
         justify-center
         gap-2
-        min-w-[110px]
+        min-w-[100px]
+        sm:min-w-[110px]
         px-2
         py-1
         text-sm
@@ -172,9 +179,9 @@ const Navbar = () => {
 
     <nav className="sticky top-0 z-50 bg-white shadow-sm border-b border-gray-100">
 
-      <div className="max-w-1600px mx-auto px-4 lg:px-8">
+      <div className="max-w-400 mx-auto px-3 sm:px-4 lg:px-8">
 
-        <div className="flex items-center justify-between h-20 gap-4">
+        <div className="flex items-center justify-between h-16 sm:h-20 gap-3">
 
           {/* LOGO */}
           <div
@@ -184,9 +191,18 @@ const Navbar = () => {
             className="flex items-center gap-2 cursor-pointer shrink-0"
           >
 
-            <Logo className="w-8 h-8" />
+            <Logo className="w-7 h-7 sm:w-8 sm:h-8" />
 
-            <h1 className="text-3xl font-bold text-gray-800 whitespace-nowrap">
+            <h1
+              className="
+                text-xl
+                sm:text-2xl
+                lg:text-3xl
+                font-bold
+                text-gray-800
+                whitespace-nowrap
+              "
+            >
 
               Shram{" "}
 
@@ -201,12 +217,24 @@ const Navbar = () => {
           </div>
 
           {/* NAVIGATION */}
-          <ul className="flex items-center justify-center flex-1 gap-1 xl:gap-3 overflow-x-auto scrollbar-hide">
+          <ul
+            className="
+              flex items-center
+              flex-1
+              gap-1 xl:gap-3
+              overflow-x-auto
+              scrollbar-hide
+              px-1
+            "
+          >
 
             {navItems.map(
               (item) => (
 
-                <li key={item.to}>
+                <li
+                  key={item.to}
+                  className="shrink-0"
+                >
 
                   <NavLink
                     to={item.to}
@@ -215,12 +243,19 @@ const Navbar = () => {
                     }
                   >
 
-                    <item.Icon size={18} />
+                    <item.Icon
+                      size={16}
+                    />
 
-                    {/* 
-                    FIXED TRANSLATION SHIFT ISSUE
-                    */}
-                    <span className="text-center text-[13px] xl:text-sm leading-none">
+                    <span
+                      className="
+                        text-center
+                        text-[11px]
+                        sm:text-[13px]
+                        xl:text-sm
+                        leading-none
+                      "
+                    >
 
                       {item.label}
 
@@ -236,7 +271,13 @@ const Navbar = () => {
           </ul>
 
           {/* RIGHT SIDE */}
-          <div className="flex items-center gap-3 shrink-0">
+          <div
+            className="
+              flex items-center
+              gap-2 sm:gap-3
+              shrink-0
+            "
+          >
 
             {/* LANGUAGE */}
             <LanguageSwitcher />
@@ -253,12 +294,15 @@ const Navbar = () => {
                 className="
                   border border-red-500
                   text-red-500
-                  px-4 py-2
+                  px-2 sm:px-4
+                  py-1.5 sm:py-2
                   rounded-lg
-                  text-sm font-medium
+                  text-xs sm:text-sm
+                  font-medium
                   transition-all duration-200
                   hover:bg-red-500
                   hover:text-white
+                  whitespace-nowrap
                 "
 
               >
@@ -280,12 +324,15 @@ const Navbar = () => {
                 className="
                   border border-blue-600
                   text-blue-600
-                  px-4 py-2
+                  px-2 sm:px-4
+                  py-1.5 sm:py-2
                   rounded-lg
-                  text-sm font-medium
+                  text-xs sm:text-sm
+                  font-medium
                   transition-all duration-200
                   hover:bg-blue-600
                   hover:text-white
+                  whitespace-nowrap
                 "
 
               >
