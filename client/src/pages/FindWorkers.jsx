@@ -4,7 +4,7 @@ import {
  useRef
 } from "react";
 
-import axios from "axios";
+import axios from "../utils/axiosInstance";
 
 import {
  useLocation
@@ -76,13 +76,13 @@ const FindWorkers = ()=>{
  =====================
  */
 
- const user = JSON.parse(
+const [user] = useState(
 
-  sessionStorage.getItem(
-   "user"
-  ) || "null"
+ JSON.parse(
+  sessionStorage.getItem("user") || "null"
+ )
 
- );
+);
 
  /*
  =====================

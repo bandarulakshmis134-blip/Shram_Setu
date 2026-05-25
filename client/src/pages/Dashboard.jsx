@@ -12,9 +12,13 @@ import MyApplications from "../components/dashboard/MyApplications";
 
 const Dashboard = () => {
 
-  const user = JSON.parse(
-    sessionStorage.getItem("user") || "null"
-  );
+ const [user] = useState(
+
+ JSON.parse(
+  sessionStorage.getItem("user") || "null"
+ )
+
+);
 
   /*
   CHECK REAL WORKER

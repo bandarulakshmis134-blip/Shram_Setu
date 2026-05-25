@@ -1,9 +1,10 @@
+
 import {
  useEffect,
  useState
 } from "react";
 
-import axios from "axios";
+import axios from "../utils/axiosInstance";
 
 import {
  useNavigate
@@ -220,9 +221,92 @@ const UpcomingWork = ({
  */
  useEffect(()=>{
 
-  fetchUpcomingWork();
+  const loadUpcomingWork = async () => {
+   await fetchUpcomingWork();
+  };
+
+  void loadUpcomingWork();
 
  },[]);
+
+ /*
+ =========================
+ RESTORE OTP AFTER RELOAD
+ =========================
+ */
+ useEffect(()=>{
+
+ if(jobs.length === 0) return;
+
+ requestAnimationFrame(()=>{
+
+  const restoredTimers = {};
+  const restoredOtpSent = {};
+  const restoredCanResend = {};
+
+  jobs.forEach((job)=>{
+
+   const saved = sessionStorage.getItem(
+
+    `otp_${job.requestId}`
+
+   );
+
+   if(saved){
+
+    const parsed =
+     JSON.parse(saved);
+
+    const remaining = Math.floor(
+
+     (parsed.expiresAt - Date.now())
+     / 1000
+
+    );
+
+    if(remaining > 0){
+
+     restoredTimers[
+      job.requestId
+     ] = remaining;
+
+     restoredOtpSent[
+      job.requestId
+     ] = true;
+
+     restoredCanResend[
+      job.requestId
+     ] = false;
+
+    }
+
+    else{
+
+     restoredCanResend[
+      job.requestId
+     ] = true;
+
+     sessionStorage.removeItem(
+
+      `otp_${job.requestId}`
+
+     );
+
+    }
+
+   }
+
+  });
+
+  setTimers(restoredTimers);
+
+  setOtpSent(restoredOtpSent);
+
+  setCanResend(restoredCanResend);
+
+ });
+
+},[jobs]);
 
  /*
  =========================
@@ -375,6 +459,25 @@ const sendOTP = async (
 
   }));
 
+  /*
+  SAVE TIMER
+  */
+  sessionStorage.setItem(
+
+   `otp_${requestId}`,
+
+   JSON.stringify({
+
+    expiresAt:
+
+     Date.now() +
+
+     ((res.data.expiresIn || 300) * 1000)
+
+   })
+
+  );
+
  }
 
  catch(error){
@@ -486,6 +589,13 @@ const verifyOTP = async (
 
    )
 
+  );
+
+  /*
+  REMOVE SAVED OTP
+  */
+  sessionStorage.removeItem(
+   `otp_${requestId}`
   );
 
   /*
@@ -794,24 +904,24 @@ const verifyOTP = async (
            ] || ""
           }
 
-       onChange={(e)=>{
+          onChange={(e)=>{
 
- const value =
+           const value =
 
-  e.target.value
-  .replace(/\D/g,"")
-  .slice(0,6);
+            e.target.value
+            .replace(/\D/g,"")
+            .slice(0,6);
 
- setOtpInputs({
+           setOtpInputs({
 
-  ...otpInputs,
+            ...otpInputs,
 
-  [job.requestId]:
-   value
+            [job.requestId]:
+             value
 
- });
+           });
 
-}}
+          }}
 
           className="w-full border rounded px-3 py-2 mt-3 outline-none"
 
@@ -940,3 +1050,4 @@ const verifyOTP = async (
 };
 
 export default UpcomingWork;
+

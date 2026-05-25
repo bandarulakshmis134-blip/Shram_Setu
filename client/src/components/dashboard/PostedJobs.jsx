@@ -3,7 +3,7 @@ import {
  useState
 } from "react";
 
-import axios from "axios";
+import axios from "../utils/axiosInstance";
 
 import {
  useNavigate
@@ -26,14 +26,13 @@ const PostedJobs = ({
  const navigate =
   useNavigate();
 
- const user = JSON.parse(
+const [user] = useState(
 
-  sessionStorage.getItem(
-   "user"
-  ) || "null"
+ JSON.parse(
+  sessionStorage.getItem("user") || "null"
+ )
 
- );
-
+);
  /*
  ============================
  FETCH JOBS

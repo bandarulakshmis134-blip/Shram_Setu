@@ -1,5 +1,6 @@
 const nodemailer =
  require("nodemailer");
+const path = require("path");
 
 /*
 ========================
@@ -63,7 +64,13 @@ const sendEmail = async (
 
     filename:"logo.png",
 
-    path:"../client/public/logo.png",
+  
+   path:require("path").join(
+    __dirname,
+   "../../client/public/logo.png"
+    ),
+
+
 
 
 

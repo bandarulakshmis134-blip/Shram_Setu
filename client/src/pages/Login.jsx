@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "axios";
+import axios from "../utils/axiosInstance";
 import { useNavigate } from "react-router-dom";
 import { Logo } from "../components/Logo";
 import { Eye, EyeOff } from "lucide-react";

@@ -217,7 +217,7 @@ exports.sendOTP =
 
         • Never share this OTP with anyone.<br/>
         • Shram Setu employees will never ask for your OTP.<br/>
-        • This OTP will expire in <strong>2 minutes</strong>.<br/>
+        • This OTP will expire in <strong>5 minutes</strong>.<br/>
         • If you did not request this reset, you can safely ignore this email.
 
        </p>

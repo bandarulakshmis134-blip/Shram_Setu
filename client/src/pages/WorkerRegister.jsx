@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import SkillsSelector from "../components/SkillsSelector";
-import axios from "axios";
+import axios from "../utils/axiosInstance";
 import { useNavigate } from "react-router-dom";
 
 const WorkerRegister = () => {
@@ -18,10 +18,6 @@ const WorkerRegister = () => {
 
   firstName:"",
   groupName:"",
-
-  mobile:"",
-  location:"",
-  experience:"",
 
   price:"",
   priceType:"Per Hour",

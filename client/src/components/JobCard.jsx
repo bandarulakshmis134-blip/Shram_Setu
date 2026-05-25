@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ApplyModal from "./ApplyModal";
-import axios from "axios"; // ✅ NEW
+import axios from "../utils/axiosInstance"; // ✅ NEW
 
 import {
   FaBriefcase,
@@ -18,9 +18,13 @@ const JobCard = ({ job }) => {
   const [showDesc, setShowDesc] = useState(false);
   const navigate = useNavigate();
 
-  const user = JSON.parse(
-    sessionStorage.getItem("user") || "null"
-  );
+ const [user] = useState(
+
+ JSON.parse(
+  sessionStorage.getItem("user")|| "null"
+ )
+
+);
 
   const jobOwnerId =
     typeof job.postedBy === "object"

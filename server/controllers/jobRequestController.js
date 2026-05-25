@@ -633,7 +633,9 @@ exports.sendWorkOTP =
 
    )
 
-   .populate("userId");
+   .populate("userId",
+     "firstname email"
+   );
 
   /*
   NOT FOUND
