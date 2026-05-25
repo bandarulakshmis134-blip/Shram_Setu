@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "../axiosInstance";
+import axios from "axios";
 import { Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 

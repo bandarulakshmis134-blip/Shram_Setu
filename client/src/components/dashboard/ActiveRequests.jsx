@@ -5,7 +5,7 @@ import {
   useMemo,
 } from "react";
 
-import axios from "../axiosInstance";
+import axios from "axios";
 
 import { useNavigate } from "react-router-dom";
 

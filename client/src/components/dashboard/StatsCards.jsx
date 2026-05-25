@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import axios from "../axiosInstance";
+import axios from "axios";
 
 const StatsCards = ({ type }) => {
 

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ApplyModal from "./ApplyModal";
-import axios from "../axiosInstance"; // ✅ NEW
+import axios from "axios"; // ✅ NEW
 
 import {
   FaBriefcase,
