@@ -29,6 +29,7 @@ const WorkerCard = ({ worker }) => {
   RATING
   =========================
   */
+
   const avgRating = Number(
    worker?.averageRating || 0
   );
@@ -37,22 +38,55 @@ const WorkerCard = ({ worker }) => {
 
     <>
 
-      <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden hover:shadow-lg transition">
+      <div
+       className="
+        bg-white
+        rounded-xl
+        shadow-md
+        border border-gray-200
+        overflow-hidden
+        hover:shadow-lg
+        transition
+       "
+      >
 
         {/* TOP */}
-        <div className="flex gap-4 p-4">
+
+        <div
+         className="
+          flex flex-col sm:flex-row
+          gap-4
+          p-4
+         "
+        >
 
           {worker.profilePic ? (
 
             <img
               src={worker.profilePic}
-              className="w-20 h-20 rounded-lg object-cover"
+              className="
+               w-full
+               sm:w-20
+               h-52 sm:h-20
+               rounded-lg
+               object-cover
+              "
               alt="worker"
             />
 
           ) : (
 
-            <div className="w-20 h-20 rounded-lg bg-gray-200 flex items-center justify-center">
+            <div
+             className="
+              w-full
+              sm:w-20
+              h-52 sm:h-20
+              rounded-lg
+              bg-gray-200
+              flex items-center justify-center
+              text-sm text-gray-500
+             "
+            >
 
               No Image
 
@@ -60,38 +94,77 @@ const WorkerCard = ({ worker }) => {
 
           )}
 
-          <div>
+          <div className="flex-1 min-w-0">
 
-            <h2 className="font-semibold text-gray-800">
+            <h2
+             className="
+              font-semibold
+              text-gray-800
+              text-base sm:text-lg
+              break-words
+             "
+            >
 
               {worker.firstName ||
                 worker.groupName}
 
             </h2>
 
-            <p className="text-blue-600 text-sm font-medium">
+            <p
+             className="
+              text-blue-600
+              text-sm
+              font-medium
+              break-words
+             "
+            >
 
               {worker.skills?.[0]}
 
             </p>
 
-            <div className="flex items-center text-gray-500 text-sm mt-1">
+            <div
+             className="
+              flex items-center
+              gap-1
+              text-gray-500
+              text-sm
+              mt-1
+              break-words
+             "
+            >
 
               <MapPin size={14} />
 
-              {worker.location}
+              <span className="break-all">
+
+               {worker.location}
+
+              </span>
 
             </div>
 
             {/* RATING */}
-            <div className="flex items-center mt-1 text-yellow-500">
+
+            <div
+             className="
+              flex items-center
+              mt-1
+              text-yellow-500
+             "
+            >
 
               <Star
                size={16}
                fill="currentColor"
               />
 
-              <span className="ml-1 text-sm">
+              <span
+               className="
+                ml-1
+                text-sm
+               "
+              >
 
                 {avgRating.toFixed(1)}
 
@@ -99,7 +172,13 @@ const WorkerCard = ({ worker }) => {
 
               {worker?.totalRatings > 0 && (
 
-               <span className="ml-1 text-xs text-gray-400">
+               <span
+                className="
+                 ml-1
+                 text-xs
+                 text-gray-400
+                "
+               >
 
                 ({worker.totalRatings})
 
@@ -114,13 +193,28 @@ const WorkerCard = ({ worker }) => {
         </div>
 
         {/* SKILLS */}
-        <div className="px-4 pb-3 flex gap-2 flex-wrap">
+
+        <div
+         className="
+          px-4
+          pb-3
+          flex gap-2
+          flex-wrap
+         "
+        >
 
           {worker.skills?.map((skill) => (
 
             <span
               key={skill}
-              className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-md"
+              className="
+               bg-gray-100
+               text-gray-600
+               text-xs
+               px-2 py-1
+               rounded-md
+               break-words
+              "
             >
 
               {skill}
@@ -132,17 +226,40 @@ const WorkerCard = ({ worker }) => {
         </div>
 
         {/* FOOTER */}
-        <div className="border-t border-gray-300 px-4 py-3 flex items-center justify-between">
 
-          <span className="text-xs text-gray-400">
+        <div
+         className="
+          border-t border-gray-300
+          px-4 py-3
+          flex flex-col sm:flex-row
+          gap-3
+          sm:gap-2
+          sm:items-center
+          sm:justify-between
+         "
+        >
+
+          <span
+           className="
+            text-xs
+            text-gray-400
+           "
+          >
 
             SS-{worker._id?.slice(-4)}
 
           </span>
 
-          <div className="flex items-center gap-2">
+          <div
+           className="
+            flex flex-wrap
+            items-center
+            gap-2
+           "
+          >
 
             {/* CHAT */}
+
             <button
               onClick={() =>
                 navigate("/messages", {
@@ -156,7 +273,14 @@ const WorkerCard = ({ worker }) => {
                   },
                 })
               }
-              className="p-2 bg-green-100 text-blue-600 rounded-lg hover:bg-green-200"
+              className="
+               p-2
+               bg-green-100
+               text-blue-600
+               rounded-lg
+               hover:bg-green-200
+               transition
+              "
             >
 
               <MessageCircle size={18} />
@@ -164,11 +288,19 @@ const WorkerCard = ({ worker }) => {
             </button>
 
             {/* PROFILE */}
+
             <button
               onClick={() =>
                 setShowProfile(true)
               }
-              className="p-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200"
+              className="
+               p-2
+               bg-gray-100
+               text-gray-600
+               rounded-lg
+               hover:bg-gray-200
+               transition
+              "
             >
 
               <User size={18} />
@@ -176,11 +308,26 @@ const WorkerCard = ({ worker }) => {
             </button>
 
             {/* REQUEST */}
+
             <button
               onClick={() =>
                 setShowModal(true)
               }
-              className="flex items-center gap-2 bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition whitespace-nowrap"
+              className="
+               flex items-center
+               justify-center
+               gap-2
+               bg-blue-600
+               text-white
+               px-4 sm:px-5
+               py-2
+               rounded-lg
+               hover:bg-blue-700
+               transition
+               whitespace-nowrap
+               text-sm sm:text-base
+               flex-1 sm:flex-none
+              "
             >
 
               Send Request
@@ -196,6 +343,7 @@ const WorkerCard = ({ worker }) => {
       </div>
 
       {/* REQUEST MODAL */}
+
       {showModal && (
 
         <RequestModal
@@ -208,6 +356,7 @@ const WorkerCard = ({ worker }) => {
       )}
 
       {/* PROFILE MODAL */}
+
       {showProfile && (
 
         <WorkerProfileModal

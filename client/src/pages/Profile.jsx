@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 import ProfileCard from "../components/ProfileCard";
 import PersonalInfo from "../components/PersonalInfo";
+import AccountActions from "../components/profile/AccountActions";
 
 const Profile = () => {
 
@@ -212,6 +213,11 @@ const Profile = () => {
       </button>
 
      )}
+
+     <AccountActions
+ user={user}
+ setUser={setUser}
+/>
 
     </div>
 

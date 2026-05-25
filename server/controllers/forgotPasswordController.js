@@ -87,36 +87,61 @@ exports.sendOTP =
      box-shadow:0 10px 30px rgba(0,0,0,0.08);
     ">
 
-     <!-- TOP HEADER -->
-     <div style="
-      background:#2563eb;
-      padding:35px;
-      text-align:center;
-     ">
+  <!-- TOP HEADER -->
+<div style="
+ background:#2563eb;
+ padding:35px;
+ text-align:center;
+">
 
-      <h1 style="
-       color:white;
-       margin:0;
-       font-size:38px;
-       font-weight:bold;
-       letter-spacing:1px;
-      ">
+ <!-- LOGO BOX -->
+ <div style="
+  width:90px;
+  height:90px;
+  background:white;
+  margin:0 auto 20px auto;
+  border-radius:20px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 8px 20px rgba(0,0,0,0.15);
+ ">
 
-       Shram <span style="color:#bfdbfe;">Setu</span>
+  <img
+   src="cid:logo"
+   alt="Shram Setu Logo"
+   style="
+    width:65px;
+    height:65px;
+    object-fit:contain;
+   "
+  />
 
-      </h1>
+ </div>
 
-      <p style="
-       color:#dbeafe;
-       margin-top:10px;
-       font-size:15px;
-      ">
+ <h1 style="
+  color:white;
+  margin:0;
+  font-size:38px;
+  font-weight:bold;
+  letter-spacing:1px;
+ ">
 
-       Connecting Skills to Opportunities
+  Shram <span style="color:#bfdbfe;">Setu</span>
 
-      </p>
+ </h1>
 
-     </div>
+ <p style="
+  color:#dbeafe;
+  margin-top:10px;
+  font-size:15px;
+ ">
+
+  Connecting Skills to Opportunities
+
+ </p>
+
+</div>
 
      <!-- CONTENT -->
      <div style="

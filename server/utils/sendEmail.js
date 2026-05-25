@@ -50,7 +50,26 @@ const sendEmail = async (
 
   subject,
 
-  html
+  html,
+
+  /*
+  ========================
+  LOGO ATTACHMENT
+  ========================
+  */
+  attachments:[
+
+   {
+
+    filename:"logo.png",
+
+    path:"./public/logo.png",
+
+    cid:"logo"
+
+   }
+
+  ]
 
  });
 
@@ -58,3 +77,4 @@ const sendEmail = async (
 
 module.exports =
  sendEmail;
+

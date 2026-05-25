@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const Worker = require("../models/Worker");
 
 exports.updateUser = async (
  req,
@@ -116,6 +117,124 @@ exports.updateUser = async (
    "UPDATE ERROR:",
    error
   );
+
+  res.status(500).json({
+
+   message:error.message
+
+  });
+
+ }
+
+};
+
+/*
+====================================
+RETIRE WORKER
+====================================
+*/
+exports.retireWorker = async (
+ req,
+ res
+)=>{
+
+ try{
+
+  const userId =
+   req.params.id;
+
+  /*
+  DELETE WORKER
+  */
+  await Worker.findOneAndDelete({
+
+   userId
+
+  });
+
+  /*
+  UPDATE USER
+  */
+  const updatedUser =
+   await User.findByIdAndUpdate(
+
+    userId,
+
+    {
+     role:"user",
+     skills:[]
+    },
+
+    {
+     new:true
+    }
+
+   );
+
+  res.json({
+
+   message:
+    "Worker retired successfully",
+
+   user:updatedUser
+
+  });
+
+ }
+
+ catch(error){
+
+  res.status(500).json({
+
+   message:error.message
+
+  });
+
+ }
+
+};
+
+/*
+====================================
+DISABLE ACCOUNT
+====================================
+*/
+exports.disableAccount = async (
+ req,
+ res
+)=>{
+
+ try{
+
+  const userId =
+   req.params.id;
+
+  /*
+  DELETE WORKER
+  */
+  await Worker.findOneAndDelete({
+
+   userId
+
+  });
+
+  /*
+  DELETE USER
+  */
+  await User.findByIdAndDelete(
+   userId
+  );
+
+  res.json({
+
+   message:
+    "Account deleted successfully"
+
+  });
+
+ }
+
+ catch(error){
 
   res.status(500).json({
 

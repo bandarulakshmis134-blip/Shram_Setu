@@ -37,6 +37,7 @@ const FindWorkers = ()=>{
  ACTIVE FILTERS
  =====================
  */
+
  const [filters,setFilters] =
   useState({});
 
@@ -45,6 +46,7 @@ const FindWorkers = ()=>{
  PANEL SWITCH
  =====================
  */
+
  const [
   activePanel,
   setActivePanel
@@ -55,6 +57,7 @@ const FindWorkers = ()=>{
  OBSERVER REF
  =====================
  */
+
  const observerRef =
   useRef(null);
 
@@ -63,6 +66,7 @@ const FindWorkers = ()=>{
  PREVENT MULTIPLE CALLS
  =====================
  */
+
  const fetchingRef =
   useRef(false);
 
@@ -71,6 +75,7 @@ const FindWorkers = ()=>{
  GET USER
  =====================
  */
+
  const user = JSON.parse(
 
   sessionStorage.getItem(
@@ -84,6 +89,7 @@ const FindWorkers = ()=>{
  URL PARAMS
  =====================
  */
+
  const locationHook =
   useLocation();
 
@@ -92,6 +98,7 @@ const FindWorkers = ()=>{
  FETCH WORKERS
  =====================
  */
+
  const fetchWorkers =
   async (
 
@@ -104,6 +111,7 @@ const FindWorkers = ()=>{
    /*
    PREVENT DUPLICATE CALLS
    */
+
    if(fetchingRef.current){
 
     return;
@@ -145,6 +153,7 @@ const FindWorkers = ()=>{
     /*
     NO MORE DATA
     */
+
     if(newWorkers.length < 12){
 
      setHasMore(false);
@@ -154,6 +163,7 @@ const FindWorkers = ()=>{
     /*
     RESET
     */
+
     if(reset){
 
      setWorkers(newWorkers);
@@ -163,6 +173,7 @@ const FindWorkers = ()=>{
     /*
     APPEND
     */
+
     else{
 
      setWorkers((prev)=>{
@@ -230,51 +241,60 @@ const FindWorkers = ()=>{
  INITIAL LOAD
  =====================
  */
+
  useEffect(()=>{
 
-  const params =
-   new URLSearchParams(
-    locationHook.search
-   );
+  const initializeWorkers =
+   async ()=>{
 
-  const category =
-   params.get("category") || "";
+    const params =
+     new URLSearchParams(
+      locationHook.search
+     );
 
-  const location =
-   params.get("location") || "";
+    const category =
+     params.get("category") || "";
 
-  const initialFilters = {};
+    const location =
+     params.get("location") || "";
 
-  if(category){
+    const initialFilters = {};
 
-   initialFilters.category =
-    category;
+    if(category){
 
-  }
+     initialFilters.category =
+      category;
 
-  if(location){
+    }
 
-   initialFilters.location =
-    location;
+    if(location){
 
-  }
+     initialFilters.location =
+      location;
 
-  /*
-  RESET EVERYTHING
-  */
-  setWorkers([]);
+    }
 
-  setPage(1);
+    /*
+    RESET EVERYTHING
+    */
 
-  setHasMore(true);
+    setWorkers([]);
 
-  setFilters(initialFilters);
+    setPage(1);
 
-  fetchWorkers(
-   1,
-   initialFilters,
-   true
-  );
+    setHasMore(true);
+
+    setFilters(initialFilters);
+
+    await fetchWorkers(
+     1,
+     initialFilters,
+     true
+    );
+
+   };
+
+  initializeWorkers();
 
  },[
    activePanel,
@@ -286,18 +306,26 @@ const FindWorkers = ()=>{
  LOAD MORE
  =====================
  */
+
  useEffect(()=>{
 
-  if(page === 1){
+  const loadMoreWorkers =
+   async ()=>{
 
-   return;
+    if(page === 1){
 
-  }
+     return;
 
-  fetchWorkers(
-   page,
-   filters
-  );
+    }
+
+    await fetchWorkers(
+     page,
+     filters
+    );
+
+   };
+
+  loadMoreWorkers();
 
  },[
    page
@@ -308,6 +336,7 @@ const FindWorkers = ()=>{
  INFINITE SCROLL
  =====================
  */
+
  useEffect(()=>{
 
   const observer =
@@ -375,6 +404,7 @@ const FindWorkers = ()=>{
  APPLY FILTERS
  =====================
  */
+
  const handleApplyFilters =
   (newFilters)=>{
 
@@ -399,12 +429,27 @@ const FindWorkers = ()=>{
  UI
  =====================
  */
+
  return(
 
-  <div className="flex gap-6 p-6 bg-gray-100 min-h-screen">
+  <div
+   className="
+    flex flex-col lg:flex-row
+    gap-6
+    p-4 sm:p-6
+    bg-gray-100
+    min-h-screen
+   "
+  >
 
    {/* LEFT FILTER */}
-   <div className="w-1/4">
+
+   <div
+    className="
+     w-full
+     lg:w-1/4
+    "
+   >
 
     <FilterSidebar
      onApply={
@@ -415,14 +460,40 @@ const FindWorkers = ()=>{
    </div>
 
    {/* RIGHT SIDE */}
-   <div className="w-3/4">
+
+   <div
+    className="
+     w-full
+     lg:w-3/4
+    "
+   >
 
     {/* TOP SWITCH */}
-    <div className="flex justify-between items-center mb-4">
 
-     <div className="bg-white rounded-lg shadow p-1 flex">
+    <div
+     className="
+      flex flex-col sm:flex-row
+      justify-between
+      sm:items-center
+      gap-3
+      mb-4
+     "
+    >
+
+     <div
+      className="
+       bg-white
+       rounded-lg
+       shadow
+       p-1
+       flex
+       w-full sm:w-fit
+       overflow-hidden
+      "
+     >
 
       {/* INDIVIDUAL */}
+
       <button
 
        onClick={() =>
@@ -431,14 +502,25 @@ const FindWorkers = ()=>{
         )
        }
 
-       className={`px-4 py-1 rounded transition ${
-        activePanel ===
-        "individual"
+       className={`
 
-         ? "bg-blue-600 text-white"
+        flex-1 sm:flex-none
+        px-3 sm:px-4
+        py-2 sm:py-1
+        text-sm sm:text-base
+        rounded
+        transition
 
-         : "text-gray-700"
-       }`}
+        ${
+         activePanel ===
+         "individual"
+
+          ? "bg-blue-600 text-white"
+
+          : "text-gray-700"
+        }
+
+       `}
 
       >
 
@@ -447,6 +529,7 @@ const FindWorkers = ()=>{
       </button>
 
       {/* GROUP */}
+
       <button
 
        onClick={() =>
@@ -455,14 +538,25 @@ const FindWorkers = ()=>{
         )
        }
 
-       className={`px-4 py-1 rounded transition ${
-        activePanel ===
-        "group"
+       className={`
 
-         ? "bg-blue-600 text-white"
+        flex-1 sm:flex-none
+        px-3 sm:px-4
+        py-2 sm:py-1
+        text-sm sm:text-base
+        rounded
+        transition
 
-         : "text-gray-700"
-       }`}
+        ${
+         activePanel ===
+         "group"
+
+          ? "bg-blue-600 text-white"
+
+          : "text-gray-700"
+        }
+
+       `}
 
       >
 
@@ -475,6 +569,7 @@ const FindWorkers = ()=>{
     </div>
 
     {/* SEARCH */}
+
     <SearchBar
      onSearch={
       handleApplyFilters
@@ -482,10 +577,16 @@ const FindWorkers = ()=>{
     />
 
     {/* WORKERS */}
+
     {loading &&
      workers.length === 0 ? (
 
-     <p className="mt-6">
+     <p
+      className="
+       mt-6
+       text-sm sm:text-base
+      "
+     >
 
       Loading workers...
 
@@ -500,10 +601,18 @@ const FindWorkers = ()=>{
     )}
 
     {/* LOADING MORE */}
+
     {loading &&
      workers.length > 0 && (
 
-     <p className="mt-6 text-center text-gray-500">
+     <p
+      className="
+       mt-6
+       text-center
+       text-gray-500
+       text-sm sm:text-base
+      "
+     >
 
       Loading more workers...
 
@@ -512,6 +621,7 @@ const FindWorkers = ()=>{
     )}
 
     {/* OBSERVER */}
+
     <div
      ref={observerRef}
      className="h-10"
