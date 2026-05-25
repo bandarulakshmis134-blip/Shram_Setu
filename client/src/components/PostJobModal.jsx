@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "../utils/axiosInstance";
+import axios from "../axiosInstance";
 import skillsList from "../data/skills";
 
 const PostJobModal = ({ isOpen, onClose, onPost }) => {

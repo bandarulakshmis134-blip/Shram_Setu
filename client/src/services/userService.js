@@ -1,4 +1,4 @@
-import axios from "../utils/axiosInstance";
+import axios from "../axiosInstance";
 
 export const updateUserProfile = async (userData) => {
 

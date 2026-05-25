@@ -12,7 +12,7 @@ import {
 
 import socket from "../socket";
 
-import axios from "../utils/axiosInstance";
+import axios from "../axiosInstance";
 
 import {
  Logo

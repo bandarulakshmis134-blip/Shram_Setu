@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Logo } from "../components/Logo";
 import { useNavigate } from "react-router-dom";
 import { FaEye, FaEyeSlash, FaUpload } from "react-icons/fa";
-import axios from "../utils/axiosInstance";
+import axios from "../axiosInstance";
 
 const Signup = () => {
 

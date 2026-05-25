@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import SkillsSelector from "../components/SkillsSelector";
-import axios from "../utils/axiosInstance";
+import axios from "../axiosInstance";
 import { useNavigate } from "react-router-dom";
 
 const WorkerRegister = () => {

@@ -5,7 +5,7 @@ import {
  useRef
 } from "react";
 
-import axios from "../utils/axiosInstance";
+import axios from "../axiosInstance";
 
 import JobCard from "../components/JobCard";
 
