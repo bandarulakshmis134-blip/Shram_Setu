@@ -63,7 +63,9 @@ const sendEmail = async (
 
     filename:"logo.png",
 
-    path:"./public/logo.png",
+    path:"../client/public/logo.png",
+
+
 
     cid:"logo"
 
