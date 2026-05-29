@@ -62,19 +62,7 @@ const sendEmail = async (
 
   html,
 
-  attachments: [
-
-   {
-
-    filename: "logo.png",
-
-    path: logoPath,
-
-    cid: "logo"
-
-   }
-
-  ]
+ 
 
  });
 
