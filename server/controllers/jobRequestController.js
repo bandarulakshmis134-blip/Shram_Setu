@@ -634,7 +634,7 @@ exports.sendWorkOTP =
    )
 
    .populate("userId",
-     "firstname email"
+     "firstName email"
    );
 
   /*
@@ -700,6 +700,16 @@ exports.sendWorkOTP =
 
   await request.save();
 
+  console.log(
+ "OTP GENERATED:",
+ otp
+);
+
+console.log(
+ "USER EMAIL:",
+ request.userId?.email
+);
+
   /*
   SANSKRIT QUOTES
   */
@@ -762,175 +772,204 @@ exports.sendWorkOTP =
   /*
   EMAIL HTML
   */
-  const html = `
+const html = `
+ <div style="
+  background:#f3f6fb;
+  padding:40px 20px;
+  font-family:Arial,sans-serif;
+ ">
+
+  <div style="
+   max-width:600px;
+   margin:auto;
+   background:white;
+   border-radius:20px;
+   overflow:hidden;
+   box-shadow:0 10px 30px rgba(0,0,0,0.08);
+  ">
+
    <div style="
-    background:#f3f6fb;
-    padding:40px 20px;
-    font-family:Arial,sans-serif;
+    background:#2563eb;
+    padding:35px;
+    text-align:center;
    ">
 
     <div style="
-     max-width:600px;
-     margin:auto;
+     display:inline-block;
      background:white;
-     border-radius:20px;
-     overflow:hidden;
-     box-shadow:0 10px 30px rgba(0,0,0,0.08);
+     padding:10px;
+     border-radius:12px;
+     margin-bottom:15px;
+    ">
+
+     <img
+      src="cid:logo"
+      alt="Shram Setu Logo"
+      style="
+       width:70px;
+       height:70px;
+       object-fit:contain;
+       display:block;
+      "
+     />
+
+    </div>
+
+    <h1 style="
+     color:white;
+     margin:0;
+     font-size:38px;
+     font-weight:bold;
+    ">
+
+     Shram
+     <span style="color:#bfdbfe;">
+
+      Setu
+
+     </span>
+
+    </h1>
+
+    <p style="
+     color:#dbeafe;
+     margin-top:10px;
+    ">
+
+     Connecting Skills to Opportunities
+
+    </p>
+
+   </div>
+
+   <div style="
+    padding:40px 35px;
+    color:#1f2937;
+   ">
+
+    <h2>
+
+     Work Completion Verification
+
+    </h2>
+
+    <p style="
+     line-height:1.8;
+    ">
+
+     Your worker has requested
+     work completion verification.
+
+    </p>
+
+    <div style="
+     margin:35px 0;
+     text-align:center;
     ">
 
      <div style="
-      background:#2563eb;
-      padding:35px;
-      text-align:center;
+      display:inline-block;
+      background:#eff6ff;
+      color:#2563eb;
+      font-size:36px;
+      font-weight:bold;
+      letter-spacing:10px;
+      padding:18px 35px;
+      border-radius:16px;
+      border:2px dashed #93c5fd;
      ">
 
-      <h1 style="
-       color:white;
-       margin:0;
-       font-size:38px;
-       font-weight:bold;
-      ">
-
-       Shram
-       <span style="color:#bfdbfe;">
-
-        Setu
-
-       </span>
-
-      </h1>
-
-      <p style="
-       color:#dbeafe;
-       margin-top:10px;
-      ">
-
-       Connecting Skills to Opportunities
-
-      </p>
-
-     </div>
-
-     <div style="
-      padding:40px 35px;
-      color:#1f2937;
-     ">
-
-      <h2>
-
-       Work Completion Verification
-
-      </h2>
-
-      <p style="
-       line-height:1.8;
-      ">
-
-       Your worker has requested
-       work completion verification.
-
-      </p>
-
-      <div style="
-       margin:35px 0;
-       text-align:center;
-      ">
-
-       <div style="
-        display:inline-block;
-        background:#eff6ff;
-        color:#2563eb;
-        font-size:36px;
-        font-weight:bold;
-        letter-spacing:10px;
-        padding:18px 35px;
-        border-radius:16px;
-        border:2px dashed #93c5fd;
-       ">
-
-        ${otp}
-
-       </div>
-
-      </div>
-
-      <div style="
-       margin-top:30px;
-       padding:20px;
-       background:#f8fafc;
-       border-radius:14px;
-       text-align:center;
-      ">
-
-       <p style="
-        font-size:20px;
-        font-weight:bold;
-        color:#1e3a8a;
-       ">
-
-        ${randomQuote.line}
-
-       </p>
-
-       <p style="
-        font-size:14px;
-        color:#6b7280;
-        font-style:italic;
-       ">
-
-        ${randomQuote.meaning}
-
-       </p>
-
-      </div>
-
-      <div style="
-       background:#f9fafb;
-       border-radius:14px;
-       padding:20px;
-       margin-top:25px;
-      ">
-
-       <p style="
-        color:#374151;
-        font-size:14px;
-        line-height:1.8;
-       ">
-
-        ⚠️
-        <strong>
-         Security Tips
-        </strong>
-
-        <br/><br/>
-
-        • Never share this OTP.<br/>
-        • OTP expires in 5 minutes.<br/>
-        • Verify only after work completion.
-
-       </p>
-
-      </div>
+      ${otp}
 
      </div>
 
     </div>
 
+    <div style="
+     margin-top:30px;
+     padding:20px;
+     background:#f8fafc;
+     border-radius:14px;
+     text-align:center;
+    ">
+
+     <p style="
+      font-size:20px;
+      font-weight:bold;
+      color:#1e3a8a;
+     ">
+
+      ${randomQuote.line}
+
+     </p>
+
+     <p style="
+      font-size:14px;
+      color:#6b7280;
+      font-style:italic;
+     ">
+
+      ${randomQuote.meaning}
+
+     </p>
+
+    </div>
+
+    <div style="
+     background:#f9fafb;
+     border-radius:14px;
+     padding:20px;
+     margin-top:25px;
+    ">
+
+     <p style="
+      color:#374151;
+      font-size:14px;
+      line-height:1.8;
+     ">
+
+      ⚠️
+      <strong>
+       Security Tips
+      </strong>
+
+      <br/><br/>
+
+      • Never share this OTP.<br/>
+      • OTP expires in 5 minutes.<br/>
+      • Verify only after work completion.
+
+     </p>
+
+    </div>
+
    </div>
-  `;
+
+  </div>
+
+ </div>
+`;
 
   /*
   SEND EMAIL
   */
-  await sendEmail(
+ console.log(
+ "SENDING OTP EMAIL..."
+);
 
-   request.userId.email,
+await sendEmail(
 
-   "Shram Setu Work Completion OTP",
+ request.userId.email,
 
-   html
+ "Shram Setu Work Completion OTP",
 
-  );
+ html
+
+);
+
+console.log(
+ "OTP EMAIL SENT SUCCESSFULLY"
+);
 
   res.json({
 

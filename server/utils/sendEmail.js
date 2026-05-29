@@ -1,29 +1,25 @@
-const nodemailer =
- require("nodemailer");
+const nodemailer = require("nodemailer");
 const path = require("path");
+const fs = require("fs");
 
 /*
 ========================
 TRANSPORTER
 ========================
 */
-const transporter =
+const transporter = nodemailer.createTransport({
 
- nodemailer.createTransport({
+ service: "gmail",
 
-  service:"gmail",
+ auth: {
 
-  auth:{
+  user: process.env.EMAIL_USER,
 
-   user:
-    process.env.EMAIL_USER,
+  pass: process.env.EMAIL_PASS
 
-   pass:
-    process.env.EMAIL_PASS
+ }
 
-  }
-
- });
+});
 
 /*
 ========================
@@ -36,45 +32,45 @@ const sendEmail = async (
  subject,
  html
 
-)=>{
+) => {
+
+ const logoPath = path.join(
+
+  __dirname,
+  "../../client/public/logo.png"
+
+ );
+
+ console.log("EMAIL TO:", to);
+ console.log("LOGO PATH:", logoPath);
+ console.log(
+  "LOGO EXISTS:",
+  fs.existsSync(logoPath)
+ );
 
  await transporter.sendMail({
 
-  from:`Shram Setu <${
+  from: `Shram Setu <${
 
    process.env.EMAIL_USER
 
   }>`,
-
-
+  
   to,
 
   subject,
 
   html,
 
-  /*
-  ========================
-  LOGO ATTACHMENT
-  ========================
-  */
-  attachments:[
+  attachments: [
 
    {
 
-    filename:"logo.png",
+    filename: "logo.png",
 
-  
-   path:require("path").join(
-    __dirname,
-   "../../client/public/logo.png"
-    ),
+    path: logoPath,
 
-
-
-
-
-    cid:"logo"
+    cid: "logo"
 
    }
 
@@ -84,6 +80,4 @@ const sendEmail = async (
 
 };
 
-module.exports =
- sendEmail;
-
+module.exports = sendEmail;
