@@ -1,12 +1,4 @@
-const dns = require("dns");
 const nodemailer = require("nodemailer");
-
-/*
-========================
-FORCE IPV4
-========================
-*/
-dns.setDefaultResultOrder("ipv4first");
 
 /*
 ========================
@@ -17,17 +9,9 @@ const transporter = nodemailer.createTransport({
 
  host: "smtp.gmail.com",
 
- port: 587,
+ port: 465,
 
- secure: false,
-
- requireTLS: true,
-
- connectionTimeout: 30000,
-
- greetingTimeout: 30000,
-
- socketTimeout: 30000,
+ secure: true,
 
  auth: {
 
