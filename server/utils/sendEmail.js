@@ -84,12 +84,9 @@ const sendEmail = async (
  const info =
   await transporter.sendMail({
 
-   from: `Shram Setu <${
+   from:
+    "Shram Setu <shramsetu.workspace@gmail.com>",
 
-    process.env.BREVO_USER
-
-   }>`,
-   
    to,
 
    subject,
