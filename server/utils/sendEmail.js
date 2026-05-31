@@ -1,6 +1,11 @@
-const nodemailer = require("nodemailer");
 const dns = require("dns");
+const nodemailer = require("nodemailer");
 
+/*
+========================
+FORCE IPV4
+========================
+*/
 dns.setDefaultResultOrder("ipv4first");
 
 /*
@@ -16,13 +21,13 @@ const transporter = nodemailer.createTransport({
 
  secure: false,
 
- family: 4,
+ requireTLS: true,
 
- connectionTimeout: 10000,
+ connectionTimeout: 30000,
 
- greetingTimeout: 10000,
+ greetingTimeout: 30000,
 
- socketTimeout: 10000,
+ socketTimeout: 30000,
 
  auth: {
 
@@ -33,13 +38,37 @@ const transporter = nodemailer.createTransport({
  }
 
 });
-console.log("NEW SMTP CONFIG LOADED");
+
+/*
+========================
+VERIFY SMTP ON STARTUP
+========================
+*/
+transporter.verify()
+
+ .then(() => {
+
+  console.log(
+   "SMTP SERVER READY"
+  );
+
+ })
+
+ .catch((error) => {
+
+  console.log(
+   "SMTP VERIFY ERROR:"
+  );
+
+  console.log(error);
+
+ });
+
 /*
 ========================
 SEND EMAIL FUNCTION
 ========================
 */
-console.log("BEFORE SEND MAIL");
 const sendEmail = async (
 
  to,
@@ -48,25 +77,35 @@ const sendEmail = async (
 
 ) => {
 
- console.log("EMAIL TO:", to);
+ console.log(
+  "EMAIL TO:",
+  to
+ );
 
- await transporter.sendMail({
+ const info =
+  await transporter.sendMail({
 
-  from: `Shram Setu <${
+   from: `Shram Setu <${
 
-   process.env.EMAIL_USER
+    process.env.EMAIL_USER
 
-  }>`,
-  
-  to,
+   }>`,
+   
+   to,
 
-  subject,
+   subject,
 
-  html
+   html
 
- });
+  });
+
+ console.log(
+  "EMAIL SENT:",
+  info.messageId
+ );
+
+ return info;
 
 };
-console.log("AFTER SEND MAIL");
 
 module.exports = sendEmail;
