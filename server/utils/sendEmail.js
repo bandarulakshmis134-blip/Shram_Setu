@@ -1,6 +1,4 @@
 const nodemailer = require("nodemailer");
-const path = require("path");
-const fs = require("fs");
 
 /*
 ========================
@@ -9,7 +7,19 @@ TRANSPORTER
 */
 const transporter = nodemailer.createTransport({
 
- service: "gmail",
+ host: "smtp.gmail.com",
+
+ port: 587,
+
+ secure: false,
+
+ family: 4,
+
+ connectionTimeout: 10000,
+
+ greetingTimeout: 10000,
+
+ socketTimeout: 10000,
 
  auth: {
 
@@ -20,12 +30,13 @@ const transporter = nodemailer.createTransport({
  }
 
 });
-
+console.log("NEW SMTP CONFIG LOADED");
 /*
 ========================
 SEND EMAIL FUNCTION
 ========================
 */
+console.log("BEFORE SEND MAIL");
 const sendEmail = async (
 
  to,
@@ -34,19 +45,7 @@ const sendEmail = async (
 
 ) => {
 
- const logoPath = path.join(
-
-  __dirname,
-  "../../client/public/logo.png"
-
- );
-
  console.log("EMAIL TO:", to);
- console.log("LOGO PATH:", logoPath);
- console.log(
-  "LOGO EXISTS:",
-  fs.existsSync(logoPath)
- );
 
  await transporter.sendMail({
 
@@ -60,12 +59,11 @@ const sendEmail = async (
 
   subject,
 
-  html,
-
- 
+  html
 
  });
 
 };
+console.log("AFTER SEND MAIL");
 
 module.exports = sendEmail;
