@@ -2,6 +2,21 @@ const nodemailer = require("nodemailer");
 
 /*
 ========================
+SMTP DEBUG
+========================
+*/
+console.log(
+ "BREVO USER:",
+ process.env.BREVO_USER
+);
+
+console.log(
+ "BREVO PASS EXISTS:",
+ !!process.env.BREVO_PASS
+);
+
+/*
+========================
 TRANSPORTER
 ========================
 */
@@ -9,7 +24,7 @@ const transporter = nodemailer.createTransport({
 
  host: "smtp-relay.brevo.com",
 
- port: 587,
+ port: 2525,
 
  secure: false,
 
@@ -61,30 +76,34 @@ const sendEmail = async (
 
 ) => {
 
-  console.log(
-   "EMAIL TO:",
-   to
-  );
+ console.log(
+  "EMAIL TO:",
+  to
+ );
 
-  const info =
-   await transporter.sendMail({
+ const info =
+  await transporter.sendMail({
 
-    from: `Shram Setu <${process.env.BREVO_USER}>`,
+   from: `Shram Setu <${
 
-    to,
+    process.env.BREVO_USER
 
-    subject,
+   }>`,
+   
+   to,
 
-    html
+   subject,
 
-   });
+   html
 
-  console.log(
-   "EMAIL SENT:",
-   info.messageId
-  );
+  });
 
-  return info;
+ console.log(
+  "EMAIL SENT:",
+  info.messageId
+ );
+
+ return info;
 
 };
 
