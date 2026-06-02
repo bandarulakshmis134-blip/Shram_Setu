@@ -222,6 +222,7 @@ const AIAssistant = () => {
   try{
 
    setLoading(true);
+ 
 
    const res = await axios.post(
 
