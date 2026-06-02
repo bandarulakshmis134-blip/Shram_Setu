@@ -15,7 +15,7 @@ const genAI =
 const model =
  genAI.getGenerativeModel({
 
-  model:"gemini-1.5-flash"
+  model: "gemini-1.5-flash-latest"
 
  });
 
@@ -101,7 +101,7 @@ ${message}
   const reply =
    result.response.text();
 
-  res.json({
+  return res.json({
 
    reply
 
@@ -112,13 +112,14 @@ ${message}
  catch(error){
 
   console.log(
-   "GEMINI ERROR:",
-   error
+   "===== GEMINI ERROR ====="
   );
 
-  res.status(500).json({
+  console.log(error);
 
-   message:"AI failed"
+  return res.status(500).json({
+
+   message:error.message
 
   });
 
