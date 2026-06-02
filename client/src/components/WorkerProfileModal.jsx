@@ -211,37 +211,6 @@ const WorkerProfileModal = ({
 
        </div>
 
-       <div>
-
-        <p className="text-sm text-gray-500">
-         Experience
-        </p>
-
-        <p className="font-medium text-gray-800">
-
-         {worker.experience
-          ? `${worker.experience} Years`
-          : "-"}
-
-        </p>
-
-       </div>
-
-       <div>
-
-        <p className="text-sm text-gray-500">
-         Work Type
-        </p>
-
-        <div className="flex items-center gap-1 text-gray-800 font-medium">
-
-         <Briefcase size={14}/>
-
-         {worker.registrationType || "-"}
-
-        </div>
-
-       </div>
 
       </div>
 

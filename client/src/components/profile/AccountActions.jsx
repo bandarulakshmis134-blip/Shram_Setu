@@ -120,25 +120,30 @@ const AccountActions = ({
     </h2>
 
     <div className="flex flex-wrap gap-4">
+{
+ Array.isArray(user?.skills) &&
+ user.skills.filter(
 
-     {
+  (skill)=>
 
-      user.role === "worker" && (
+   typeof skill === "string" &&
+   skill.trim() !== ""
 
-       <button
-        onClick={()=>
-         setShowRetire(true)
-        }
-        className="bg-white-500 hover:bg-white-600 text-black px-5 py-2 rounded-lg"
-       >
+ ).length > 0 && (
 
-        Retire Worker
+  <button
+   onClick={()=>
+    setShowRetire(true)
+   }
+   className="bg-white-500 hover:bg-white-600 text-black px-5 py-2 rounded-lg"
+  >
 
-       </button>
+   Retire Worker
 
-      )
+  </button>
 
-     }
+ )
+}
 
      <button
       onClick={()=>

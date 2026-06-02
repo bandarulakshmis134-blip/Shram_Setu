@@ -623,168 +623,350 @@ SEND WORK OTP
 */
 exports.sendWorkOTP = async (req,res)=>{
 
-try{
+ try{
 
-console.log("STEP 0 - ROUTE HIT");
+  const request =
+   await JobRequest.findById(
+    req.params.id
+   )
+   .populate(
+    "userId",
+    "firstName email"
+   );
 
-const request =
-await JobRequest.findById(
-req.params.id
-)
-.populate(
-"userId",
-"firstName email"
-);
+  if(!request){
 
-console.log("STEP 1 - REQUEST FOUND");
+   return res.status(404).json({
 
-if(!request){
+    message:"Request not found"
 
-return res.status(404).json({
-message:"Request not found"
-});
+   });
 
-}
+  }
 
-if(
-request.status ===
-"completed"
-){
+  if(
+   request.status ===
+   "completed"
+  ){
 
-return res.status(400).json({
-message:"Work already completed"
-});
+   return res.status(400).json({
 
-}
+    message:"Work already completed"
 
-request.workOTP = null;
-request.workOTPExpiry = null;
+   });
 
-const otp = Math.floor(
-100000 +
-Math.random() * 900000
-).toString();
+  }
 
-request.workOTP = otp;
+  request.workOTP = null;
+  request.workOTPExpiry = null;
 
-request.workOTPExpiry =
-new Date(
-Date.now() +
-5 * 60 * 1000
-);
+  const otp = Math.floor(
 
-await request.save();
+   100000 +
+   Math.random() * 900000
 
-console.log(
-"OTP GENERATED:",
-otp
-);
+  ).toString();
 
-console.log(
-"USER EMAIL:",
-request.userId?.email
-);
+  request.workOTP = otp;
 
-const sanskritLines = [
+  request.workOTPExpiry =
+   new Date(
 
-{
-line:"परिश्रमात् अधिकं किमपि पवित्रं नास्ति。",
-meaning:"Nothing is more sacred than hard work."
-},
+    Date.now() +
+    5 * 60 * 1000
 
-{
-line:"श्रमिकाः एव एतत् जगत् पुरतः नयन्ति。",
-meaning:"Workers are the ones who move this world forward."
-},
+   );
 
-{
-line:"श्रमजातः स्वेदः पवित्रः。",
-meaning:"The sweat born from labor is sacred."
-},
+  await request.save();
 
-{
-line:"श्रमेव जयते。",
-meaning:"Through hard work comes victory."
-}
+  const sanskritLines = [
 
-];
+   {
 
-const randomQuote =
-sanskritLines[
-Math.floor(
-Math.random() *
-sanskritLines.length
-)
-];
+    line:
+     "परिश्रमात् अधिकं किमपि पवित्रं नास्ति।",
 
-const html = `
+    meaning:
+     "Nothing is more sacred than hard work."
 
-   <div>
-    OTP: ${otp}
-    <br/>
-    ${randomQuote.line}
-    <br/>
-    ${randomQuote.meaning}
+   },
+
+   {
+
+    line:
+     "श्रमिकाः एव एतत् जगत् पुरतः नयन्ति।",
+
+    meaning:
+     "Workers are the ones who move this world forward."
+
+   },
+
+   {
+
+    line:
+     "श्रमजातः स्वेदः पवित्रः।",
+
+    meaning:
+     "The sweat born from labor is sacred."
+
+   },
+
+   {
+
+    line:
+     "श्रमेव जयते।",
+
+    meaning:
+     "Through hard work comes victory."
+
+   }
+
+  ];
+
+  const randomQuote =
+   sanskritLines[
+    Math.floor(
+     Math.random() *
+     sanskritLines.length
+    )
+   ];
+
+ const html = `
+
+<div style="
+ background:#f3f6fb;
+ padding:40px 20px;
+ font-family:Arial,sans-serif;
+">
+
+ <div style="
+  max-width:600px;
+  margin:auto;
+  background:white;
+  border-radius:20px;
+  overflow:hidden;
+  box-shadow:0 10px 30px rgba(0,0,0,0.08);
+ ">
+
+  <!-- TOP HEADER -->
+  <div style="
+   background:#2563eb;
+   padding:35px;
+   text-align:center;
+  ">
+
+   <!-- LOGO BOX -->
+   <div style="
+    width:90px;
+    height:90px;
+    background:white;
+    margin:0 auto 20px auto;
+    border-radius:20px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    box-shadow:0 8px 20px rgba(0,0,0,0.15);
+   ">
+
+    <img
+     src="https://shram-setu-nine.vercel.app/logo.png"
+     alt="Shram Setu Logo"
+     style="
+      width:65px;
+      height:65px;
+      object-fit:contain;
+     "
+    />
+
    </div>
-  `;
 
-console.log(
-"STEP A - BEFORE EMAIL"
-);
+   <h1 style="
+    color:white;
+    margin:0;
+    font-size:38px;
+    font-weight:bold;
+    letter-spacing:1px;
+   ">
 
-await sendEmail(
+    Shram <span style="color:#bfdbfe;">Setu</span>
 
-request.userId.email,
+   </h1>
 
-"Shram Setu Work Completion OTP",
+   <p style="
+    color:#dbeafe;
+    margin-top:10px;
+    font-size:15px;
+   ">
 
-html
+    Connecting Skills to Opportunities
 
-);
+   </p>
 
-console.log(
-"STEP B - EMAIL SENT"
-);
+  </div>
 
-res.json({
+  <!-- CONTENT -->
+  <div style="
+   padding:40px 35px;
+   color:#1f2937;
+  ">
 
-message:"OTP sent successfully",
+   <h2 style="
+    margin-top:0;
+    font-size:24px;
+    color:#111827;
+   ">
 
-expiresIn:300
+    Work Completion Verification
 
-});
+   </h2>
 
-console.log(
-"STEP C - RESPONSE SENT"
-);
+   <p style="
+    font-size:15px;
+    line-height:1.8;
+    color:#4b5563;
+   ">
 
-}
+    Your worker has requested work completion verification.
 
-catch(error){
+    <br/><br/>
 
-console.log(
-"===== SEND OTP ERROR ====="
-);
+    Please share the OTP below only after the work has been completed successfully.
 
-console.log(error);
+   </p>
 
-console.log(
-"ERROR MESSAGE:",
-error.message
-);
+   <!-- OTP BOX -->
+   <div style="
+    margin:35px 0;
+    text-align:center;
+   ">
 
-console.log(
-"ERROR STACK:",
-error.stack
-);
+    <div style="
+     display:inline-block;
+     background:#eff6ff;
+     color:#2563eb;
+     font-size:36px;
+     font-weight:bold;
+     letter-spacing:10px;
+     padding:18px 35px;
+     border-radius:16px;
+     border:2px dashed #93c5fd;
+    ">
 
-res.status(500).json({
+     ${otp}
 
-message:error.message
+    </div>
 
-});
+   </div>
 
-}
+   <!-- SANSKRIT QUOTE -->
+   <div style="
+    margin-top:20px;
+    padding:20px;
+    background:#f8fafc;
+    border-radius:14px;
+    text-align:center;
+   ">
+
+    <p style="
+     font-size:20px;
+     font-weight:bold;
+     color:#1e3a8a;
+     margin:0;
+    ">
+
+     ${randomQuote.line}
+
+    </p>
+
+    <p style="
+     font-size:14px;
+     color:#6b7280;
+     font-style:italic;
+     margin-top:10px;
+    ">
+
+     ${randomQuote.meaning}
+
+    </p>
+
+   </div>
+
+   <!-- SECURITY -->
+   <div style="
+    background:#f9fafb;
+    border-radius:14px;
+    padding:20px;
+    margin-top:25px;
+   ">
+
+    <p style="
+     margin:0;
+     color:#374151;
+     font-size:14px;
+     line-height:1.8;
+    ">
+
+     ⚠️ <strong>Security Tips</strong><br/><br/>
+
+     • Never share this OTP before work completion.<br/>
+     • OTP expires in <strong>5 minutes</strong>.<br/>
+     • Verify only after confirming the work is completed.<br/>
+     • If you did not request this verification, ignore this email.
+
+    </p>
+
+   </div>
+
+   <!-- FOOTER -->
+   <p style="
+    margin-top:35px;
+    font-size:14px;
+    color:#6b7280;
+    line-height:1.8;
+   ">
+
+    Thank you for choosing
+    <strong>Shram Setu</strong> 🚀
+
+   </p>
+
+  </div>
+
+ </div>
+
+</div>
+
+`;
+
+  await sendEmail(
+
+   request.userId.email,
+
+   "Shram Setu Work Completion OTP",
+
+   html
+
+  );
+
+  res.json({
+
+   message:"OTP sent successfully",
+
+   expiresIn:300
+
+  });
+
+ }
+
+ catch(error){
+
+  res.status(500).json({
+
+   message:error.message
+
+  });
+
+ }
 
 };
 

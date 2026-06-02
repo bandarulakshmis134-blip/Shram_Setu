@@ -108,7 +108,7 @@ exports.sendOTP =
  ">
 
   <img
-   src="cid:logo"
+   src="https://shram-setu-nine.vercel.app/logo.png"
    alt="Shram Setu Logo"
    style="
     width:65px;

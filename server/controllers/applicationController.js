@@ -233,6 +233,8 @@ exports.getJobApplications =
     profilePic
     skills
     location
+    description
+    groupName
     age
     gender
     about

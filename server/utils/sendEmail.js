@@ -2,21 +2,6 @@ const nodemailer = require("nodemailer");
 
 /*
 ========================
-SMTP DEBUG
-========================
-*/
-console.log(
- "BREVO USER:",
- process.env.BREVO_USER
-);
-
-console.log(
- "BREVO PASS EXISTS:",
- !!process.env.BREVO_PASS
-);
-
-/*
-========================
 TRANSPORTER
 ========================
 */
@@ -40,31 +25,6 @@ const transporter = nodemailer.createTransport({
 
 /*
 ========================
-VERIFY SMTP ON STARTUP
-========================
-*/
-transporter.verify()
-
- .then(() => {
-
-  console.log(
-   "SMTP SERVER READY"
-  );
-
- })
-
- .catch((error) => {
-
-  console.log(
-   "SMTP VERIFY ERROR:"
-  );
-
-  console.log(error);
-
- });
-
-/*
-========================
 SEND EMAIL FUNCTION
 ========================
 */
@@ -75,11 +35,6 @@ const sendEmail = async (
  html
 
 ) => {
-
- console.log(
-  "EMAIL TO:",
-  to
- );
 
  const info =
   await transporter.sendMail({
@@ -94,11 +49,6 @@ const sendEmail = async (
    html
 
   });
-
- console.log(
-  "EMAIL SENT:",
-  info.messageId
- );
 
  return info;
 
