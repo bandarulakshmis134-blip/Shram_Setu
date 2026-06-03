@@ -11,7 +11,19 @@ const userSchema = new mongoose.Schema({
 
  lastName:String,
 
- email: String,
+ email: {
+
+ type: String,
+
+ required: true,
+
+ unique: true,
+
+ trim: true,
+
+ lowercase: true
+
+},
 
  age: Number,
 
@@ -24,14 +36,35 @@ const userSchema = new mongoose.Schema({
   default:"Other"
  },
 
- mobile: {
-  type: Number,
-  required: true
- },
+mobile: {
+
+ type: String,
+
+ required: true,
+
+ unique: true,
+
+ trim: true,
+
+ lowercase: true
+
+},
 
  location: String,
 
- aadhaar: String,
+ aadhaar: {
+
+ type: String,
+
+ required: true,
+
+ unique: true,
+
+ trim: true,
+
+ lowercase: true
+
+},
 
  password: {
   type: String,
