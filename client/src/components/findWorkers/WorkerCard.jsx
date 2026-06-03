@@ -13,8 +13,11 @@ import { useNavigate } from "react-router-dom";
 import RequestModal from "./RequestModal";
 
 import WorkerProfileModal from "../WorkerProfileModal";
+import { getWorkerBadge } from "../../utils/getWorkerBadge";
 
 const WorkerCard = ({ worker }) => {
+
+  const badge = getWorkerBadge(worker);
 
   const [showModal, setShowModal] =
     useState(false);
@@ -96,19 +99,118 @@ const WorkerCard = ({ worker }) => {
 
           <div className="flex-1 min-w-0">
 
-            <h2
-             className="
-              font-semibold
-              text-gray-800
-              text-base sm:text-lg
-              break-words
-             "
-            >
+          <div
+ className="
+  flex
+  items-center
+  gap-2
+  flex-wrap
+ "
+>
 
-              {worker.firstName ||
-                worker.groupName}
+ <h2
+  className="
+   font-semibold
+   text-gray-800
+   text-base sm:text-lg
+   break-words
+  "
+ >
 
-            </h2>
+  {worker.firstName ||
+   worker.groupName}
+
+ </h2>
+
+ {badge && (
+
+  <div
+   className="
+    flex
+    items-center
+    gap-1
+   "
+  >
+
+   <img
+
+    src={badge.image}
+
+    alt="SETURYX"
+
+    title="
+SETURYX
+श्रमेव जयते
+
+The Highest Mark Of Trust & Excellence
+
+Awarded only to workers
+with a perfect 5-star rating
+and 100+ verified reviews.
+"
+
+    className="
+     h-10
+     w-auto
+     object-contain
+    "
+
+   />
+
+  </div>
+
+ )}
+
+</div>
+
+{badge && (
+
+ <div
+  className="
+   flex
+   items-center
+   gap-2
+   mt-1
+   flex-wrap
+  "
+ >
+
+  <span
+   className="
+    bg-gradient-to-r
+    from-yellow-50
+    via-yellow-100
+    to-yellow-50
+    text-yellow-700
+    border
+    border-yellow-300
+    px-2
+    py-1
+    rounded-full
+    text-xs
+    font-bold
+   "
+  >
+
+   💎 SETURYX
+
+  </span>
+
+  <span
+   className="
+    text-xs
+    italic
+    text-gray-500
+   "
+  >
+
+   श्रमेव जयते
+
+  </span>
+
+ </div>
+
+)}
 
             <p
              className="
