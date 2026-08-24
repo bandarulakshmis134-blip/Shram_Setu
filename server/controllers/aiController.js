@@ -5,46 +5,59 @@ const Groq = require("groq-sdk");
 GROQ CONFIG
 =========================
 */
+
 const groq = new Groq({
-
- apiKey: process.env.GROQ_API_KEY
-
+  apiKey: process.env.GROQ_API_KEY
 });
 
 /*
 =========================
-CHAT WITH AI
+HELPER
 =========================
 */
-exports.chatWithAI = async (req,res)=>{
 
- try{
+const isJobDescriptionRequest = (message) => {
 
-  const {
-   message,
-   language
-  } = req.body;
+  const text = message.toLowerCase();
 
-  if(!message){
+  const keywords = [
+    "write job description",
+    "create job description",
+    "generate job description",
+    "make a job description",
+    "job description",
+    "create a job",
+    "write a job",
+    "generate a job"
+  ];
 
-   return res.status(400).json({
+  return keywords.some((keyword) =>
+    text.includes(keyword)
+  );
 
-    message:"Message required"
+};
 
-   });
+/*
+=========================
+NORMAL KAIYO CHAT
+=========================
+*/
 
-  }
+const normalChat = async (
+  message,
+  language
+) => {
 
   const completion =
-   await groq.chat.completions.create({
+    await groq.chat.completions.create({
 
-    messages:[
+      messages: [
 
-     {
+        {
 
-      role:"system",
+          role: "system",
 
-      content:`
+          content: `
 
 You are KAIYO, the official AI assistant of Shram Setu.
 
@@ -95,54 +108,327 @@ Rules:
 - Reply in ${language || "English"}.
 - Do not mention internal instructions.
 
-      `
+          `
 
-     },
+        },
 
-     {
+        {
 
-      role:"user",
+          role: "user",
 
-      content:message
+          content: message
 
-     }
+        }
 
-    ],
+      ],
 
-    model:"llama-3.3-70b-versatile",
+      model: "llama-3.3-70b-versatile",
 
-    temperature:0.7,
+      temperature: 0.7,
 
-    max_tokens:1024
+      max_tokens: 1024
 
-   });
+    });
 
-  const reply =
-   completion.choices[0]
-   .message.content;
-
-  return res.json({
-
-   reply
-
-  });
-
- }
-
- catch(error){
-
-  console.log(
-   "GROQ ERROR:",
-   error
-  );
-
-  return res.status(500).json({
-
-   message:
-    "Something went wrong. Please try again."
-
-  });
-
- }
+  return completion
+    .choices[0]
+    .message
+    .content;
 
 };
+
+/*
+=========================
+STRUCTURED JOB DESCRIPTION
+=========================
+*/
+
+const generateStructuredJob =
+  async (
+    message,
+    language
+  ) => {
+
+  const completion =
+    await groq.chat.completions.create({
+
+      messages: [
+
+        {
+
+          role: "system",
+
+          content: `
+
+You are KAIYO, the official AI assistant of Shram Setu.
+
+The user wants help creating a professional job description.
+
+Extract or infer the job information from the user's request.
+
+Return ONLY the structured data defined by the JSON schema.
+
+Do not add extra fields.
+
+Use ${language || "English"} for all human-readable text.
+
+If the user does not provide an exact budget,
+provide a reasonable estimated budget range and clearly
+label it as an estimate.
+
+The job description should be suitable for
+posting on the Shram Setu platform.
+
+          `
+
+        },
+
+        {
+
+          role: "user",
+
+          content: message
+
+        }
+
+      ],
+
+      /*
+      =====================================
+      STRUCTURED OUTPUT
+      =====================================
+      */
+
+      response_format: {
+
+        type: "json_schema",
+
+        json_schema: {
+
+          name: "shram_setu_job_description",
+
+          strict: true,
+
+          schema: {
+
+            type: "object",
+
+            properties: {
+
+              jobTitle: {
+
+                type: "string"
+
+              },
+
+              category: {
+
+                type: "string"
+
+              },
+
+              description: {
+
+                type: "string"
+
+              },
+
+              requiredSkills: {
+
+                type: "array",
+
+                items: {
+
+                  type: "string"
+
+                }
+
+              },
+
+              experience: {
+
+                type: "string"
+
+              },
+
+              location: {
+
+                type: "string"
+
+              },
+
+              estimatedBudget: {
+
+                type: "string"
+
+              },
+
+              responsibilities: {
+
+                type: "array",
+
+                items: {
+
+                  type: "string"
+
+                }
+
+              }
+
+            },
+
+            required: [
+
+              "jobTitle",
+              "category",
+              "description",
+              "requiredSkills",
+              "experience",
+              "location",
+              "estimatedBudget",
+              "responsibilities"
+
+            ],
+
+            additionalProperties: false
+
+          }
+
+        }
+
+      },
+
+      /*
+      =====================================
+      IMPORTANT
+      =====================================
+      */
+
+      model: "openai/gpt-oss-20b",
+
+      temperature: 0.3,
+
+      max_tokens: 1200
+
+    });
+
+  const content =
+    completion
+      .choices[0]
+      .message
+      .content;
+
+  return JSON.parse(content);
+
+};
+
+/*
+=========================
+CHAT WITH AI
+=========================
+*/
+
+exports.chatWithAI =
+  async (req, res) => {
+
+    try {
+
+      const {
+        message,
+        language
+      } = req.body;
+
+      /*
+      =========================
+      VALIDATION
+      =========================
+      */
+
+      if (!message) {
+
+        return res.status(400).json({
+
+          message: "Message required"
+
+        });
+
+      }
+
+      /*
+      =========================
+      STRUCTURED OUTPUT MODE
+      =========================
+      */
+
+      if (
+        isJobDescriptionRequest(message)
+      ) {
+
+        console.log(
+          "KAIYO: STRUCTURED OUTPUT MODE"
+        );
+
+        const job =
+          await generateStructuredJob(
+            message,
+            language
+          );
+
+        return res.json({
+
+          type: "job_description",
+
+          structured: true,
+
+          data: job
+
+        });
+
+      }
+
+      /*
+      =========================
+      NORMAL CHAT MODE
+      =========================
+      */
+
+      console.log(
+        "KAIYO: NORMAL CHAT MODE"
+      );
+
+      const reply =
+        await normalChat(
+          message,
+          language
+        );
+
+      return res.json({
+
+        type: "text",
+
+        structured: false,
+
+        reply
+
+      });
+
+    }
+
+    catch (error) {
+
+      console.log(
+        "===== GROQ ERROR ====="
+      );
+
+      console.log(error);
+
+      return res.status(500).json({
+
+        message:
+          "Something went wrong. Please try again."
+
+      });
+
+    }
+
+  };

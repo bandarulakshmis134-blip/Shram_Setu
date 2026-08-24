@@ -27,7 +27,7 @@ const AIAssistant = () => {
 
  const location = useLocation();
 
- const { t,i18n } =
+ const { t, i18n } =
   useTranslation();
 
  /*
@@ -35,6 +35,7 @@ const AIAssistant = () => {
  STATES
  ========================
  */
+
  const [open,setOpen] =
   useState(false);
 
@@ -61,6 +62,7 @@ const AIAssistant = () => {
  DRAGGING
  ========================
  */
+
  const [position,setPosition] =
   useState({
    x:24,
@@ -81,6 +83,7 @@ const AIAssistant = () => {
  CHAT SCROLL
  ========================
  */
+
  const chatContainerRef =
   useRef(null);
 
@@ -89,12 +92,12 @@ const AIAssistant = () => {
  AUTO SCROLL
  ========================
  */
+
  useEffect(()=>{
 
   if(chatContainerRef.current){
 
    chatContainerRef.current.scrollTop =
-
     chatContainerRef.current.scrollHeight;
 
   }
@@ -106,6 +109,7 @@ const AIAssistant = () => {
  DRAG START
  ========================
  */
+
  const handleMouseDown = (e)=>{
 
   dragging.current = true;
@@ -131,6 +135,7 @@ const AIAssistant = () => {
  DRAGGING
  ========================
  */
+
  useEffect(()=>{
 
   const handleMouseMove = (e)=>{
@@ -190,6 +195,7 @@ const AIAssistant = () => {
  SEND MESSAGE
  ========================
  */
+
  const sendMessage = async ()=>{
 
   if(!message.trim()) return;
@@ -206,6 +212,7 @@ const AIAssistant = () => {
   /*
   USER MESSAGE
   */
+
   setMessages(prev => [
 
    ...prev,
@@ -222,33 +229,70 @@ const AIAssistant = () => {
   try{
 
    setLoading(true);
- 
 
-   const res = await axios.post(
+   const res =
+    await axios.post(
 
-    `${import.meta.env.VITE_API_URL}/api/ai/chat`,
+     `${import.meta.env.VITE_API_URL}/api/ai/chat`,
 
-    {
-     message:currentMessage,
-     userId:user?._id,
-     language:i18n.language
-    }
+     {
+      message:currentMessage,
+      userId:user?._id,
+      language:i18n.language
+     }
 
-   );
+    );
 
    /*
-   AI REPLY
+   =================================
+   STRUCTURED JOB DESCRIPTION
+   =================================
    */
-   setMessages(prev => [
 
-    ...prev,
+   if(
+    res.data?.structured === true &&
+    res.data?.type === "job_description"
+   ){
 
-    {
-     sender:"ai",
-     text:res.data.reply
-    }
+    const job =
+     res.data.data;
 
-   ]);
+    setMessages(prev => [
+
+     ...prev,
+
+     {
+      sender:"ai",
+      structured:true,
+      job
+     }
+
+    ]);
+
+   }
+
+   /*
+   =================================
+   NORMAL AI RESPONSE
+   =================================
+   */
+
+   else{
+
+    setMessages(prev => [
+
+     ...prev,
+
+     {
+      sender:"ai",
+      text:
+       res.data?.reply ||
+       "I couldn't generate a response."
+     }
+
+    ]);
+
+   }
 
   }
 
@@ -284,6 +328,7 @@ const AIAssistant = () => {
  HIDE ON THESE PAGES
  ========================
  */
+
  const hiddenRoutes = [
 
   "/",
@@ -293,7 +338,6 @@ const AIAssistant = () => {
  ];
 
  const shouldHide =
-
   hiddenRoutes.includes(
    location.pathname
   );
@@ -304,11 +348,18 @@ const AIAssistant = () => {
 
  }
 
+ /*
+ ========================
+ RENDER
+ ========================
+ */
+
  return (
 
   <>
 
    {/* FLOATING BOT */}
+
    <div
 
     onMouseDown={handleMouseDown}
@@ -333,9 +384,11 @@ const AIAssistant = () => {
      >
 
       {/* GLOW */}
+
       <div className="absolute inset-0 bg-blue-400 rounded-full blur-3xl opacity-40 animate-pulse" />
 
       {/* BOT */}
+
       <div className="relative">
 
        <div className="absolute inset-0 bg-blue-400 blur-3xl opacity-30 rounded-full animate-pulse" />
@@ -356,6 +409,7 @@ const AIAssistant = () => {
    </div>
 
    {/* CHAT WINDOW */}
+
    {open && (
 
     <div
@@ -370,11 +424,13 @@ const AIAssistant = () => {
     >
 
      {/* HEADER */}
+
      <div className="bg-blue-600 px-5 py-4 text-white shrink-0">
 
       <div className="flex items-center gap-3">
 
        {/* BACK */}
+
        <button
 
         onClick={()=>setOpen(false)}
@@ -388,6 +444,7 @@ const AIAssistant = () => {
        </button>
 
        {/* BOT IMAGE */}
+
        <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-lg overflow-hidden shrink-0">
 
         <img
@@ -399,6 +456,7 @@ const AIAssistant = () => {
        </div>
 
        {/* TITLE */}
+
        <div>
 
         <h2 className="font-semibold text-lg">
@@ -422,6 +480,7 @@ const AIAssistant = () => {
      </div>
 
      {/* CHAT AREA */}
+
      <div
 
       ref={chatContainerRef}
@@ -437,42 +496,258 @@ const AIAssistant = () => {
         key={index}
 
         className={`flex ${
-
          msg.sender === "user"
-
           ? "justify-end"
-
           : "justify-start"
-
         }`}
 
        >
 
-        <div
+        {/* =========================
+            STRUCTURED JOB CARD
+        ========================= */}
 
-         className={`max-w-[80%] break-words px-4 py-3 rounded-3xl text-sm shadow-sm transition-all duration-300
+        {msg.structured && msg.job ? (
 
-         ${
+         <div className="max-w-[88%] bg-white border border-gray-200 rounded-3xl shadow-sm overflow-hidden">
 
-          msg.sender === "user"
+          {/* CARD HEADER */}
 
-           ? "bg-blue-600 text-white rounded-br-md"
+          <div className="bg-blue-600 text-white px-4 py-3">
 
-           : "bg-white border border-gray-200 text-gray-700 rounded-bl-md"
+           <div className="flex items-center gap-2">
 
-         }`}
+            <Sparkles size={16}/>
 
-        >
+            <span className="font-semibold">
 
-         {msg.text}
+             AI Generated Job
 
-        </div>
+            </span>
+
+           </div>
+
+          </div>
+
+          <div className="p-4 space-y-4">
+
+           {/* TITLE */}
+
+           <div>
+
+            <p className="text-xs text-gray-400 uppercase tracking-wide">
+
+             Job Title
+
+            </p>
+
+            <h3 className="font-semibold text-gray-800 text-lg">
+
+             {msg.job.jobTitle}
+
+            </h3>
+
+           </div>
+
+           {/* CATEGORY */}
+
+           <div>
+
+            <p className="text-xs text-gray-400 uppercase tracking-wide">
+
+             Category
+
+            </p>
+
+            <p className="text-sm text-gray-700">
+
+             {msg.job.category}
+
+            </p>
+
+           </div>
+
+           {/* DESCRIPTION */}
+
+           <div>
+
+            <p className="text-xs text-gray-400 uppercase tracking-wide">
+
+             Description
+
+            </p>
+
+            <p className="text-sm text-gray-700 leading-relaxed">
+
+             {msg.job.description}
+
+            </p>
+
+           </div>
+
+           {/* SKILLS */}
+
+           <div>
+
+            <p className="text-xs text-gray-400 uppercase tracking-wide mb-2">
+
+             Required Skills
+
+            </p>
+
+            <div className="flex flex-wrap gap-2">
+
+             {msg.job.requiredSkills?.map(
+
+              (skill,skillIndex)=>(
+
+               <span
+
+                key={skillIndex}
+
+                className="text-xs bg-blue-50 text-blue-600 px-3 py-1.5 rounded-full"
+
+               >
+
+                {skill}
+
+               </span>
+
+              )
+
+             )}
+
+            </div>
+
+           </div>
+
+           {/* EXPERIENCE */}
+
+           <div>
+
+            <p className="text-xs text-gray-400 uppercase tracking-wide">
+
+             Experience
+
+            </p>
+
+            <p className="text-sm text-gray-700">
+
+             {msg.job.experience}
+
+            </p>
+
+           </div>
+
+           {/* LOCATION */}
+
+           <div>
+
+            <p className="text-xs text-gray-400 uppercase tracking-wide">
+
+             Location
+
+            </p>
+
+            <p className="text-sm text-gray-700">
+
+             {msg.job.location}
+
+            </p>
+
+           </div>
+
+           {/* BUDGET */}
+
+           <div>
+
+            <p className="text-xs text-gray-400 uppercase tracking-wide">
+
+             Estimated Budget
+
+            </p>
+
+            <p className="text-sm font-semibold text-gray-800">
+
+             {msg.job.estimatedBudget}
+
+            </p>
+
+           </div>
+
+           {/* RESPONSIBILITIES */}
+
+           <div>
+
+            <p className="text-xs text-gray-400 uppercase tracking-wide mb-2">
+
+             Responsibilities
+
+            </p>
+
+            <ul className="list-disc pl-5 space-y-1">
+
+             {msg.job.responsibilities?.map(
+
+              (item,itemIndex)=>(
+
+               <li
+
+                key={itemIndex}
+
+                className="text-sm text-gray-700"
+
+               >
+
+                {item}
+
+               </li>
+
+              )
+
+             )}
+
+            </ul>
+
+           </div>
+
+          </div>
+
+         </div>
+
+        ) : (
+
+         /* =========================
+            NORMAL MESSAGE
+         ========================= */
+
+         <div
+
+          className={`max-w-[80%] break-words px-4 py-3 rounded-3xl text-sm shadow-sm transition-all duration-300
+
+          ${
+           msg.sender === "user"
+
+            ? "bg-blue-600 text-white rounded-br-md"
+
+            : "bg-white border border-gray-200 text-gray-700 rounded-bl-md"
+
+          }`}
+
+         >
+
+          {msg.text}
+
+         </div>
+
+        )}
 
        </div>
 
       ))}
 
       {/* LOADING */}
+
       {loading && (
 
        <div className="flex items-center gap-2 text-gray-400 text-sm animate-pulse">
@@ -488,12 +763,15 @@ const AIAssistant = () => {
      </div>
 
      {/* QUICK ACTIONS */}
+
      <div className="px-3 py-2 border-t bg-white flex gap-2 overflow-x-auto shrink-0">
 
       {[
+
        "Find electrician",
        "Suggest budget",
        "Write job description"
+
       ].map((prompt)=>(
 
        <button
@@ -517,6 +795,7 @@ const AIAssistant = () => {
      </div>
 
      {/* INPUT */}
+
      <div className="p-3 border-t bg-white flex items-center gap-2 shrink-0">
 
       <input
